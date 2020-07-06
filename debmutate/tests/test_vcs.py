@@ -19,7 +19,7 @@
 
 from unittest import TestCase
 
-from lintian_brush.vcs import (
+from debmutate.vcs import (
     split_vcs_url,
     unsplit_vcs_url,
     )

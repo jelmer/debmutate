@@ -16,7 +16,51 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+__all__ = [
+    'TestCase',
+    'TestCaseInTempDir',
+    ]
+
+import os
+import tempfile
 import unittest
+
+class TestCase(unittest.TestCase):
+
+    def overrideEnv(self, key, value):
+        oldvalue = os.environ.get(key)
+
+        def restore():
+            if oldvalue is None:
+                del os.environ[key]
+            else:
+                os.environ[key] = value
+
+        self.addCleanup(restore)
+        os.environ[key] = value
+
+
+class TestCaseInTempDir(TestCase):
+
+    def setUp(self):
+        td = tempfile.TemporaryDirectory(prefix='debmutate')
+        self.test_dir = td.name
+        self.addCleanup(td.cleanup)
+        cwd = os.getcwd()
+        self.addCleanup(os.chdir, cwd)
+        os.chdir(self.test_dir)
+
+    def build_tree_contents(self, entries):
+        for entry in entries:
+            if entry[0].endswith('/'):
+                os.mkdir(entry[0])
+            else:
+                with open(entry[0], 'w') as f:
+                    f.write(entry[1])
+
+    def assertFileEqual(self, content, path):
+        with open(path, 'r') as f:
+            self.assertEqual(content, f.read())
 
 
 def test_suite():

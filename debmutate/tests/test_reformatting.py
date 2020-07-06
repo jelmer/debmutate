@@ -18,9 +18,9 @@
 
 """Tests for lintian brush reformatting tools."""
 
-from breezy.tests import (
+from . import (
     TestCase,
-    TestCaseWithTransport,
+    TestCaseInTempDir,
     )
 
 from ..reformatting import (
@@ -47,7 +47,7 @@ class CheckPreserveFormattingTests(TestCase):
         check_preserve_formatting("FOO  ", "FOO ", 'debian/blah')
 
 
-class GeneratedFileTests(TestCaseWithTransport):
+class GeneratedFileTests(TestCaseInTempDir):
 
     def test_generated_control_file(self):
         self.build_tree_contents([
@@ -88,7 +88,7 @@ Testsuite: autopkgtest
         check_generated_file('debian/control')
 
 
-class EditFormattedFileTests(TestCaseWithTransport):
+class EditFormattedFileTests(TestCaseInTempDir):
 
     def test_unchanged(self):
         self.build_tree_contents([('a', 'some content\n')])

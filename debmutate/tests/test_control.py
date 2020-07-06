@@ -18,9 +18,9 @@
 
 """Tests for lintian_brush.control."""
 
-from breezy.tests import (
+from . import (
     TestCase,
-    TestCaseWithTransport,
+    TestCaseInTempDir,
     )
 
 from ..control import (
@@ -46,7 +46,7 @@ from ..reformatting import (
     )
 
 
-class UpdateControlTests(TestCaseWithTransport):
+class UpdateControlTests(TestCaseInTempDir):
 
     def test_do_not_edit(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\

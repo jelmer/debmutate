@@ -18,9 +18,9 @@
 
 """Tests for debmutate.deb822."""
 
-from breezy.tests import (
+from . import (
     TestCase,
-    TestCaseWithTransport,
+    TestCaseInTempDir,
     )
 
 from debian.deb822 import Deb822
@@ -87,7 +87,7 @@ Package: bloe
 """)
 
 
-class UpdateControlTests(TestCaseWithTransport):
+class UpdateControlTests(TestCaseInTempDir):
 
     def test_do_not_edit(self):
         self.build_tree_contents([('controlfile', """\
@@ -176,7 +176,7 @@ Testsuite: autopkgtest
 """, 'controlfile')
 
 
-class ApplyChangesTests(TestCaseWithTransport):
+class ApplyChangesTests(TestCaseInTempDir):
 
     def setUp(self):
         super(ApplyChangesTests, self).setUp()
