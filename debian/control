@@ -1,0 +1,21 @@
+Source: debmutate
+Section: python
+Priority: optional
+Maintainer: Jelmer Vernooĳ <jelmer@debian.org>
+Build-Depends: dh-python,
+               python3-all,
+               python3-debian,
+               python3-setuptools,
+               debhelper-compat (= 13)
+Standards-Version: 4.5.0
+Rules-Requires-Root: no
+Vcs-Git: https://salsa.debian.org/jelmer/debmutate.git
+Vcs-Browser: https://salsa.debian.org/jelmer/debmutate
+
+Package: python3-debmutate
+Architecture: all
+Depends: python3-debian, ${misc:Depends}, ${python3:Depends}
+Description: Format-preserving manipulation of Debian control files in Python
+ Debmutate is a set of Python modules for manipulating the control files of
+ Debian packages, with the ability to preserve the existing formatting of
+ the control files.

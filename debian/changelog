@@ -1,0 +1,5 @@
+debmutate (0.1) UNRELEASED; urgency=medium
+
+  * Initial release. Closes: #964421
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 06 Jul 2020 22:40:05 +0000
