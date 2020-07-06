@@ -2,8 +2,10 @@ Debmutate is a set of Python modules for manipulating the control files of
 Debian packages, with the ability to preserve the existing formatting of
 the control files.
 
-It's built on top of the excellent python-debian library, and was originally
-extracted from lintian-brush.
+It's built on top of the excellent
+[python-debian](https://salsa.debian.org/python-debian-team/python-debian)
+library, and was originally extracted from
+[lintian-brush](https://salsa.debian.org/jelmer/lintian-brush).
 
 To modify one of the control files, use one of the context managers to edit the file:
 
