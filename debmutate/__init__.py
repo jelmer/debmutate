@@ -2,4 +2,4 @@
 
 """Make changes to Debian packages."""
 
-__version__ = (0, 70)
+__version__ = (0, 1)

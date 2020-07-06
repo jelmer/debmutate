@@ -22,7 +22,7 @@ setup(
     version="0.1",
     author="Jelmer Vernooij",
     author_email="jelmer@debian.org",
-    packages=["debmutate"],
+    packages=["debmutate", "debmutate.tests"],
     url="https://salsa.debian.org/jelmer/debmutate",
     description="manipulation of Debian package control files",
     project_urls={
