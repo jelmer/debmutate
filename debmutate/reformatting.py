@@ -25,6 +25,7 @@ __all__ = [
 
 
 import os
+from typing import Union
 
 
 class GeneratedFile(Exception):
@@ -46,7 +47,8 @@ class FormattingUnpreservable(Exception):
         self.rewritten_contents = rewritten_contents
 
 
-def check_preserve_formatting(rewritten_text, text, path):
+def check_preserve_formatting(
+        rewritten_text: Union[str, bytes], text: Union[str, bytes], path: str):
     """Check that formatting can be preserved.
 
     If the REFORMATTING environment variable is set to 'allow',
@@ -66,7 +68,7 @@ def check_preserve_formatting(rewritten_text, text, path):
     raise FormattingUnpreservable(path, text, rewritten_text)
 
 
-def check_generated_file(path):
+def check_generated_file(path: str) -> None:
     """Check if a file is generated from another file.
 
     Args:
@@ -90,8 +92,10 @@ def check_generated_file(path):
 
 
 def edit_formatted_file(
-        path, original_contents, rewritten_contents,
-        updated_contents, allow_generated=False):
+        path: str, original_contents: Union[str, bytes],
+        rewritten_contents: Union[str, bytes],
+        updated_contents: Union[str, bytes],
+        allow_generated: bool = False) -> bool:
     """Edit a formatted file.
 
     Args:
@@ -122,7 +126,9 @@ def edit_formatted_file(
 class Editor(object):
     """Context object for editing a file, preserving formatting."""
 
-    def __init__(self, path: str, mode='', allow_generated=False):
+    def __init__(
+            self, path: str, mode: str = '',
+            allow_generated: bool = False) -> None:
         self.path = path
         self.mode = mode
         self.allow_generated = allow_generated
@@ -158,7 +164,8 @@ class Editor(object):
         else:
             return None
 
-    def has_changed(self):
+    def has_changed(self) -> bool:
+        """Check if any changes have been made so far."""
         return self._updated_content() not in (
             self._rewritten_content, self._orig_content)
 

@@ -21,6 +21,7 @@ __all__ = [
     'NotMachineReadableError',
     'MachineReadableFormatError',
     'CopyrightEditor',
+    'upstream_fields_in_copyright',
     ]
 
 from debian.copyright import (
@@ -29,6 +30,8 @@ from debian.copyright import (
     NotMachineReadableError,
     )
 
+from typing import Dict
+
 from .reformatting import Editor
 
 
@@ -36,7 +39,7 @@ class CopyrightEditor(Editor):
     """Update a machine-readable copyright file.
     """
 
-    def __init__(self, path='debian/copyright'):
+    def __init__(self, path: str = 'debian/copyright') -> None:
         super(CopyrightEditor, self).__init__(path)
 
     def _parse(self, content):
@@ -46,11 +49,20 @@ class CopyrightEditor(Editor):
         return parsed.dump()
 
     @property
-    def copyright(self):
+    def copyright(self) -> Copyright:
+        """The actual copyright file."""
         return self._parsed
 
 
-def upstream_fields_in_copyright(path='debian/copyright'):
+def upstream_fields_in_copyright(
+        path: str = 'debian/copyright') -> Dict[str, str]:
+    """Extract upstream fields from a copyright file.
+
+    Args:
+      path: Copyright file to open
+    Returns:
+      Dictionary with Contact/Name keys
+    """
     ret = {}
     try:
         with open(path, 'r') as f:

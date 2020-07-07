@@ -9,7 +9,7 @@ library, and was originally extracted from
 
 To modify one of the control files, use one of the context managers to edit the file:
 
-    from debmutate.control import ControlMutator
+    from debmutate.control import ControlEditor
 
     with ControlEditor(path='debian/control') as control:
         print(control.source['Maintainer'])

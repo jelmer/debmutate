@@ -1,4 +1,4 @@
-check:: style testsuite
+check:: style testsuite typing
 
 .PHONY: style testsuite unsupported
 
@@ -6,7 +6,7 @@ style::
 	flake8
 
 typing::
-	mypy lintian_brush fixers
+	mypy debmutate
 
 testsuite::
 	python3 setup.py test

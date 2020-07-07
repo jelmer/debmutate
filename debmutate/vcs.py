@@ -17,11 +17,25 @@
 
 """Utility functions for dealing with Debian Vcs URLs of various types."""
 
+__all__ = [
+    'split_vcs_url',
+    'unsplit_vcs_url',
+    'get_vcs_info',
+    'mangle_version_for_git',
+    ]
+
 import re
 from typing import Optional, Tuple
 
 
 def split_vcs_url(url: str) -> Tuple[str, Optional[str], Optional[str]]:
+    """Split a Debian VCS URL.
+
+    Args:
+      url: Url to split
+    Returns:
+      tuple with (url, optional branch, optional path)
+    """
     subpath: Optional[str]
     branch: Optional[str]
     m = re.search(r' \[([^] ]+)\]', url)
@@ -41,6 +55,14 @@ def split_vcs_url(url: str) -> Tuple[str, Optional[str], Optional[str]]:
 def unsplit_vcs_url(repo_url: str,
                     branch: Optional[str] = None,
                     subpath: Optional[str] = None) -> str:
+    """Unsplit a Debian VCS URL.
+
+    Args:
+      repo_url: Repository URL
+      branch: Branch name
+      subpath: Subpath in the tree
+    Returns: full URL
+    """
     url = repo_url
     if branch:
         url = '%s -b %s' % (url, branch)

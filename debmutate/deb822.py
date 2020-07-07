@@ -18,14 +18,23 @@
 
 """Utility functions for dealing with deb822 files."""
 
+__all__ = [
+    'dump_paragraphs',
+    'reformat_deb822',
+    'ChangeConflict',
+    'Deb822Editor',
+    ]
+
 from debian.deb822 import Deb822
 from io import BytesIO
+from typing import Iterable, List
+
 from .reformatting import (
     Editor,
     )
 
 
-def dump_paragraphs(paragraphs):
+def dump_paragraphs(paragraphs: Iterable[Deb822]) -> bytes:
     """Dump a set of deb822 paragraphs to a file.
 
     Args:
@@ -44,7 +53,7 @@ def dump_paragraphs(paragraphs):
     return outf.getvalue()
 
 
-def reformat_deb822(contents):
+def reformat_deb822(contents: bytes) -> bytes:
     """Check whether it's possible to preserve a control file.
 
     Args:
@@ -74,7 +83,7 @@ class Deb822Editor(Editor):
 
     """
 
-    def __init__(self, path, allow_generated=False):
+    def __init__(self, path: str, allow_generated: bool = False) -> None:
         super(Deb822Editor, self).__init__(
             path, allow_generated=allow_generated, mode='b')
 
@@ -125,7 +134,7 @@ class Deb822Editor(Editor):
         return list(Deb822.iter_paragraphs(content, encoding='utf-8'))
 
     @property
-    def paragraphs(self):
+    def paragraphs(self) -> List[Deb822]:
         return self._parsed
 
     def _format(self, paragraphs):

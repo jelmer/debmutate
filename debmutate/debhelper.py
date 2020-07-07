@@ -18,8 +18,14 @@
 
 """Debhelper utility functions."""
 
+__all__ = [
+    'ensure_minimum_debhelper_version',
+    'read_debhelper_compat_file',
+    'get_debhelper_compat_level',
+    ]
+
 import os
-from typing import Optional
+from typing import Optional, Union
 
 from debian.deb822 import Deb822
 
@@ -28,7 +34,8 @@ from debian.changelog import Version
 from .control import ensure_minimum_version, get_relation
 
 
-def ensure_minimum_debhelper_version(source, minimum_version):
+def ensure_minimum_debhelper_version(
+        source: Deb822, minimum_version: Union[str, Version]) -> bool:
     """Ensure that the pakcage is at least using version x of debhelper.
 
     This is a dedicated helper, since debhelper can now also be pulled in
@@ -79,7 +86,7 @@ def ensure_minimum_debhelper_version(source, minimum_version):
     return False
 
 
-def read_debhelper_compat_file(path):
+def read_debhelper_compat_file(path: str) -> int:
     """Read a debian/compat file.
 
     Args:

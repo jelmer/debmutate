@@ -18,11 +18,31 @@
 
 """Utility functions for dealing with control files."""
 
+__all__ = [
+    'dh_gnome_clean',
+    'pg_buildext_updatecontrol',
+    'guess_template_type',
+    'ControlEditor',
+    'update_control',
+    'parse_relations',
+    'format_relations',
+    'get_relation',
+    'iter_relations',
+    'ensure_minimum_version',
+    'ensure_exact_version',
+    'ensure_some_version',
+    'filter_dependencies',
+    'drop_dependency',
+    'delete_from_list',
+    'is_dep_implied',
+    'is_relation_implied',
+    ]
+
 import collections
 import contextlib
 from itertools import takewhile
 import os
-from typing import Optional, Callable, Tuple, Union, List
+from typing import Optional, Callable, Tuple, Union, List, Iterable
 
 from debian.changelog import Version
 from debian.deb822 import Deb822
@@ -38,6 +58,9 @@ def dh_gnome_clean(path: str = '.') -> None:
 
     This needs to do some post-hoc cleaning, since dh_gnome_clean
     writes various debhelper log files that should not be checked in.
+
+    Args:
+      path: Path to run dh_gnome_clean in
     """
     for n in os.listdir(os.path.join(path, 'debian')):
         if n.endswith('.debhelper.log'):
@@ -50,11 +73,21 @@ def dh_gnome_clean(path: str = '.') -> None:
 
 def pg_buildext_updatecontrol(path: str = '.') -> None:
     """Run the 'pg_buildext updatecontrol' command.
+
+    Args:
+      path: path to run pg_buildext updatecontrol in
     """
     subprocess.check_call(["pg_buildext", "updatecontrol"], cwd=path)
 
 
 def guess_template_type(template_path: str) -> Optional[str]:
+    """Guess the type for a control template.
+
+    Args:
+      template_path: Template path
+    Returns:
+      Name of template type; None if unknown
+    """
     try:
         with open(template_path, 'rb') as f:
             template = f.read()
@@ -172,6 +205,8 @@ def update_control(path='debian/control', source_package_cb=None,
 
 
 class ControlEditor(object):
+    """Edit a control file.
+    """
 
     changed: bool
 
@@ -188,16 +223,19 @@ class ControlEditor(object):
 
     @property
     def paragraphs(self) -> List[Deb822]:
+        """List of all the paragraphs."""
         return self._primary.paragraphs
 
     @property
     def source(self) -> Deb822:
+        """Source package."""
         if not self._primary.paragraphs[0].get('Source'):
             raise ValueError('first paragraph is not Source')
         return self._primary.paragraphs[0]
 
     @property
     def binaries(self) -> List[Deb822]:
+        """List of binary packages."""
         return self._primary.paragraphs[1:]
 
     def changes(self):
@@ -264,7 +302,7 @@ class ControlEditor(object):
         return False
 
 
-def parse_relations(text):
+def parse_relations(text: str):
     """Parse a package relations string.
 
     (e.g. a Depends, Provides, Build-Depends, etc field)
@@ -273,9 +311,9 @@ def parse_relations(text):
 
     Args:
       text: Text to parse
-    Returns:
+    Returns: list of tuples with (whitespace, relation, whitespace)
     """
-    ret = []
+    ret: List[Tuple[str, List[PkgRelation], str]] = []
     for top_level in text.split(','):
         if top_level == "":
             if ',' not in text:
@@ -302,7 +340,8 @@ def parse_relations(text):
     return ret
 
 
-def format_relations(relations):
+def format_relations(
+        relations: List[Tuple[str, List[PkgRelation], str]]) -> str:
     """Format a package relations string.
 
     This attemps to create formatting.
@@ -314,7 +353,8 @@ def format_relations(relations):
     return ','.join(ret)
 
 
-def get_relation(relationstr, package):
+def get_relation(
+        relationstr: str, package: str) -> Tuple[int, List[PkgRelation]]:
     """Retrieve the relation for a particular package.
 
     Args:
@@ -333,7 +373,9 @@ def get_relation(relationstr, package):
     raise KeyError(package)
 
 
-def iter_relations(relationstr, package):
+def iter_relations(
+        relationstr: str,
+        package: str) -> Iterable[Tuple[int, List[PkgRelation]]]:
     """Iterate over the relations relevant for a particular package.
 
     Args:
@@ -353,7 +395,9 @@ def iter_relations(relationstr, package):
         yield i, relation
 
 
-def ensure_minimum_version(relationstr, package, minimum_version):
+def ensure_minimum_version(
+        relationstr: str, package: str,
+        minimum_version: Union[str, Version]) -> str:
     """Update a relation string to ensure a particular version is required.
 
     Args:
@@ -405,7 +449,9 @@ def ensure_minimum_version(relationstr, package, minimum_version):
     return relationstr
 
 
-def ensure_exact_version(relationstr, package, version, position=None):
+def ensure_exact_version(
+        relationstr: str, package: str,
+        version: Union[str, Version], position: Optional[int] = None) -> str:
     """Update a relation string to depend on a specific version.
 
     Args:
@@ -523,7 +569,7 @@ def add_dependency(relationstr, relation, position=None):
     return format_relations(relations)
 
 
-def ensure_some_version(relationstr, package):
+def ensure_some_version(relationstr: str, package: str) -> str:
     """Add a package dependency to a depends line if it's not there.
 
     Args:
@@ -576,7 +622,7 @@ def filter_dependencies(
     return ret
 
 
-def drop_dependency(relationstr, package):
+def drop_dependency(relationstr: str, package: str) -> str:
     """Drop a dependency from a depends line.
 
     Args:
@@ -597,7 +643,7 @@ def drop_dependency(relationstr, package):
     return relationstr
 
 
-def delete_from_list(liststr, item_to_delete):
+def delete_from_list(liststr: str, item_to_delete: str) -> str:
     if not item_to_delete:
         raise ValueError(item_to_delete)
     if isinstance(item_to_delete, str):

@@ -21,6 +21,11 @@ __all__ = [
     'ChangelogParseError',
     'ChangelogCreateError',
     'ChangelogEditor',
+    'changes_sections',
+    'changes_by_author',
+    'changelog_add_entry',
+    'any_long_lines',
+    'rewrap_change',
     ]
 
 from datetime import datetime
@@ -71,6 +76,14 @@ def changes_sections(
         ) -> Iterator[
             Tuple[Optional[str], List[int], List[List[Tuple[int, str]]]]
         ]:
+    """Return the different sections from a set of changelog entries.
+
+    Args:
+      changes: list of changes from a changelog entry
+    Returns:
+      iterator over tuples with:
+        (author, list of line numbers, list of list of (lineno, line) tuples
+    """
     section: Tuple[
         Optional[str], List[int],
         List[List[Tuple[int, str]]]] = (None, [], [])
@@ -161,11 +174,20 @@ def _can_join(line1, line2):
     return True
 
 
-def any_long_lines(lines, width=WIDTH):
+def any_long_lines(lines: List[str], width: int = WIDTH) -> bool:
+    """Check if any lines are longer than the specified width.
+    """
     return any([len(line) > width for line in lines])
 
 
 def rewrap_change(change: List[str]) -> List[str]:
+    """Rewrap lines from a list of changes.
+
+    Args:
+      change: List of lines
+    Returns:
+      new list of lines
+    """
     if not change:
         return change
     m = _initial_re.match(change[0])
@@ -233,6 +255,13 @@ def changelog_add_entry(
         timestamp: Optional[datetime] = None,
         urgency: str = 'low') -> None:
     """Add an entry to a changelog.
+
+    Args:
+      cl: Changelog object to modify
+      summary: List of lines
+      maintainer: maintainer identity to use (defaults to get_maintainer())
+      timestamp: Timestamp to set for new entries
+      urgency: Urgency to use for new items
     """
     if timestamp is None:
         timestamp = datetime.now()
