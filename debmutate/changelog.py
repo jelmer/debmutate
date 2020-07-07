@@ -26,6 +26,7 @@ __all__ = [
     'changelog_add_entry',
     'any_long_lines',
     'rewrap_change',
+    'strip_changelog_message',
     ]
 
 from datetime import datetime
@@ -304,3 +305,32 @@ def changelog_add_entry(
             line = line[len(m.group(0)):]
         cl[0]._changes.extend(TextWrapper(prefix).wrap(line))
     cl[0]._changes.append('')
+
+
+def strip_changelog_message(changes: List[str]) -> List[str]:
+    """Strip a changelog message like debcommit does.
+
+    Takes a list of changes from a changelog entry and applies a transformation
+    so the message is well formatted for a commit message.
+
+    :param changes: a list of lines from the changelog entry
+    :return: another list of lines with blank lines stripped from the start
+        and the spaces the start of the lines split if there is only one
+        logical entry.
+    """
+    if not changes:
+        return changes
+    while changes and changes[-1] == '':
+        changes.pop()
+    while changes and changes[0] == '':
+        changes.pop(0)
+
+    whitespace_column_re = re.compile(r'  |\t')
+    changes = [whitespace_column_re.sub('', line, 1) for line in changes]
+
+    leader_re = re.compile(r'[ \t]*[*+-] ')
+    count = len([l for l in changes if leader_re.match(l)])
+    if count == 1:
+        return [leader_re.sub('', line, 1).lstrip() for line in changes]
+    else:
+        return changes

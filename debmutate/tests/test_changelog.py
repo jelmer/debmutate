@@ -28,6 +28,7 @@ from debmutate.changelog import (
     rewrap_change,
     _inc_version,
     changes_sections,
+    strip_changelog_message,
     )
 
 from debian.changelog import Version
@@ -183,3 +184,44 @@ class ChangesSectionsTests(TestCase):
                 '    rest',
                 '',
                 ])))
+
+
+
+class StripChangelogMessageTests(TestCase):
+
+    def test_None(self):
+        self.assertEqual(strip_changelog_message(None), None)
+
+    def test_no_changes(self):
+        self.assertEqual(strip_changelog_message([]), [])
+
+    def test_empty_changes(self):
+        self.assertEqual(strip_changelog_message(['']), [])
+
+    def test_removes_leading_whitespace(self):
+        self.assertEqual(strip_changelog_message(
+                    ['foo', '  bar', '\tbaz', '   bang']),
+                    ['foo', 'bar', 'baz', ' bang'])
+
+    def test_removes_star_if_one(self):
+        self.assertEqual(strip_changelog_message(['  * foo']), ['foo'])
+        self.assertEqual(strip_changelog_message(['\t* foo']), ['foo'])
+        self.assertEqual(strip_changelog_message(['  + foo']), ['foo'])
+        self.assertEqual(strip_changelog_message(['  - foo']), ['foo'])
+        self.assertEqual(strip_changelog_message(['  *  foo']), ['foo'])
+        self.assertEqual(
+            strip_changelog_message(['  *  foo', '     bar']), ['foo', 'bar'])
+
+    def test_leaves_start_if_multiple(self):
+        self.assertEqual(
+            strip_changelog_message(['  * foo', '  * bar']),
+            ['* foo', '* bar'])
+        self.assertEqual(
+            strip_changelog_message(['  * foo', '  + bar']),
+            ['* foo', '+ bar'])
+        self.assertEqual(
+            strip_changelog_message(
+                ['  * foo', '  bar', '  * baz']),
+            ['* foo', 'bar', '* baz'])
+
+
