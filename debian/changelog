@@ -1,4 +1,4 @@
-debmutate (0.1) unstable; urgency=medium
+debmutate (0.2) unstable; urgency=medium
 
   * Initial release. Closes: #964421
 
