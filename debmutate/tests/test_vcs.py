@@ -22,6 +22,7 @@ from unittest import TestCase
 from debmutate.vcs import (
     split_vcs_url,
     unsplit_vcs_url,
+    mangle_version_for_git,
     )
 
 
@@ -78,3 +79,12 @@ class UnsplitVcsUrlTests(TestCase):
             'https://github.com/jelmer/example -b master',
             unsplit_vcs_url(
                 'https://github.com/jelmer/example', 'master', None))
+
+
+class MangleVersionForGitTests(TestCase):
+
+    def test_replace_tilde(self):
+        self.assertEqual('1.0_1', mangle_version_for_git('1.0~1'))
+
+    def test_normal(self):
+        self.assertEqual('1.0', mangle_version_for_git('1.0'))

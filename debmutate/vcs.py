@@ -66,3 +66,20 @@ def get_vcs_info(control) -> Tuple[
         return ("Hg", repo_url, subpath)
 
     return None, None, None
+
+
+def mangle_version_for_git(version: str) -> str:
+    """Mangle a version string for use in a Git tag.
+
+    Args:
+      version: version string to manipulate
+    Returns: tag name
+    """
+    # See https://dep-team.pages.debian.net/deps/dep14/
+    manipulated = (
+        version.replace("~", "_").replace(':', '%').replace('..', '.#.'))
+    if manipulated.endswith('.'):
+        manipulated += '#'
+    if manipulated.endswith('.lock'):
+        manipulated = manipulated[:-4] + '#lock'
+    return manipulated
