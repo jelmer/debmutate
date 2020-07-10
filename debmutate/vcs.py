@@ -22,6 +22,7 @@ __all__ = [
     'unsplit_vcs_url',
     'get_vcs_info',
     'mangle_version_for_git',
+    'source_package_vcs',
     ]
 
 import re
@@ -105,3 +106,23 @@ def mangle_version_for_git(version: str) -> str:
     if manipulated.endswith('.lock'):
         manipulated = manipulated[:-4] + '#lock'
     return manipulated
+
+
+def source_package_vcs(control) -> Tuple[str, str]:
+    """Extract the Vcs URL from a source package.
+
+    Args:
+      control: A source control paragraph
+    Returns:
+      Tuple with Vcs type and Vcs URL
+    Raises:
+      KeyError: When no Vcs header was found
+    """
+    for prefix in ['Vcs-', 'XS-Vcs-', 'X-Vcs']:
+        for field, value in control.items():
+            if field.startswith(prefix):
+                vcs_type = field[len(prefix):]
+                if vcs_type == 'Browser':
+                    continue
+                return vcs_type, value
+    raise KeyError
