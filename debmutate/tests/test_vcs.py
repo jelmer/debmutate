@@ -23,6 +23,7 @@ from debmutate.vcs import (
     split_vcs_url,
     unsplit_vcs_url,
     mangle_version_for_git,
+    gbp_expand_tag_name,
     )
 
 
@@ -88,3 +89,13 @@ class MangleVersionForGitTests(TestCase):
 
     def test_normal(self):
         self.assertEqual('1.0', mangle_version_for_git('1.0'))
+
+
+class ExpandGbpTagFormatTests(TestCase):
+
+    def test_gbp_tag_format(self):
+        self.assertEqual(
+            'blah-1.0', gbp_expand_tag_name('blah-%(version)s', '1.0'))
+        self.assertEqual(
+            'blah-0.1-1',
+            gbp_expand_tag_name('blah-%(version%~%-)s', '0.1~1'))

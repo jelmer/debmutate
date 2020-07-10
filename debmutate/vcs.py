@@ -23,6 +23,7 @@ __all__ = [
     'get_vcs_info',
     'mangle_version_for_git',
     'source_package_vcs',
+    'gbp_expand_tag_name',
     ]
 
 import re
@@ -126,3 +127,37 @@ def source_package_vcs(control) -> Tuple[str, str]:
                     continue
                 return vcs_type, value
     raise KeyError
+
+
+class GbpTagFormatError(Exception):
+    """Unknown variable in gbp tag name."""
+
+    def __init__(self, tag_name, variable):
+        super(GbpTagFormatError, self).__init__(tag_name, variable)
+        self.variable = variable
+        self.tag_name = tag_name
+
+
+def gbp_expand_tag_name(tag_format: str, version: str) -> str:
+    # See gbp/pkg/pkgpolicy.py in gbp-buildpackage
+    version_mangle_re = (
+        r'%\(version'
+        r'%(?P<M>[^%])'
+        r'%(?P<R>([^%]|\\%))+'
+        r'\)s')
+
+    ret = tag_format
+    m = re.search(version_mangle_re, tag_format)
+    if m:
+        ret = re.sub(version_mangle_re, "%(version)s", tag_format)
+        version = version.replace(
+            m.group('M'), m.group('R').replace(r'\%', '%'))
+
+    vars = {
+        'version': version,
+        'hversion': version.replace('.', '-'),
+        }
+    try:
+        return ret % vars
+    except KeyError as e:
+        raise GbpTagFormatError(tag_format, e.args[0])
