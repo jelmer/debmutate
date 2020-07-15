@@ -27,6 +27,7 @@ __all__ = [
     'any_long_lines',
     'rewrap_change',
     'strip_changelog_message',
+    'new_changelog_entries',
     ]
 
 from datetime import datetime
@@ -329,8 +330,24 @@ def strip_changelog_message(changes: List[str]) -> List[str]:
     changes = [whitespace_column_re.sub('', line, 1) for line in changes]
 
     leader_re = re.compile(r'[ \t]*[*+-] ')
-    count = len([l for l in changes if leader_re.match(l)])
+    count = len([line for line in changes if leader_re.match(line)])
     if count == 1:
         return [leader_re.sub('', line, 1).lstrip() for line in changes]
     else:
         return changes
+
+
+def new_changelog_entries(
+        old_text: List[bytes], new_text: List[bytes]) -> List[str]:
+    import difflib
+    sequencematcher = difflib.SequenceMatcher
+    changes = []
+    for group in sequencematcher(
+            None, old_text, new_text).get_grouped_opcodes(0):
+        j1, j2 = group[0][3], group[-1][4]
+        for line in new_text[j1:j2]:
+            if line.startswith(b"  "):
+                # Debian Policy Manual states that debian/changelog must be
+                # UTF-8
+                changes.append(line.decode('utf-8'))
+    return changes
