@@ -1,10 +1,10 @@
-debmutate (0.3) UNRELEASED; urgency=medium
+debmutate (0.3) unstable; urgency=medium
 
   * Add functions for expanding tags from gbp.conf.
   * Add strip_changelog_message.
   * Add more typing and documentation.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 16 Jul 2020 19:01:49 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 16 Jul 2020 19:02:28 +0000
 
 debmutate (0.2) unstable; urgency=medium
 
