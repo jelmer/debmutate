@@ -30,5 +30,6 @@ debmutate currently provides editors for the following control files:
  * debian/changelog
  * debian/copyright
  * debian/control
+ * debian/patches/series
  * debian/tests/control
  * debian/watch
