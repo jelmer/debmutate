@@ -186,7 +186,6 @@ class ChangesSectionsTests(TestCase):
                 ])))
 
 
-
 class StripChangelogMessageTests(TestCase):
 
     def test_None(self):
@@ -223,5 +222,3 @@ class StripChangelogMessageTests(TestCase):
             strip_changelog_message(
                 ['  * foo', '  bar', '  * baz']),
             ['* foo', 'bar', '* baz'])
-
-
