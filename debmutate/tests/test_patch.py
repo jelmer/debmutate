@@ -91,15 +91,20 @@ class FindCommonPatchSuffixTests(TestCase):
 
 class SeriesTests(TestCaseInTempDir):
 
-    def test_edit_simple(self):
+    def setUp(self):
+        super(SeriesTests, self).setUp()
         self.build_tree_contents([
             ('debian/', ),
-            ('debian/patches/', ),
+            ('debian/patches/', )])
+
+    def test_edit_simple(self):
+        self.build_tree_contents([
             ('debian/patches/series', """\
 patch1
 patch2
 """)])
         with QuiltSeriesEditor() as editor:
+            self.assertEqual(['patch1', 'patch2'], list(editor.patches()))
             editor.append('patch3')
         self.assertFileEqual("""\
 patch1
@@ -109,16 +114,32 @@ patch3
 
     def test_edit_comment(self):
         self.build_tree_contents([
-            ('debian/', ),
-            ('debian/patches/', ),
             ('debian/patches/series', """\
 # patch1
 patch2
 """)])
         with QuiltSeriesEditor() as editor:
+            self.assertEqual(['patch2'], list(editor.patches()))
             editor.append('patch3')
+            self.assertEqual(
+                ['patch2', 'patch3'], list(editor.patches()))
         self.assertFileEqual("""\
 # patch1
 patch2
 patch3
+""", 'debian/patches/series')
+
+    def test_remove(self):
+        self.build_tree_contents([
+            ('debian/patches/series', """\
+# patch1
+patch2
+""")])
+        with QuiltSeriesEditor() as editor:
+            self.assertEqual(['patch2'], list(editor.patches()))
+            self.assertRaises(KeyError, editor.remove, 'patch3')
+            editor.remove('patch2')
+            self.assertEqual([], list(editor.patches()))
+        self.assertFileEqual("""\
+# patch1
 """, 'debian/patches/series')
