@@ -19,11 +19,15 @@
 
 from io import BytesIO
 
-from . import TestCase
+from . import (
+    TestCase,
+    TestCaseInTempDir,
+    )
 
 from ..patch import (
     find_common_patch_suffix,
     read_quilt_series,
+    QuiltSeriesEditor,
     )
 
 
@@ -83,3 +87,38 @@ class FindCommonPatchSuffixTests(TestCase):
         self.assertEqual(
             '.patch',
             find_common_patch_suffix(['series', 'foo.patch', 'bar.patch']))
+
+
+class SeriesTests(TestCaseInTempDir):
+
+    def test_edit_simple(self):
+        self.build_tree_contents([
+            ('debian/', ),
+            ('debian/patches/', ),
+            ('debian/patches/series', """\
+patch1
+patch2
+""")])
+        with QuiltSeriesEditor() as editor:
+            editor.append('patch3')
+        self.assertFileEqual("""\
+patch1
+patch2
+patch3
+""", 'debian/patches/series')
+
+    def test_edit_comment(self):
+        self.build_tree_contents([
+            ('debian/', ),
+            ('debian/patches/', ),
+            ('debian/patches/series', """\
+# patch1
+patch2
+""")])
+        with QuiltSeriesEditor() as editor:
+            editor.append('patch3')
+        self.assertFileEqual("""\
+# patch1
+patch2
+patch3
+""", 'debian/patches/series')
