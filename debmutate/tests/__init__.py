@@ -70,6 +70,7 @@ def test_suite():
         'control',
         'deb822',
         'debhelper',
+        'lintian_overrides',
         'patch',
         'reformatting',
         'vcs',
