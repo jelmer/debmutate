@@ -43,15 +43,22 @@ class LintianOverride(object):
         self.tag = tag
         self.info = info
 
-    def matches(self, package: Optional[str], tag: Optional[str],
-                info: Optional[str], arch: Optional[str]) -> bool:
-        if (self.package is not None and
-                package is not None and
+    def __repr__(self):
+        return "%s(package=%r, archlist=%r, type=%r, tag=%r, info=%r)" % (
+            type(self).__name__, self.package, self.archlist, self.type,
+            self.tag, self.info)
+
+    def matches(self, package: Optional[str] = None, tag: Optional[str] = None,
+                info: Optional[str] = None, arch: Optional[str] = None,
+                type: Optional[str] = None) -> bool:
+        if (self.package is not None and package is not None and
                 self.package != package):
+            return False
+        if self.type is not None and type is not None and self.type != type:
             return False
         if self.tag is not None and tag is not None and self.tag != tag:
             return False
-        if self.info is not None and self.info and info != self.info:
+        if self.info is not None and info is not None and info != self.info:
             return False
         if self.archlist and arch is not None and arch not in self.archlist:
             return False
