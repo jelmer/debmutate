@@ -178,3 +178,13 @@ def serialize_override(override):
     if override.info:
         line += ' ' + override.info
     return line + '\n'
+
+
+def iter_overrides(f):
+    """Iterate over overrides in a file.
+    """
+    for line in f.readlines():
+        if line.startswith('#') or not line.strip():
+            pass
+        else:
+            yield parse_override(line)

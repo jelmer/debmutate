@@ -22,9 +22,12 @@ from . import (
     TestCaseInTempDir,
     )
 
+from io import StringIO
+
 from ..lintian_overrides import (
     LintianOverride,
     LintianOverridesEditor,
+    iter_overrides,
     parse_override,
     serialize_override,
     )
@@ -74,6 +77,15 @@ class ParseOverrideTests(TestCase):
         self.assertEqual(
             LintianOverride(tag='sometag', archlist=['i386', 'amd64']),
             parse_override('[i386 amd64]: sometag\n'))
+
+    def test_iter_overrides(self):
+        self.assertEqual([
+            LintianOverride(tag='sometag', archlist=['i386', 'amd64']),
+            LintianOverride(tag='anothertag', info='optional-extra')],
+            list(iter_overrides(StringIO("""
+[i386 amd64]: sometag
+anothertag optional-extra
+"""))))
 
 
 class SerializeOverrideTests(TestCase):
