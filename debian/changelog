@@ -1,8 +1,8 @@
-debmutate (0.4) UNRELEASED; urgency=medium
+debmutate (0.4) unstable; urgency=medium
 
   * Add debmutate.lintian_overrides module.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 27 Jul 2020 19:09:02 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 27 Jul 2020 20:28:33 +0000
 
 debmutate (0.3) unstable; urgency=medium
 
