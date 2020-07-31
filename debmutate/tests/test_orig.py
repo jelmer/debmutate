@@ -54,5 +54,3 @@ class ComponentFromOrigTarballTests(TestCase):
         self.assertRaises(
             ValueError,
             component_from_orig_tarball, "foo_0.1.orig;.tar.gz", "foo", "0.1")
-
-
