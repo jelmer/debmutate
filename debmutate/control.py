@@ -295,6 +295,7 @@ class ControlEditor(object):
                 if os.path.exists(template_path):
                     self.changed = _update_control_template(
                         template_path, self.path, self.changes())
+                    break
             else:
                 raise
         else:
