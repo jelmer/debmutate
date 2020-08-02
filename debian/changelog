@@ -1,3 +1,9 @@
+debmutate (0.5) UNRELEASED; urgency=medium
+
+  * Support updating debian/control from a debian/rules rule.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 02 Aug 2020 02:06:42 +0000
+
 debmutate (0.4) unstable; urgency=medium
 
   * Add debmutate.lintian_overrides module.

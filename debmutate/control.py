@@ -80,6 +80,15 @@ def pg_buildext_updatecontrol(path: str = '.') -> None:
     subprocess.check_call(["pg_buildext", "updatecontrol"], cwd=path)
 
 
+def rules_generate_control(path: str = '.') -> None:
+    """Update/generate debian/control using debian/rules.
+
+    Args:
+      path: package root
+    """
+    subprocess.check_call(['./debian/rules', '-f', 'debian/control'])
+
+
 def guess_template_type(template_path: str) -> Optional[str]:
     """Guess the type for a control template.
 
@@ -137,7 +146,7 @@ def _cdbs_resolve_conflict(
 
 def _update_control_template(template_path: str, path: str, changes):
     template_type = guess_template_type(template_path)
-    if template_type is None or template_type == 'rules':
+    if template_type is None:
         raise GeneratedFile(path, template_path)
     with Deb822Editor(template_path) as updater:
         resolve_conflict: Optional[Callable[[
@@ -165,6 +174,8 @@ def _update_control_template(template_path: str, path: str, changes):
                 inf.read().replace(b'@lintian-brush-test@', b'testvalue'))
     elif template_type == 'directory':
         raise GeneratedFile(path, template_path)
+    elif template_type == 'rules':
+        rules_generate_control(package_root)
     else:
         raise AssertionError
     return True
