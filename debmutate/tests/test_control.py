@@ -32,6 +32,7 @@ from ..control import (
     ensure_minimum_version,
     ensure_some_version,
     get_relation,
+    guess_template_type,
     iter_relations,
     is_relation_implied,
     is_dep_implied,
@@ -190,10 +191,12 @@ Uploaders: @sometest@
 #!/usr/bin/make -f
 
 debian/control: debian/control.in
-\tsed -e's/@sometest@/testvalue/' < debian/control.in > debian/control
+\tsed -e's/@sometest@/testvalue/' \
+        < debian/control.in > debian/control
 """)])
         os.chmod('debian/rules', 0o755)
 
+        self.assertEqual('rules', guess_template_type('debian/control.in'))
         with ControlEditor() as updater:
             updater.source['Testsuite'] = 'autopkgtest8'
             updater.changes()
@@ -624,13 +627,17 @@ class IsRelationImpliedTests(TestCase):
 
 class RulesGenerateControlTests(TestCaseInTempDir):
 
-    def test_simple(self):
+    def setUp(self):
+        super(RulesGenerateControlTests, self).setUp()
         self.build_tree_contents([('debian/', ), ('debian/control.in', """\
 Source: blah
 
 Package: blah-@FOO@
 
-"""), ('debian/rules', """\
+""")])
+
+    def test_simple(self):
+        self.build_tree_contents([('debian/rules', """\
 #!/usr/bin/make -f
 
 debian/control: debian/control.in
@@ -645,3 +652,24 @@ Source: blah
 Package: blah-bar
 
 """, 'debian/control')
+
+    def test_updates_other_targets(self):
+        self.build_tree_contents([('debian/rules', """\
+#!/usr/bin/make -f
+
+foo:
+\ttouch foo
+
+debian/control: debian/control.in foo
+\tsed -e 's/@FOO@/bar/' < debian/control.in > debian/control
+
+""")])
+        os.chmod('debian/rules', 0o755)
+        rules_generate_control('.')
+        self.assertFileEqual("""\
+Source: blah
+
+Package: blah-bar
+
+""", 'debian/control')
+        self.assertFalse(os.path.exists('foo'))
