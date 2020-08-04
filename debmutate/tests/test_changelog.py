@@ -29,6 +29,7 @@ from debmutate.changelog import (
     _inc_version,
     changes_sections,
     strip_changelog_message,
+    new_upstream_package_version,
     )
 
 from debian.changelog import Version
@@ -222,3 +223,31 @@ class StripChangelogMessageTests(TestCase):
             strip_changelog_message(
                 ['  * foo', '  bar', '  * baz']),
             ['* foo', 'bar', '* baz'])
+
+
+class TestNewUpstreamPackageVersion(TestCase):
+
+    def test_simple_debian(self):
+        self.assertEquals(
+            Version("1.2-1"),
+            new_upstream_package_version("1.2", "debian"))
+
+    def test_simple_ubuntu(self):
+        self.assertEquals(
+            Version("1.2-0ubuntu1"),
+            new_upstream_package_version("1.2", "ubuntu"))
+
+    def test_debian_with_dash(self):
+        self.assertEquals(
+            Version("1.2-0ubuntu1-1"),
+            new_upstream_package_version("1.2-0ubuntu1", "debian"))
+
+    def test_ubuntu_with_dash(self):
+        self.assertEquals(
+            Version("1.2-1-0ubuntu1"),
+            new_upstream_package_version("1.2-1", "ubuntu"))
+
+    def test_ubuntu_with_epoch(self):
+        self.assertEquals(
+            Version("3:1.2-1-0ubuntu1"),
+            new_upstream_package_version("1.2-1", "ubuntu", "3"))

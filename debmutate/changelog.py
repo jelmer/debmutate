@@ -351,3 +351,23 @@ def new_changelog_entries(
                 # UTF-8
                 changes.append(line.decode('utf-8'))
     return changes
+
+
+def new_upstream_package_version(
+        upstream_version: str, distribution_name: str,
+        epoch: Optional[str] = None) -> Version:
+    """Determine the package version for a new upstream.
+
+    Args:
+      upstream_version: Upstream version string
+      distribution_name: Distribution the package is for
+      epoch: Optional epoch
+    Returns:
+      The new version
+    """
+    if distribution_name == "ubuntu":
+        ret = Version("%s-0ubuntu1" % upstream_version)
+    else:
+        ret = Version("%s-1" % upstream_version)
+    ret.epoch = epoch
+    return ret
