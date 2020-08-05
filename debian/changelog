@@ -1,3 +1,10 @@
+debmutate (0.5) UNRELEASED; urgency=medium
+
+  * Deal with some more conflicts when editing cdbs templated control
+    files.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 05 Aug 2020 18:47:55 +0000
+
 debmutate (0.4) unstable; urgency=medium
 
   * Add debmutate.lintian_overrides module.

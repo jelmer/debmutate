@@ -24,6 +24,7 @@ from . import (
     )
 
 from ..control import (
+    _cdbs_resolve_conflict,
     add_dependency,
     drop_dependency,
     ensure_exact_version,
@@ -581,3 +582,16 @@ class IsRelationImpliedTests(TestCase):
         self.assertTrue(is_relation_implied('bzr', 'bzr'))
         self.assertTrue(is_relation_implied('bzr | foo', 'bzr'))
         self.assertFalse(is_relation_implied('bzr (= 3)', 'bzr (>= 3)'))
+
+
+class CdbsResolverConflictTests(TestCase):
+
+    def test_build_depends(self):
+        val = _cdbs_resolve_conflict(
+            ('Source', 'libnetsds-perl'), 'Build-Depends', '@cdbs@',
+            'debhelper (>= 6), foo', 'debhelper (>= 10), foo')
+        self.assertEqual(val, '@cdbs@, debhelper (>= 10)')
+        val = _cdbs_resolve_conflict(
+            ('Source', 'libnetsds-perl'), 'Build-Depends', '@cdbs@, foo',
+            'debhelper (>= 6), foo', 'debhelper (>= 10), foo')
+        self.assertEqual(val, '@cdbs@, foo, debhelper (>= 10)')

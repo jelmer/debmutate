@@ -127,9 +127,20 @@ def _cdbs_resolve_conflict(
     if (para_key[0] == 'Source' and field == 'Build-Depends' and
             expected_old_value is not None and
             new_value is not None and
-            actual_old_value is not None and
-            expected_old_value in new_value):
-        return new_value.replace(expected_old_value, actual_old_value)
+            actual_old_value is not None):
+        if expected_old_value in new_value:
+            return new_value.replace(expected_old_value, actual_old_value)
+        else:
+            def f(v):
+                return '|'.join(map(str, v))
+
+            existing = set(f(v[1]) for v in parse_relations(actual_old_value))
+            ret = expected_old_value
+            for _, v, _ in parse_relations(new_value):
+                if f(v) in existing:
+                    continue
+                ret = add_dependency(ret, v)
+            return ret
     raise ChangeConflict(
         para_key, field, expected_old_value, actual_old_value,
         new_value)
