@@ -588,10 +588,10 @@ class CdbsResolverConflictTests(TestCase):
 
     def test_build_depends(self):
         val = _cdbs_resolve_conflict(
-            ('Source', 'libnetsds-perl'), 'Build-Depends', '@cdbs@',
-            'debhelper (>= 6), foo', 'debhelper (>= 10), foo')
+            ('Source', 'libnetsds-perl'), 'Build-Depends',
+            'debhelper (>= 6), foo', '@cdbs@', 'debhelper (>= 10), foo')
         self.assertEqual(val, '@cdbs@, debhelper (>= 10)')
         val = _cdbs_resolve_conflict(
-            ('Source', 'libnetsds-perl'), 'Build-Depends', '@cdbs@, foo',
-            'debhelper (>= 6), foo', 'debhelper (>= 10), foo')
+            ('Source', 'libnetsds-perl'), 'Build-Depends',
+            'debhelper (>= 6), foo', '@cdbs@, foo', 'debhelper (>= 10), foo')
         self.assertEqual(val, '@cdbs@, foo, debhelper (>= 10)')

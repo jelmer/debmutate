@@ -134,8 +134,9 @@ def _cdbs_resolve_conflict(
             def f(v):
                 return '|'.join(map(str, v))
 
-            existing = set(f(v[1]) for v in parse_relations(actual_old_value))
-            ret = expected_old_value
+            existing = set(
+                f(v[1]) for v in parse_relations(expected_old_value))
+            ret = actual_old_value
             for _, v, _ in parse_relations(new_value):
                 if f(v) in existing:
                     continue
