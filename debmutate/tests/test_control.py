@@ -30,6 +30,7 @@ from ..control import (
     ensure_exact_version,
     ensure_minimum_version,
     ensure_some_version,
+    ensure_relation,
     get_relation,
     iter_relations,
     is_relation_implied,
@@ -310,6 +311,48 @@ class EnsureMinimumVersionTests(TestCase):
             ensure_minimum_version(
                 'blah, debhelper (>= 8), debhelper (>= 10) | dh-systemd',
                 'debhelper', '9'))
+
+
+class EnsureRelationTests(TestCase):
+
+    def test_added(self):
+        self.assertEqual(
+            'debhelper (>= 9)', ensure_relation('', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'blah, debhelper (>= 9)',
+            ensure_relation('blah', 'debhelper (>= 9)'))
+
+    def test_unchanged(self):
+        self.assertEqual(
+            'debhelper (>= 9)', ensure_relation(
+                'debhelper (>= 9)', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'debhelper (= 9)', ensure_relation(
+                'debhelper (= 9)', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'debhelper (>= 9)', ensure_relation(
+                'debhelper (>= 9)', 'debhelper (>= 9~)'))
+
+    def test_updated(self):
+        self.assertEqual(
+            'debhelper (>= 9)',
+            ensure_relation('debhelper', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'blah, debhelper (>= 9)',
+            ensure_relation('blah, debhelper', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'blah, debhelper (>= 9)',
+            ensure_relation('blah, debhelper (>= 8)', 'debhelper (>= 9)'))
+        self.assertEqual(
+            'blah, debhelper (>= 9)',
+            ensure_relation(
+                'blah, debhelper (>= 8), debhelper (>= 8.1) | dh-systemd',
+                'debhelper (>= 9)'))
+        self.assertEqual(
+            'blah, debhelper (>= 9), debhelper (>= 10) | dh-systemd',
+            ensure_relation(
+                'blah, debhelper (>= 8), debhelper (>= 10) | dh-systemd',
+                'debhelper (>= 9)'))
 
 
 class EnsureSomeVersionTests(TestCase):

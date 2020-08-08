@@ -505,7 +505,7 @@ def ensure_exact_version(
 
 
 def ensure_relation(
-        relationstr, new_relation: List[PkgRelation],
+        relationstr: str, new_relationstr: Union[str, List[PkgRelation]],
         position: Optional[int] = None) -> str:
     """Ensure that a relation exists.
 
@@ -513,18 +513,30 @@ def ensure_relation(
     relation that satisfies the specified relation, or
     by upgrading an existing relation.
     """
+    if isinstance(new_relationstr, str):
+        new_relation = PkgRelation.parse(new_relationstr)
+    else:
+        new_relation = new_relationstr
     relations = parse_relations(relationstr)
+    added = False
+    to_remove = []
     for i, (head_whitespace, relation, tail_whitespace) in enumerate(
             relations):
         if isinstance(relation, str):  # formatting
             continue
         if is_relation_implied(new_relation, relation):
-            return relations
+            return relationstr
         if is_relation_implied(relation, new_relation):
-            relations[i] = (relations[i][0], new_relation, relations[i][2])
-            break
-    else:
+            if added:
+                to_remove.append(i)
+            else:
+                relations[i] = (relations[i][0], new_relation, relations[i][2])
+                added = True
+    if not added:
         _add_dependency(relations, new_relation)
+
+    for i in reversed(to_remove):
+        del relations[i]
 
     return format_relations(relations)
 
