@@ -94,14 +94,15 @@ class Deb822Editor(Editor):
           changes: dict mapping paragraph types to
               list of (field_name, old_value, new_value)
             resolve_conflict: callback that receives
-                (para_key, field, expected_old_value, actual_old_value,
-                 new_value) and returns a new value
+                (para_key, field, actual_old_value, template_old_value,
+                 actual_new_value) and returns a new template value
         """
-        def _default_resolve_conflict(para_key, field, expected_old_value,
-                                      actual_old_value, new_value):
+        def _default_resolve_conflict(
+                para_key, field, actual_old_value,
+                template_old_value, actual_new_value):
             raise ChangeConflict(
-                para_key, field, expected_old_value, actual_old_value,
-                new_value)
+                para_key, field, actual_old_value, template_old_value,
+                actual_new_value)
 
         if resolve_conflict is None:
             resolve_conflict = _default_resolve_conflict
