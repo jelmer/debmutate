@@ -42,7 +42,7 @@ import collections
 import contextlib
 from itertools import takewhile
 import os
-from typing import Optional, Callable, Tuple, Union, List, Iterable
+from typing import Optional, Callable, Tuple, Union, List, Iterable, Dict
 
 from debian.changelog import Version
 from debian.deb822 import Deb822
@@ -121,30 +121,29 @@ def guess_template_type(template_path: str) -> Optional[str]:
 def _cdbs_resolve_conflict(
         para_key: str,
         field: str,
-        expected_old_value: Optional[str],
         actual_old_value: Optional[str],
-        new_value: Optional[str]) -> Optional[str]:
+        template_old_value: Optional[str],
+        actual_new_value: Optional[str]
+        ) -> Optional[str]:
     if (para_key[0] == 'Source' and field == 'Build-Depends' and
-            expected_old_value is not None and
-            new_value is not None and
-            actual_old_value is not None):
-        if expected_old_value in new_value:
-            return new_value.replace(expected_old_value, actual_old_value)
+            template_old_value is not None and
+            actual_old_value is not None and
+            actual_new_value is not None):
+        if actual_old_value in actual_new_value:
+            # We're simply adding to the existing list
+            return actual_new_value.replace(
+                actual_old_value, template_old_value)
         else:
-            def f(v):
-                return '|'.join(map(str, v))
-
-            existing = set(
-                f(v[1]) for v in parse_relations(expected_old_value))
-            ret = actual_old_value
-            for _, v, _ in parse_relations(new_value):
-                if f(v) in existing:
+            existing = [v[1] for v in parse_relations(actual_old_value)]
+            ret = template_old_value
+            for _, v, _ in parse_relations(actual_new_value):
+                if any(is_relation_implied(v, r) for r in existing):
                     continue
-                ret = add_dependency(ret, v)
+                ret = ensure_relation(ret, v)
             return ret
     raise ChangeConflict(
-        para_key, field, expected_old_value, actual_old_value,
-        new_value)
+        para_key, field, actual_old_value, template_old_value,
+        actual_new_value)
 
 
 def _update_control_template(template_path: str, path: str, changes):
@@ -505,7 +504,35 @@ def ensure_exact_version(
     return relationstr
 
 
-def _add_dependency(relations, relation, position=None):
+def ensure_relation(
+        relationstr, new_relation: List[PkgRelation],
+        position: Optional[int] = None) -> str:
+    """Ensure that a relation exists.
+
+    This is done by either verifying that there is an existing
+    relation that satisfies the specified relation, or
+    by upgrading an existing relation.
+    """
+    relations = parse_relations(relationstr)
+    for i, (head_whitespace, relation, tail_whitespace) in enumerate(
+            relations):
+        if isinstance(relation, str):  # formatting
+            continue
+        if is_relation_implied(new_relation, relation):
+            return relations
+        if is_relation_implied(relation, new_relation):
+            relations[i] = (relations[i][0], new_relation, relations[i][2])
+            break
+    else:
+        _add_dependency(relations, new_relation)
+
+    return format_relations(relations)
+
+
+def _add_dependency(
+        relations: List[Tuple[str, List[PkgRelation], str]],
+        relation: List[PkgRelation],
+        position: Optional[int] = None) -> None:
     """Add a dependency to a depends line.
 
     Args:
@@ -516,6 +543,7 @@ def _add_dependency(relations, relation, position=None):
       Nothing
     """
     if len(relations) > 0 and not relations[-1][1]:
+        pointless_tail: Optional[Tuple[str, List[PkgRelation], str]]
         pointless_tail = relations.pop(-1)
     else:
         pointless_tail = None
@@ -526,14 +554,14 @@ def _add_dependency(relations, relation, position=None):
         head_whitespace = (relations[0][0] or " ")  # Best guess
         tail_whitespace = ''
     else:
-        hws = collections.defaultdict(lambda: 0)
+        hws: Dict[str, int] = collections.defaultdict(lambda: 0)
         for r in relations[1:]:
             hws[r[0]] += 1
         if len(hws) == 1:
             head_whitespace = list(hws.keys())[0]
         else:
             head_whitespace = relations[-1][0]  # Best guess
-        tws = collections.defaultdict(lambda: 0)
+        tws: Dict[str, int] = collections.defaultdict(lambda: 0)
         for r in relations[0:-1]:
             tws[r[2]] += 1
         if len(tws) == 1:
