@@ -746,6 +746,22 @@ def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
             return Version(outer.version[1]) == Version(dep.version[1])
         else:
             return False
+    elif dep.version[0] == '<<':
+        if outer.version[0] == '<<':
+            return Version(outer.version[1]) <= Version(dep.version[1])
+        if outer.version[0] in ('<=', '='):
+            return Version(outer.version[1]) < Version(dep.version[1])
+        elif outer.version[0] in ('>>', '>='):
+            return False
+        else:
+            raise AssertionError('unsupported: %s' % outer.version[0])
+    elif dep.version[0] == '<=':
+        if outer.version[0] in ('<=', '=', '<<'):
+            return Version(outer.version[1]) <= Version(dep.version[1])
+        elif outer.version[0] in ('>>', '>='):
+            return False
+        else:
+            raise AssertionError('unsupported: %s' % outer.version[0])
     else:
         raise AssertionError('unable to handle checks for %s' % dep.version[0])
 
