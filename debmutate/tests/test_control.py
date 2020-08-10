@@ -41,6 +41,7 @@ from ..control import (
     parse_relations,
     delete_from_list,
     ControlEditor,
+    parse_standards_version,
     )
 from ..reformatting import (
     GeneratedFile,
@@ -662,3 +663,9 @@ class CdbsResolverConflictTests(TestCase):
             'debhelper (>= 6), foo', '@cdbs@, debhelper (>= 9)',
             'debhelper (>= 10), foo')
         self.assertEqual(val, '@cdbs@, debhelper (>= 10)')
+
+
+class ParseStandardsVersionTests(TestCase):
+
+    def test_parse(self):
+        self.assertEqual((4, 5, 0), parse_standards_version('4.5.0'))

@@ -36,6 +36,7 @@ __all__ = [
     'delete_from_list',
     'is_dep_implied',
     'is_relation_implied',
+    'parse_standards_version',
     ]
 
 import collections
@@ -794,3 +795,13 @@ def is_relation_implied(
                for outer_dep in outer_rel):
             return True
     return False
+
+
+def parse_standards_version(v: str) -> Tuple[int, ...]:
+    """Parse a standards version.
+
+    Args:
+      v: Version string
+    Returns: Tuple with version
+    """
+    return tuple([int(k) for k in v.split('.')])
