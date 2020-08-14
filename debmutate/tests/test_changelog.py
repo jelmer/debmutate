@@ -17,6 +17,7 @@
 
 """Tests for lintian_brush.changelog."""
 
+from debian.changelog import Changelog
 import os
 import shutil
 import tempfile
@@ -25,6 +26,7 @@ from debmutate.changelog import (
     ChangelogCreateError,
     ChangelogEditor,
     TextWrapper,
+    all_sha_prefixed,
     rewrap_change,
     _inc_version,
     changes_sections,
@@ -251,3 +253,34 @@ class TestNewUpstreamPackageVersion(TestCase):
         self.assertEquals(
             Version("3:1.2-1-0ubuntu1"),
             new_upstream_package_version("1.2-1", "ubuntu", "3"))
+
+
+class AllShaPrefixedTests(TestCase):
+
+    def test_no_prefix(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        self.assertFalse(all_sha_prefixed(cl[0]))
+
+    def test_empty(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        self.assertFalse(all_sha_prefixed(cl[0]))
+
+    def test_prefixed(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        self.assertTrue(all_sha_prefixed(cl[0]))

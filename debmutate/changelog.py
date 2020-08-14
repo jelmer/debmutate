@@ -24,6 +24,7 @@ __all__ = [
     'changes_sections',
     'changes_by_author',
     'changelog_add_entry',
+    'all_sha_prefixed',
     'any_long_lines',
     'rewrap_change',
     'strip_changelog_message',
@@ -371,3 +372,23 @@ def new_upstream_package_version(
         ret = Version("%s-1" % upstream_version)
     ret.epoch = epoch
     return ret
+
+
+def all_sha_prefixed(cl: Changelog) -> bool:
+    """Check if all lines in a changelog entry are prefixed with a sha.
+
+    This is generally done by gbp-dch(1).
+
+    Args:
+      cl: Changelog entry
+    Returns: bool
+    """
+    sha_prefixed = 0
+    for change in cl.changes():
+        if not change.startswith('  * '):
+            continue
+        if re.match(r'  \* \[[0-9a-f]{7}\] ', change):
+            sha_prefixed += 1
+        else:
+            return False
+    return (sha_prefixed > 0)
