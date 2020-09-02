@@ -66,6 +66,8 @@ def dh_gnome_clean(path: str = '.') -> None:
     for n in os.listdir(os.path.join(path, 'debian')):
         if n.endswith('.debhelper.log'):
             raise AssertionError('pre-existing .debhelper.log files')
+    if not os.path.exists(os.path.join(path, 'debian/changelog')):
+        raise AssertionError('no changelog file in %s' % path)
     subprocess.check_call(["dh_gnome_clean"], cwd=path)
     for n in os.listdir(os.path.join(path, 'debian')):
         if n.endswith('.debhelper.log'):
