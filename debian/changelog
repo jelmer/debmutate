@@ -1,10 +1,10 @@
-debmutate (0.5) UNRELEASED; urgency=medium
+debmutate (0.5) unstable; urgency=medium
 
   * Deal with some more conflicts when editing cdbs templated control
     files.
   * debmutate.changelog: Add all_sha_prefixed.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 05 Aug 2020 18:47:55 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 02 Sep 2020 17:34:18 +0000
 
 debmutate (0.4) unstable; urgency=medium
 
