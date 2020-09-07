@@ -99,14 +99,23 @@ class QuiltSeriesEditor(Editor):
     def _parse(self, content):
         return list(read_quilt_series(content.splitlines(True)))
 
+    def _nonexistant(self):
+        return None
+
     def _format(self, parsed):
+        if parsed is None:
+            return None
         # TODO(jelmer): Support formatting comments and options
         return b''.join(write_quilt_series(parsed))
 
     def append(self, name, options=[]):
+        if self._parsed is None:
+            self._parsed = []
         self._parsed.append(QuiltSeriesEntry(name, False, options))
 
     def patches(self):
+        if self._parsed is None:
+            return
         for entry in self._parsed:
             if not entry.quoted:
                 yield entry.name

@@ -107,7 +107,8 @@ def edit_formatted_file(
       allow_generated: Do not raise GeneratedFile when encountering a generated
         file
     """
-    if type(updated_contents) != type(rewritten_contents):
+    if (updated_contents is not None and rewritten_contents is not None and
+            type(updated_contents) != type(rewritten_contents)):
         raise TypeError('inconsistent types: %r, %r' % (
             type(updated_contents), type(rewritten_contents)))
     if updated_contents in (rewritten_contents, original_contents):
@@ -115,8 +116,10 @@ def edit_formatted_file(
     if not allow_generated:
         check_generated_file(path)
     check_preserve_formatting(
-            rewritten_contents.strip(),
-            original_contents.strip(), path)
+            rewritten_contents.strip()
+            if rewritten_contents is not None else None,
+            original_contents.strip()
+            if original_contents is not None else None, path)
     mode = 'w' + ('b' if isinstance(updated_contents, bytes) else '')
     with open(path, mode) as f:
         f.write(updated_contents)
@@ -149,6 +152,7 @@ class Editor(object):
             with open(self.path, 'r' + self.mode) as f:
                 self._orig_content = f.read()
         except FileNotFoundError:
+            self._orig_content = None
             self._parsed = self._nonexistant()
         else:
             self._parsed = self._parse(self._orig_content)

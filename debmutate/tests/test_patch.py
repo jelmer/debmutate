@@ -18,6 +18,7 @@
 """Tests for debmutate.patch."""
 
 from io import BytesIO
+import os
 
 from . import (
     TestCase,
@@ -96,6 +97,16 @@ class SeriesTests(TestCaseInTempDir):
         self.build_tree_contents([
             ('debian/', ),
             ('debian/patches/', )])
+
+    def test_edit_nonexistant(self):
+        with QuiltSeriesEditor():
+            pass
+        self.assertFalse(os.path.exists('debian/patches/series'))
+        with QuiltSeriesEditor() as editor:
+            editor.append('patch1')
+        self.assertFileEqual("""\
+patch1
+""", 'debian/patches/series')
 
     def test_edit_simple(self):
         self.build_tree_contents([
