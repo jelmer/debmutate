@@ -25,6 +25,9 @@ from typing import Iterator, List
 from .reformatting import Editor
 
 
+DEFAULT_DEBIAN_PATCHES_DIR = 'debian/patches'
+
+
 QuiltSeriesEntry = namedtuple(
     'QuiltSeriesEntry', ['name', 'quoted', 'options'])
 

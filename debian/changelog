@@ -1,3 +1,9 @@
+debmutate (0.6) UNRELEASED; urgency=medium
+
+  * Various improvements to quilt patch editing.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 08 Sep 2020 00:53:03 +0000
+
 debmutate (0.5) unstable; urgency=medium
 
   * Deal with some more conflicts when editing cdbs templated control
