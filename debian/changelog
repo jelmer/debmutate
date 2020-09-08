@@ -1,8 +1,8 @@
-debmutate (0.6) UNRELEASED; urgency=medium
+debmutate (0.6) unstable; urgency=medium
 
   * Various improvements to quilt patch editing.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 08 Sep 2020 00:53:03 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 08 Sep 2020 01:10:00 +0000
 
 debmutate (0.5) unstable; urgency=medium
 
