@@ -1,8 +1,8 @@
-debmutate (0.7) UNRELEASED; urgency=medium
+debmutate (0.7) unstable; urgency=medium
 
   * Do not accidentally add empty lines in control files.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 12 Sep 2020 15:39:20 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 12 Sep 2020 15:39:34 +0000
 
 debmutate (0.6) unstable; urgency=medium
 
