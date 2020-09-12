@@ -250,8 +250,11 @@ class FormatRelationsTests(TestCase):
                 '',
                 format_relations([('', [], '')]))
         self.assertEqual(
-                '\n',
+                '',
                 format_relations([('', [], '\n')]))
+        self.assertEqual(
+                '',
+                format_relations([('\n ', [], '')]))
 
     def test_simple(self):
         self.assertEqual(
@@ -263,7 +266,7 @@ class FormatRelationsTests(TestCase):
         self.assertEqual(
                 format_relations(
                     [('  \n', [PkgRelation('debhelper')], ' \n')]),
-                '  \ndebhelper \n')
+                '  \ndebhelper ')
 
     def test_multiple(self):
         self.assertEqual(
@@ -455,8 +458,7 @@ class AddDependencyTests(TestCase):
  bar""", 'blah'))
         self.assertEqual("""foo,
  bar,
- blah
-""", add_dependency("""foo,
+ blah""", add_dependency("""foo,
  bar
 """, 'blah'))
 
@@ -474,16 +476,14 @@ class AddDependencyTests(TestCase):
         self.assertEqual("""
  foo
  , bar
- , blah
-""", add_dependency("""
+ , blah""", add_dependency("""
  foo
  , bar
 """, 'blah'))
         self.assertEqual("""
  foo
  , blah
- , bar
-""", add_dependency("""
+ , bar""", add_dependency("""
  foo
  , bar
 """, 'blah', position=1))

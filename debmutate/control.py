@@ -365,7 +365,15 @@ def format_relations(
     for (head_whitespace, relation, tail_whitespace) in relations:
         ret.append(head_whitespace + ' | '.join(o.str() for o in relation) +
                    tail_whitespace)
-    return ','.join(ret)
+    # The first line can be whitespace only, the subsequent ones can not
+    lines = []
+    for i, line in enumerate(','.join(ret).split('\n')):
+        if i == 0:
+            lines.append(line)
+        else:
+            if line.strip():
+                lines.append(line)
+    return '\n'.join(lines)
 
 
 def get_relation(
