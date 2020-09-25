@@ -1,3 +1,9 @@
+debmutate (0.8) UNRELEASED; urgency=medium
+
+  * Add support for parsing maintscript files.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 25 Sep 2020 17:38:02 +0000
+
 debmutate (0.7) unstable; urgency=medium
 
   * Do not accidentally add empty lines in control files.

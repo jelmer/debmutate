@@ -24,6 +24,7 @@ __all__ = [
     'get_debhelper_compat_level',
     ]
 
+from dataclasses import dataclass
 import os
 from typing import Optional, Union
 
@@ -32,6 +33,7 @@ from debian.deb822 import Deb822
 from debian.changelog import Version
 
 from .control import ensure_minimum_version, get_relation
+from .reformatting import Editor
 
 
 def ensure_minimum_debhelper_version(
@@ -116,3 +118,131 @@ def get_debhelper_compat_level(path: str = '.') -> Optional[int]:
         return None
     else:
         return int(str(relation.version[1]))
+
+
+@dataclass
+class MaintscriptSupports:
+    command: str
+
+    def args(self):
+        return ['supports', self.command]
+
+
+@dataclass
+class MaintscriptRemoveConffile:
+    conffile: str
+    prior_version: Optional[Version] = None
+    package: Optional[str] = None
+
+    def args(self):
+        ret = ['rm_conffile', self.conffile]
+        if self.prior_version:
+            ret.append(str(self.prior_version))
+            if self.package:
+                ret.append(self.package)
+        return ret
+
+
+@dataclass
+class MaintscriptMoveConffile:
+    old_conffile: str
+    new_conffile: str
+    prior_version: Optional[Version] = None
+    package: Optional[str] = None
+
+    def args(self):
+        ret = ['mv_conffile', self.old_conffile, self.new_conffile]
+        if self.prior_version:
+            ret.append(str(self.prior_version))
+            if self.package:
+                ret.append(self.package)
+        return ret
+
+
+@dataclass
+class MaintscriptSymlinkToDir:
+    pathname: str
+    old_target: str
+    prior_version: Optional[Version] = None
+    package: Optional[str] = None
+
+    def args(self):
+        ret = ['symlink_to_dir', self.pathname, self.old_target]
+        if self.prior_version:
+            ret.append(str(self.prior_version))
+            if self.package:
+                ret.append(self.package)
+        return ret
+
+
+@dataclass
+class MaintscriptDirToSymlink:
+    pathname: str
+    new_target: str
+    prior_version: Optional[Version] = None
+    package: Optional[str] = None
+
+    def args(self):
+        ret = ['dir_to_symlink', self.pathname, self.new_target]
+        if self.prior_version:
+            ret.append(str(self.prior_version))
+            if self.package:
+                ret.append(self.package)
+        return ret
+
+
+def parse_maintscript_line(line):
+    args = line.split()
+    return {
+        'supports': MaintscriptSupports,
+        'rm_conffile': MaintscriptRemoveConffile,
+        'mv_conffile': MaintscriptMoveConffile,
+        'symlink_to_dir': MaintscriptSymlinkToDir,
+        'dir_to_symlink': MaintscriptDirToSymlink,
+        }.get(args[0], list)(*args[1:])
+
+
+def serialize_maintscript_line(args):
+    return ' '.join(args)
+
+
+class MaintscriptEditor(Editor):
+
+    def __init__(self, path: str = 'debian/maintscript'):
+        super(MaintscriptEditor, self).__init__(path=path)
+
+    def _nonexistant(self):
+        return None
+
+    def _parse(self, content):
+        """Parse the specified bytestring and returned parsed object."""
+        ret = []
+        for line in content.splitlines(True):
+            if line.startswith('#') or not line.strip():
+                ret.append(line)
+            else:
+                ret.append(parse_maintscript_line(line))
+        return ret
+
+    @property
+    def lines(self):
+        if self._parsed is None:
+            return []
+        return self._parsed
+
+    @property
+    def entries(self):
+        return [entry for entry in self.lines
+                if not isinstance(entry, str)]
+
+    def _format(self, parsed):
+        """Serialize the parsed object."""
+        ret = []
+        for entry in self._parsed:
+            if isinstance(entry, str):
+                ret.append(entry)
+            else:
+                ret.append(serialize_maintscript_line(entry.args()))
+        if ret:
+            return ''.join(ret)
+        return None

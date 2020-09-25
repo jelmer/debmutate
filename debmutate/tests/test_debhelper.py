@@ -17,12 +17,15 @@
 
 """Tests for debmutate.debhelper."""
 
-from unittest import (
+from . import (
     TestCase,
+    TestCaseInTempDir,
     )
 
 from ..debhelper import (
     ensure_minimum_debhelper_version,
+    MaintscriptEditor,
+    MaintscriptMoveConffile,
     )
 
 
@@ -72,3 +75,21 @@ class EnsureMinumumDebhelperVersionTests(TestCase):
     def test_in_indep(self):
         d = {'Build-Depends-Indep': 'debhelper (>= 9)'}
         self.assertRaises(Exception, ensure_minimum_debhelper_version, d, '10')
+
+
+class MaintscriptEditorTests(TestCaseInTempDir):
+
+    def test_simple_edit(self):
+        self.build_tree_contents([('debian/', ), ('debian/maintscript', """\
+mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
+0.3.3-13.1~
+""")])
+        with MaintscriptEditor() as e:
+            self.assertEqual([MaintscriptMoveConffile(
+                '/etc/iptotal/apache.conf',
+                '/etc/apache2/conf-available/iptotal.conf',
+                '0.3.3-13.1~')], e.entries)
+
+    def test_simple_missing(self):
+        with MaintscriptEditor() as e:
+            self.assertEqual([], e.entries)
