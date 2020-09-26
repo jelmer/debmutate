@@ -48,10 +48,17 @@ from typing import Optional, Callable, Tuple, Union, List, Iterable, Dict
 from debian.changelog import Version
 from debian.deb822 import Deb822
 import subprocess
+import warnings
 
 from ._deb822 import PkgRelation
 from .deb822 import Deb822Editor, ChangeConflict
 from .reformatting import GeneratedFile
+
+
+def parse_relation(t: str):
+    with warnings.catch_warnings():
+        suppress_substvar_warnings()
+        return PkgRelation.parse(t)
 
 
 def dh_gnome_clean(path: str = '.') -> None:
@@ -350,7 +357,7 @@ def parse_relations(text: str):
                     tail_whitespace = top_level[-i:]
                     top_level = top_level[:-i]
                 break
-        ret.append((head_whitespace, PkgRelation.parse(top_level),
+        ret.append((head_whitespace, parse_relation(top_level),
                     tail_whitespace))
     return ret
 
@@ -525,7 +532,7 @@ def ensure_relation(
     by upgrading an existing relation.
     """
     if isinstance(new_relationstr, str):
-        new_relation = PkgRelation.parse(new_relationstr)
+        new_relation = parse_relation(new_relationstr)
     else:
         new_relation = new_relationstr
     relations = parse_relations(relationstr)
@@ -628,7 +635,7 @@ def add_dependency(relationstr, relation, position=None):
     """
     relations = parse_relations(relationstr)
     if isinstance(relation, str):
-        relation = PkgRelation.parse(relation)
+        relation = parse_relation(relation)
     _add_dependency(relations, relation, position=position)
     return format_relations(relations)
 
@@ -654,7 +661,7 @@ def ensure_some_version(relationstr: str, package: str) -> str:
         if names != [package]:
             continue
         return relationstr
-    _add_dependency(relations, PkgRelation.parse(package))
+    _add_dependency(relations, parse_relation(package))
     return format_relations(relations)
 
 
@@ -788,11 +795,11 @@ def is_relation_implied(
     Return: boolean
     """
     if isinstance(inner, str):
-        inner_rel = PkgRelation.parse(inner)
+        inner_rel = parse_relation(inner)
     else:
         inner_rel = inner
     if isinstance(outer, str):
-        outer_rel = PkgRelation.parse(outer)
+        outer_rel = parse_relation(outer)
     else:
         outer_rel = outer
 
@@ -815,3 +822,12 @@ def parse_standards_version(v: str) -> Tuple[int, ...]:
     Returns: Tuple with version
     """
     return tuple([int(k) for k in v.split('.')])
+
+
+def suppress_substvar_warnings():
+    import warnings
+    warnings.filterwarnings(
+        action='ignore',
+        category=UserWarning,
+        message=('cannot parse package relationship \"\$\{.*\}\", returning '
+                 'it raw'))
