@@ -107,6 +107,8 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz
         self.assertEqual([
             Watch('https://samba.org/~jelmer/', 'blah-(\\d+).tar.gz')],
             wf.entries)
+        self.assertEqual(wf.entries[0].get_option('pgpmode'), 'mangle')
+        self.assertRaises(KeyError, wf.entries[0].get_option, 'mode')
 
     def test_parse_opt_quotes(self):
         wf = parse_watch_file(StringIO("""\
