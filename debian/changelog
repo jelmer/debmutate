@@ -1,9 +1,9 @@
-debmutate (0.8) UNRELEASED; urgency=medium
+debmutate (0.8) unstable; urgency=medium
 
   * Add support for parsing maintscript files.
   * Suppress warnings about substvars.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 25 Sep 2020 17:38:02 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 26 Sep 2020 16:22:40 +0000
 
 debmutate (0.7) unstable; urgency=medium
 
