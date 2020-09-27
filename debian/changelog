@@ -1,8 +1,8 @@
-debmutate (0.9) UNRELEASED; urgency=medium
+debmutate (0.9) unstable; urgency=medium
 
   * Add get_option / del_option members to Watch.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 27 Sep 2020 19:15:11 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 27 Sep 2020 19:15:52 +0000
 
 debmutate (0.8) unstable; urgency=medium
 

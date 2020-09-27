@@ -107,8 +107,8 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz
         self.assertEqual([
             Watch('https://samba.org/~jelmer/', 'blah-(\\d+).tar.gz')],
             wf.entries)
-        self.assertEqual(wf.entries[0].get_option('pgpmode'), 'mangle')
-        self.assertRaises(KeyError, wf.entries[0].get_option, 'mode')
+        self.assertEqual(wf.get_option('pgpmode'), 'mangle')
+        self.assertRaises(KeyError, wf.get_option, 'mode')
 
     def test_parse_opt_quotes(self):
         wf = parse_watch_file(StringIO("""\
@@ -132,6 +132,8 @@ opts=pgpmode=mangle,\\
             wf.entries,
             [Watch('https://samba.org/~jelmer',
                    'blah-(\\d+).tar.gz', opts=['pgpmode=mangle', 'foo=bar'])])
+        self.assertEqual(wf.entries[0].get_option('pgpmode'), 'mangle')
+        self.assertRaises(KeyError, wf.entries[0].get_option, 'mode')
 
     def test_parse_continued_leading_spaces_3(self):
         wf = parse_watch_file(StringIO("""\

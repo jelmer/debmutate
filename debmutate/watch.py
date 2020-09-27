@@ -63,6 +63,28 @@ class WatchFile(object):
             options = []
         self.options = options
 
+    def get_option(self, name):
+        for option in self.options:
+            try:
+                key, value = option.split('=', 1)
+            except ValueError:
+                key = option
+                value = None
+            if key == name:
+                return value
+        raise KeyError(name)
+
+    def del_option(self, name):
+        for i, option in enumerate(self.options):
+            try:
+                key, value = option.split('=', 1)
+            except ValueError:
+                key = option
+            if key == name:
+                del self.options[i]
+                return
+        raise KeyError(name)
+
     def __iter__(self) -> Iterator['Watch']:
         return iter(self.entries)
 

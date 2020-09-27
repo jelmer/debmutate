@@ -829,5 +829,5 @@ def suppress_substvar_warnings():
     warnings.filterwarnings(
         action='ignore',
         category=UserWarning,
-        message=('cannot parse package relationship \"\$\{.*\}\", returning '
-                 'it raw'))
+        message=(r'cannot parse package relationship \"\$\{.*\}\", returning '
+                 r'it raw'))
