@@ -19,7 +19,7 @@ from setuptools import setup
 
 setup(
     name="debmutate",
-    version="0.1",
+    version="0.10",
     author="Jelmer Vernooij",
     author_email="jelmer@debian.org",
     packages=["debmutate", "debmutate.tests"],
