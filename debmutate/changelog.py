@@ -269,27 +269,35 @@ def changelog_add_entry(
       maintainer: maintainer identity to use (defaults to get_maintainer())
       timestamp: Timestamp to set for new entries
       urgency: Urgency to use for new items
+    Raises:
+      ValueError: when the maintainer details can not be found and were not
+        specified
     """
     if timestamp is None:
         timestamp = datetime.now()
     if maintainer is None:
-        maintainer = get_maintainer()
+        maintainer_name, maintainer_email = get_maintainer()
+    else:
+        maintainer_name, maintainer_email = maintainer
+    if maintainer_name is None or maintainer_email is None:
+        raise ValueError(
+            'unable to determine maintainer details and none specified')
     if (cl[0].distributions == 'UNRELEASED' or (
             cl[0].author is None and cl[0].date is None)):
         by_author = list(changes_by_author(cl[0].changes()))
         if all([author is None for (author, linenos, change) in by_author]):
             if cl[0].author is not None:
                 entry_maintainer = parseaddr(cl[0].author)
-                if entry_maintainer != maintainer:
+                if entry_maintainer != (maintainer_name, maintainer_email):
                     cl[0]._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
                     if cl[0]._changes[-1]:
                         cl[0]._changes.append('')
-                    cl[0]._changes.append('  [ %s ]' % maintainer[0])
+                    cl[0]._changes.append('  [ %s ]' % maintainer_name)
         else:
-            if by_author[-1][0] != maintainer[0]:
+            if by_author[-1][0] != maintainer_name:
                 if cl[0]._changes[-1]:
                     cl[0]._changes.append('')
-                cl[0]._changes.append('  [ %s ]' % maintainer[0])
+                cl[0]._changes.append('  [ %s ]' % maintainer_name)
         if not cl[0]._changes[-1].strip():
             del cl[0]._changes[-1]
     else:
@@ -297,7 +305,7 @@ def changelog_add_entry(
             package=cl[0].package,
             version=_inc_version(cl[0].version),
             urgency=urgency,
-            author="%s <%s>" % maintainer,
+            author="%s <%s>" % (maintainer_name, maintainer_email),
             date=format_datetime(timestamp),
             distributions='UNRELEASED',
             changes=[''])
