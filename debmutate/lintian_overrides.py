@@ -17,6 +17,8 @@
 
 """Utility functions for dealing with lintian overrides files."""
 
+import fnmatch
+import re
 from typing import Optional, List
 
 from .reformatting import Editor
@@ -30,6 +32,14 @@ from .reformatting import Editor
 VALID_TYPES = ['udeb', 'source', 'binary']
 
 
+def _create_matcher(value):
+    if value:
+        p = re.compile(fnmatch.translate(value))
+        return lambda x: bool(p.match(x))
+    else:
+        return lambda x: True
+
+
 class LintianOverride(object):
 
     def __init__(self, package: Optional[str] = None,
@@ -41,7 +51,9 @@ class LintianOverride(object):
             raise ValueError(type)
         self.type = type
         self.tag = tag
+        self._tag_match = _create_matcher(self.tag)
         self.info = info
+        self._info_match = _create_matcher(self.info)
 
     def __repr__(self):
         return "%s(package=%r, archlist=%r, type=%r, tag=%r, info=%r)" % (
@@ -56,10 +68,13 @@ class LintianOverride(object):
             return False
         if self.type is not None and type is not None and self.type != type:
             return False
-        if self.tag is not None and tag is not None and self.tag != tag:
+        if (self.tag is not None and tag is not None and
+                not self._tag_match(tag)):
             return False
-        if self.info is not None and info is not None and info != self.info:
+        if (self.info is not None and info is not None and
+                not self._info_match(info)):
             return False
+        # TODO(jelmer): wildcards in the arch list?
         if self.archlist and arch is not None and arch not in self.archlist:
             return False
         return True
