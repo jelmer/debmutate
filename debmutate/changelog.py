@@ -35,6 +35,7 @@ from datetime import datetime
 from email.utils import format_datetime
 from io import StringIO
 from debian.changelog import (
+    ChangeBlock,
     Changelog,
     ChangelogCreateError,
     ChangelogParseError,
@@ -242,7 +243,7 @@ def _inc_version(version: Version) -> Version:
         else:
             ret.debian_revision += "1"
         return ret
-    else:
+    elif ret.upstream_version:
         # Native package
         m = re.match('^(.*?)([0-9]+)$', ret.upstream_version)
         if m:
@@ -250,6 +251,9 @@ def _inc_version(version: Version) -> Version:
         else:
             ret.upstream_version += "1"
         return ret
+    else:
+        # Uhm..
+        raise ValueError(ret)
 
 
 def changelog_add_entry(
@@ -374,7 +378,7 @@ def new_upstream_package_version(
     return ret
 
 
-def all_sha_prefixed(cl: Changelog) -> bool:
+def all_sha_prefixed(cb: ChangeBlock) -> bool:
     """Check if all lines in a changelog entry are prefixed with a sha.
 
     This is generally done by gbp-dch(1).
@@ -384,7 +388,7 @@ def all_sha_prefixed(cl: Changelog) -> bool:
     Returns: bool
     """
     sha_prefixed = 0
-    for change in cl.changes():
+    for change in cb.changes():
         if not change.startswith('  * '):
             continue
         if re.match(r'  \* \[[0-9a-f]{7}\] ', change):
