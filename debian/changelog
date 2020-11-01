@@ -1,3 +1,9 @@
+debmutate (0.11) UNRELEASED; urgency=medium
+
+  * Add support for wildcards in lintian overrides.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 01 Nov 2020 15:30:57 +0000
+
 debmutate (0.10) unstable; urgency=medium
 
   * Fix Python version number.
