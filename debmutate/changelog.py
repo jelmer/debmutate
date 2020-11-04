@@ -74,6 +74,12 @@ class ChangelogEditor(Editor):
     def changelog(self):
         return self._parsed
 
+    def __getitem__(self, i):
+        return self.changelog[i]
+
+    def new_block(self, *args, **kwargs):
+        return self.changelog.new_block(*args, **kwargs)
+
 
 def changes_sections(
         changes: List[str]
@@ -309,16 +315,20 @@ def changelog_add_entry(
             date=format_datetime(timestamp),
             distributions='UNRELEASED',
             changes=[''])
+    changeblock_add_line(cl[0], summary)
+
+
+def changeblock_add_line(block, lines):
     wrapper = TextWrapper(INITIAL_INDENT)
-    cl[0]._changes.extend(wrapper.wrap(summary[0]))
-    for line in summary[1:]:
+    block._changes.extend(wrapper.wrap(lines[0]))
+    for line in lines[1:]:
         prefix = len(INITIAL_INDENT) * ' '
         m = re.match(r'^[  ]*[\+\-\*] ', line)
         if m:
             prefix += m.group(0)
             line = line[len(m.group(0)):]
-        cl[0]._changes.extend(TextWrapper(prefix).wrap(line))
-    cl[0]._changes.append('')
+        block._changes.extend(TextWrapper(prefix).wrap(line))
+    block._changes.append('')
 
 
 def strip_changelog_message(changes: List[str]) -> List[str]:
