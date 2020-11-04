@@ -29,6 +29,7 @@ from ..watch import (
     Watch,
     WatchFile,
     WatchEditor,
+    InvalidUVersionMangle,
     )
 
 
@@ -186,6 +187,26 @@ https://samba.org/~jelmer/@PACKAGE@ blah-(\\d+).tar.gz
         self.assertEqual(
             'https://samba.org/~jelmer/blah',
             wf.entries[0].format_url('blah'))
+
+    def test_parse_uversionmangle(self):
+        wf = parse_watch_file(StringIO("""\
+version = 3
+opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$/$1~$2/ \\
+   https://samba.org/~jelmer/ blah-(\\d+).tar.gz
+"""))
+        self.assertEqual(3, wf.version)
+        self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
+        self.assertEqual(
+            '1.0~alpha1', wf.entries[0].uversionmangle('1.0alpha1'))
+
+    def test_parse_uversionmangle_invalid(self):
+        wf = parse_watch_file(StringIO("""\
+version = 3
+opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$$1~$2 \\
+   https://samba.org/~jelmer/ blah-(\\d+).tar.gz
+"""))
+        self.assertRaises(
+            InvalidUVersionMangle, wf.entries[0].uversionmangle, '1.0alpha1')
 
 
 class WatchEditorTests(TestCase):

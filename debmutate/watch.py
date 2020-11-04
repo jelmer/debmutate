@@ -50,6 +50,10 @@ SUBSTITUTIONS = {
 }
 
 
+class InvalidUVersionMangle(ValueError):
+    """uversionmangle is invalid"""
+
+
 class WatchFile(object):
 
     def __init__(self, entries: Optional[List['Watch']] = None,
@@ -131,6 +135,16 @@ class Watch(object):
         if opts is None:
             opts = []
         self.options = opts
+
+    def uversionmangle(self, version):
+        try:
+            vm = self.get_option('uversionmangle')
+        except KeyError:
+            return version
+        m = re.fullmatch('^s/(.*)/(.*[^/])(/[a-zA-Z]*)?$', vm)
+        if not m:
+            raise InvalidUVersionMangle(vm)
+        return re.sub(m.group(1), m.group(2).replace('$', '\\'), version)
 
     def get_option(self, name):
         for option in self.options:
