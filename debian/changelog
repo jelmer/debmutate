@@ -1,8 +1,8 @@
-debmutate (0.12) UNRELEASED; urgency=medium
+debmutate (0.12) unstable; urgency=medium
 
   * Add support for uversionmangle to Watch.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 04 Nov 2020 02:35:45 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 04 Nov 2020 02:37:09 +0000
 
 debmutate (0.11) unstable; urgency=medium
 
