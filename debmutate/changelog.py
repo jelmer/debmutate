@@ -24,6 +24,8 @@ __all__ = [
     'changes_sections',
     'changes_by_author',
     'changelog_add_entry',
+    'changeblock_add_line',
+    'changeblock_ensure_first_line',
     'all_sha_prefixed',
     'any_long_lines',
     'rewrap_change',
@@ -79,6 +81,16 @@ class ChangelogEditor(Editor):
 
     def new_block(self, *args, **kwargs):
         return self.changelog.new_block(*args, **kwargs)
+
+    def add_entry(
+            self,
+            summary: List[str],
+            maintainer: Optional[Tuple[str, str]] = None,
+            timestamp: Optional[datetime] = None,
+            urgency: str = 'low') -> None:
+        return changelog_add_entry(
+            self.changelog, summary=summary, maintainer=maintainer,
+            timestamp=timestamp, urgency=urgency)
 
 
 def changes_sections(
@@ -414,3 +426,14 @@ def all_sha_prefixed(cb: ChangeBlock) -> bool:
         else:
             return False
     return (sha_prefixed > 0)
+
+
+def changeblock_ensure_first_line(block, line):
+    """Ensure that the first line matches the specified line.
+    """
+    if block._changes[0]:
+        raise ValueError('first block line not empty')
+    line = '  * ' + line
+    if block._changes[1] == line:
+        return
+    block._changes.insert(1, line)

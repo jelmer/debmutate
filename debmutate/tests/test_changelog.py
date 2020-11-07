@@ -32,6 +32,7 @@ from debmutate.changelog import (
     changes_sections,
     strip_changelog_message,
     new_upstream_package_version,
+    block_ensure_first_line,
     )
 
 from debian.changelog import Version
@@ -284,3 +285,43 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
         self.assertTrue(all_sha_prefixed(cl[0]))
+
+
+class BlockEnsureFirstLineTests(TestCase):
+
+    def test_ensure_first_line(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        block_ensure_first_line(cl[0], 'QA Upload.')
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * QA Upload.
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
+
+    def test_exists(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * QA Upload.
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        block_ensure_first_line(cl[0], 'QA Upload.')
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * QA Upload.
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))

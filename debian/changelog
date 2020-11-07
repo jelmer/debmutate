@@ -1,3 +1,9 @@
+debmutate (0.13) UNRELEASED; urgency=medium
+
+  * Add changeblock_ensure_first_line function.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 07 Nov 2020 23:19:08 +0000
+
 debmutate (0.12) unstable; urgency=medium
 
   * Add support for uversionmangle to Watch.
