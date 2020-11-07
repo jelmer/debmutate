@@ -297,7 +297,9 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        changeblock_ensure_first_line(cl[0], 'QA Upload.')
+        changeblock_ensure_first_line(
+            cl[0], 'QA Upload.',
+            maintainer=('Jelmer Vernooij', 'jelmer@debian.org'))
         self.assertEqual("""\
 lintian-brush (0.28) UNRELEASED; urgency=medium
 
@@ -345,4 +347,25 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
   * [217263e] Add fixer for obsolete-runtime-tests-restriction.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
+
+    def test_different_author(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        changeblock_ensure_first_line(
+            cl[0], 'QA Upload.', maintainer=('Joe Example', 'joe@example.com'))
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * QA Upload.
+
+  [ Jelmer Vernooij ]
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
 """, str(cl))

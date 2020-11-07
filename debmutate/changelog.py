@@ -428,9 +428,16 @@ def all_sha_prefixed(cb: ChangeBlock) -> bool:
     return (sha_prefixed > 0)
 
 
-def changeblock_ensure_first_line(block, line):
+def changeblock_ensure_first_line(block, line, maintainer=None):
     """Ensure that the first line matches the specified line.
     """
+    if maintainer is None:
+        maintainer_name, maintainer_email = get_maintainer()
+    else:
+        maintainer_name, maintainer_email = maintainer
+    if maintainer_name is None or maintainer_email is None:
+        raise ValueError(
+            'unable to determine maintainer details and none specified')
     if block._changes[0]:
         raise ValueError('first block line not empty')
     line = '  * ' + line
@@ -439,3 +446,7 @@ def changeblock_ensure_first_line(block, line):
     block._changes.insert(1, line)
     if block._changes[2].startswith('  ['):
         block._changes.insert(2, '')
+    elif parseaddr(block.author)[0] != maintainer_name:
+        block._changes.insert(2, '  [ %s ]' % parseaddr(block.author)[0])
+        block._changes.insert(2, '')
+        block.author = "%s <%s>" % (maintainer_name, maintainer_email)
