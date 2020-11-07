@@ -437,3 +437,5 @@ def changeblock_ensure_first_line(block, line):
     if block._changes[1] == line:
         return
     block._changes.insert(1, line)
+    if block._changes[2].startswith('  ['):
+        block._changes.insert(2, '')
