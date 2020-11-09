@@ -41,6 +41,7 @@ from debian.changelog import (
     Changelog,
     ChangelogCreateError,
     ChangelogParseError,
+    format_date,
     get_maintainer,
     Version,
     )
@@ -450,3 +451,11 @@ def changeblock_ensure_first_line(block, line, maintainer=None):
         block._changes.insert(2, '  [ %s ]' % parseaddr(block.author)[0])
         block._changes.insert(2, '')
         block.author = "%s <%s>" % (maintainer_name, maintainer_email)
+
+
+def release(cl, distribution="unstable", timestamp=None, localtime=True):
+    """Create a release for a changelog file.
+    """
+    if cl[0].distributions == 'UNRELEASED':
+        cl[0].distributions = distribution
+        cl[0].date = format_date(timestamp=timestamp, localtime=localtime)

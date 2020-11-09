@@ -1,3 +1,9 @@
+debmutate (0.14) UNRELEASED; urgency=medium
+
+  * Add debmutate.changelog.release().
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 09 Nov 2020 15:06:54 +0000
+
 debmutate (0.13) unstable; urgency=medium
 
   * Add changeblock_ensure_first_line function.

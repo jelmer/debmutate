@@ -30,6 +30,7 @@ from debmutate.changelog import (
     rewrap_change,
     _inc_version,
     changes_sections,
+    release,
     strip_changelog_message,
     new_upstream_package_version,
     changeblock_ensure_first_line,
@@ -369,3 +370,40 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
 """, str(cl))
+
+
+class ReleaseTests(TestCase):
+
+    def test_already_updated(self):
+        cl = Changelog("""\
+lintian-brush (0.28) unstable; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        release(cl, timestamp=1604934305, localtime=False)
+        self.assertEqual(str(cl), """\
+lintian-brush (0.28) unstable; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+
+    def test_updated(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        release(cl, timestamp=1604934305, localtime=False)
+        self.assertEqual(str(cl), """\
+lintian-brush (0.28) unstable; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+""")
