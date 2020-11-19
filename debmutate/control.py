@@ -118,6 +118,8 @@ def guess_template_type(template_path: str) -> Optional[str]:
                     return 'cdbs'
     except IsADirectoryError:
         return 'directory'
+    if os.path.exists('debian/debcargo.toml'):
+        return 'debcargo'
     try:
         with open('debian/rules', 'rb') as f:
             for line in f:
