@@ -459,3 +459,18 @@ def release(cl, distribution="unstable", timestamp=None, localtime=True):
     if cl[0].distributions == 'UNRELEASED':
         cl[0].distributions = distribution
         cl[0].date = format_date(timestamp=timestamp, localtime=localtime)
+
+
+def find_last_distribution(changelog):
+    """Find the last changelog that was used in a changelog.
+
+    This will skip stanzas with the 'UNRELEASED' distribution.
+
+    Args:
+      changelog: Changelog to analyze
+    """
+    for block in changelog._blocks:
+        distribution = block.distributions.split(" ")[0]
+        if distribution != "UNRELEASED":
+            return distribution
+    return None

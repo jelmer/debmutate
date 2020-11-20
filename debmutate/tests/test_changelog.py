@@ -34,6 +34,7 @@ from debmutate.changelog import (
     strip_changelog_message,
     new_upstream_package_version,
     changeblock_ensure_first_line,
+    find_last_distribution,
     )
 
 from debian.changelog import Version
@@ -407,3 +408,32 @@ lintian-brush (0.28) unstable; urgency=medium
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
 """)
+
+
+class FindLastDistributionTests(TestCase):
+
+    def create_changelog(self, *distributions):
+        changelog = Changelog()
+        changes = ["  [ A. Hacker ]", "  * Something"]
+        author = "J. Maintainer <maint@example.com"
+        for distro in distributions:
+            changelog.new_block(changes=changes, author=author,
+                                distributions=distro)
+        return changelog
+
+    def test_first(self):
+        changelog = self.create_changelog("unstable")
+        self.assertEquals("unstable", find_last_distribution(changelog))
+
+    def test_second(self):
+        changelog = self.create_changelog("unstable", "UNRELEASED")
+        self.assertEquals("UNRELEASED", changelog.distributions)
+        self.assertEquals("unstable", find_last_distribution(changelog))
+
+    def test_empty(self):
+        changelog = self.create_changelog()
+        self.assertEquals(None, find_last_distribution(changelog))
+
+    def test_only_unreleased(self):
+        changelog = self.create_changelog("UNRELEASED")
+        self.assertEquals(None, find_last_distribution(changelog))
