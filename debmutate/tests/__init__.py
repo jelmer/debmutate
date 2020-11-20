@@ -69,6 +69,7 @@ def test_suite():
         'changelog',
         'control',
         'deb822',
+        'debcargo',
         'debhelper',
         'lintian_overrides',
         'patch',
