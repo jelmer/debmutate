@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-# Copyright (C) 2019 Jelmer Vernooij
+# Copyright (C) 2019-2020 Jelmer Vernooij
+#
+# find_extra_authors and find_thanks originally imported from
+# breezy-debian and (C) 2006 James Westby
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +31,8 @@ __all__ = [
     'changeblock_ensure_first_line',
     'all_sha_prefixed',
     'any_long_lines',
+    'find_extra_authors',
+    'find_thanks',
     'rewrap_change',
     'strip_changelog_message',
     'new_changelog_entries',
@@ -474,3 +479,44 @@ def find_last_distribution(changelog):
         if distribution != "UNRELEASED":
             return distribution
     return None
+
+
+def find_extra_authors(changes):
+    """Find additional authors from a changelog entry.
+
+    :return: List of fullnames of additional authors, without e-mail address.
+    """
+    authors = []
+    for new_author, linenos, lines in changes_by_author(changes):
+        if new_author is None:
+            continue
+        already_included = False
+        for author in authors:
+            if author.startswith(new_author):
+                already_included = True
+                break
+        if not already_included:
+            authors.append(new_author)
+    return authors
+
+
+def find_thanks(changes):
+    """Find all people thanked in a changelog entry.
+
+    :param changes: String with the contents of the changelog entry
+    :return: List of people thanked, optionally including email address.
+    """
+    thanks_re = re.compile(
+        r"[tT]hank(?:(?:s)|(?:you))(?:\s*to)?"
+        "((?:\\s+(?:(?:\\w\\.)|(?:\\w+(?:-\\w+)*)))+"
+        "(?:\\s+<[^@>]+@[^@>]+>)?)",
+        re.UNICODE)
+    thanks = []
+    for new_author, linenos, lines in changes_by_author(changes):
+        for match in thanks_re.finditer(''.join(lines)):
+            if thanks is None:
+                thanks = []
+            thanks_str = match.group(1).strip()
+            thanks_str = re.sub(r"\s+", " ", thanks_str)
+            thanks.append(thanks_str)
+    return thanks

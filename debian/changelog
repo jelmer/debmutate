@@ -1,6 +1,7 @@
 debmutate (0.15) UNRELEASED; urgency=medium
 
   * Add debmutate.versions.
+  * Import find_extra_authors and find_thanks from brz-debian.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Nov 2020 03:07:17 +0000
 

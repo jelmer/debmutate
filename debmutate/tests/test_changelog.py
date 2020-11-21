@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # Copyright (C) 2018 Jelmer Vernooij
 #
+# Tests for find_thanks and find_extra_authors originally imported from
+# breezy-debian, also (C) 2006 James Westby
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -28,6 +31,8 @@ from debmutate.changelog import (
     TextWrapper,
     all_sha_prefixed,
     rewrap_change,
+    find_extra_authors,
+    find_thanks,
     _inc_version,
     changes_sections,
     release,
@@ -437,3 +442,74 @@ class FindLastDistributionTests(TestCase):
     def test_only_unreleased(self):
         changelog = self.create_changelog("UNRELEASED")
         self.assertEquals(None, find_last_distribution(changelog))
+
+
+class ChangelogInfoTests(TestCase):
+
+    def test_find_extra_authors_none(self):
+        changes = ["  * Do foo", "  * Do bar"]
+        authors = find_extra_authors(changes)
+        self.assertEqual([], authors)
+
+    def test_find_extra_authors(self):
+        changes = ["  * Do foo", "", "  [ A. Hacker ]", "  * Do bar", "",
+                   "  [ B. Hacker ]", "  [ A. Hacker}"]
+        authors = find_extra_authors(changes)
+        self.assertEqual([u"A. Hacker", u"B. Hacker"], authors)
+        self.assertEqual([str]*len(authors), list(map(type, authors)))
+
+    def test_find_extra_authors_utf8(self):
+        changes = [u"  * Do foo", u"", "  [ \xe1. Hacker ]", "  * Do bar", "",
+                   u"  [ \xe7. Hacker ]", "  [ A. Hacker}"]
+        authors = find_extra_authors(changes)
+        self.assertEqual([u"\xe1. Hacker", u"\xe7. Hacker"], authors)
+        self.assertEqual([str]*len(authors), list(map(type, authors)))
+
+    def test_find_extra_authors_iso_8859_1(self):
+        # We try to treat lines as utf-8, but if that fails to decode, we fall
+        # back to iso-8859-1
+        changes = ["  * Do foo", "", "  [ \xe1. Hacker ]", "  * Do bar", "",
+                   "  [ \xe7. Hacker ]", "  [ A. Hacker}"]
+        authors = find_extra_authors(changes)
+        self.assertEqual([u"\xe1. Hacker", u"\xe7. Hacker"], authors)
+        self.assertEqual([str]*len(authors), list(map(type, authors)))
+
+    def test_find_extra_authors_no_changes(self):
+        authors = find_extra_authors([])
+        self.assertEqual([], authors)
+
+    def assert_thanks_is(self, changes, expected_thanks):
+        thanks = find_thanks(changes)
+        self.assertEqual(expected_thanks, thanks)
+        self.assertEqual([str]*len(thanks), list(map(type, thanks)))
+
+    def test_find_thanks_no_changes(self):
+        self.assert_thanks_is([], [])
+
+    def test_find_thanks_none(self):
+        changes = ["  * Do foo", "  * Do bar"]
+        self.assert_thanks_is(changes, [])
+
+    def test_find_thanks(self):
+        changes = ["  * Thanks to A. Hacker"]
+        self.assert_thanks_is(changes, [u"A. Hacker"])
+        changes = ["  * Thanks to James A. Hacker"]
+        self.assert_thanks_is(changes, [u"James A. Hacker"])
+        changes = ["  * Thankyou to B. Hacker"]
+        self.assert_thanks_is(changes, [u"B. Hacker"])
+        changes = ["  * thanks to A. Hacker"]
+        self.assert_thanks_is(changes, [u"A. Hacker"])
+        changes = ["  * thankyou to B. Hacker"]
+        self.assert_thanks_is(changes, [u"B. Hacker"])
+        changes = ["  * Thanks A. Hacker"]
+        self.assert_thanks_is(changes, [u"A. Hacker"])
+        changes = ["  * Thankyou B.  Hacker"]
+        self.assert_thanks_is(changes, [u"B. Hacker"])
+        changes = ["  * Thanks to Mark A. Super-Hacker"]
+        self.assert_thanks_is(changes, [u"Mark A. Super-Hacker"])
+        changes = ["  * Thanks to A. Hacker <ahacker@example.com>"]
+        self.assert_thanks_is(changes, [u"A. Hacker <ahacker@example.com>"])
+        changes = [u"  * Thanks to Adeodato Sim\xc3\xb3"]
+        self.assert_thanks_is(changes, [u"Adeodato Sim\xc3\xb3"])
+        changes = [u"  * Thanks to \xc1deodato Sim\xc3\xb3"]
+        self.assert_thanks_is(changes, [u"\xc1deodato Sim\xc3\xb3"])
