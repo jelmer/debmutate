@@ -123,6 +123,18 @@ class WatchFile(object):
             f.write('\n')
 
 
+def parse_uversionmangle(vm):
+    if vm[0] != 's':
+        raise InvalidUVersionMangle(vm, 'not a substitution regex')
+    parts = vm.split(vm[1])
+    if len(parts) < 3:
+        raise InvalidUVersionMangle(vm)
+    pattern = parts[1]
+    replacement = parts[2]
+    flags = parts[3]
+    return (pattern, replacement, flags)
+
+
 class Watch(object):
 
     def __init__(self, url: str, matching_pattern: Optional[str] = None,
@@ -141,10 +153,8 @@ class Watch(object):
             vm = self.get_option('uversionmangle')
         except KeyError:
             return version
-        m = re.fullmatch('^s/(.*)/(.*[^/])(/[a-zA-Z]*)?$', vm)
-        if not m:
-            raise InvalidUVersionMangle(vm)
-        return re.sub(m.group(1), m.group(2).replace('$', '\\'), version)
+        (pattern, replacement, flags) = parse_uversionmangle(vm)
+        return re.sub(pattern, replacement.replace('$', '\\'), version)
 
     def get_option(self, name):
         for option in self.options:
