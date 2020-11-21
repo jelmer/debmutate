@@ -75,6 +75,7 @@ def test_suite():
         'patch',
         'reformatting',
         'vcs',
+        'versions',
         'watch',
         ]
     module_names = [__name__ + '.test_' + name for name in names]
