@@ -164,11 +164,8 @@ def apply_subst_expr(vm: str, orig: str) -> str:
     return re.sub(pattern, replacement, orig)
 
 
-def apply_url_mangle(expr: str, orig: str, base=None) -> str:
-    url = apply_subst_expr(expr, orig)
-    if base:
-        return urljoin(base, url)
-    return url
+def apply_url_mangle(expr: str, orig: str) -> str:
+    return apply_subst_expr(expr, orig)
 
 
 class Release(object):
@@ -188,6 +185,28 @@ class Release(object):
         return "%s(%r, %r, pgpsigurl=%r)" % (
             type(self).__name__, self.version, self.url,
             self.pgpsigurl)
+
+
+def html_search(body, matching_pattern):
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(body, 'html.parser')
+    for a in soup.find_all('a'):
+        href = a.attrs.get('href')
+        if not href:
+            continue
+        m = re.fullmatch(matching_pattern, href)
+        if m:
+            yield m
+
+
+def plain_search(body, matching_pattern):
+    return re.finditer(matching_pattern, body)
+
+
+searchers = {
+    'plain': plain_search,
+    'html': html_search,
+    }
 
 
 class Watch(object):
@@ -280,31 +299,27 @@ class Watch(object):
 
     def discover(self, package):
         from urllib.request import urlopen, Request
-        from bs4 import BeautifulSoup
         url = self.format_url(package)
         try:
             user_agent = self.get_option('user-agent')
         except KeyError:
             user_agent = DEFAULT_USER_AGENT
+        try:
+            searchmode = self.get_option('searchmode')
+        except KeyError:
+            searchmode = 'html'
         req = Request(url, headers={'User-Agent': user_agent})
         resp = urlopen(req)
-        soup = BeautifulSoup(resp.read(), 'html.parser')
-        for a in soup.find_all('a'):
-            href = a.attrs.get('href')
-            if not href:
-                continue
-            m = re.fullmatch(self.matching_pattern, href)
+        for m in searchers[searchmode](resp.read(), self.matching_pattern):
             # TODO(jelmer): Apply uversionmangle
-            if not m:
-                continue
+            full_url = urljoin(url, m.group(0))
             try:
                 pgpsigurlmangle = self.get_option('pgpsigurlmangle')
             except KeyError:
                 pgpsigurl = None
             else:
-                pgpsigurl = apply_url_mangle(pgpsigurlmangle, href, base=url)
-            yield Release(
-                m.group(1), urljoin(url, href), pgpsigurl=pgpsigurl)
+                pgpsigurl = apply_url_mangle(pgpsigurlmangle, full_url)
+            yield Release(m.group(1), full_url, pgpsigurl=pgpsigurl)
 
 
 class MissingVersion(Exception):
