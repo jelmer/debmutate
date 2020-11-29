@@ -199,6 +199,17 @@ opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$/$1~$2/ \\
         self.assertEqual(
             '1.0~alpha1', wf.entries[0].uversionmangle('1.0alpha1'))
 
+    def test_parse_subst_expr_escape(self):
+        wf = parse_watch_file(StringIO("""\
+version = 3
+opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha|\\/)\\d*)$/$1~$2/ \\
+   https://samba.org/~jelmer/ blah-(\\d+).tar.gz
+"""))
+        self.assertEqual(3, wf.version)
+        self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
+        self.assertEqual(
+            '1.0~alpha1', wf.entries[0].uversionmangle('1.0alpha1'))
+
     def test_parse_subst_expr_percent(self):
         wf = parse_watch_file(StringIO("""\
 version = 3

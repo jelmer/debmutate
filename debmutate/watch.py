@@ -21,6 +21,7 @@ from io import StringIO
 import re
 import sys
 from typing import Iterable, List, Union, Callable, Optional, TextIO, Iterator
+from urllib.parse import urljoin
 from warnings import warn
 
 from debian.changelog import Version
@@ -29,6 +30,9 @@ from .reformatting import (
     Editor,
     )
 
+from . import __version__
+
+DEFAULT_USER_AGENT = 'debmutate/%s' % '.'.join([str(x) for x in __version__])
 
 DEFAULT_VERSION: int = 4
 
@@ -145,7 +149,7 @@ class WatchFile(object):
 def parse_subst_expr(vm):
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
-    parts = vm.split(vm[1])
+    parts = re.split(r'(?<!\\)' + vm[1], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -158,6 +162,13 @@ def apply_subst_expr(vm: str, orig: str) -> str:
     (pattern, replacement, flags) = parse_subst_expr(vm)
     # TODO(jelmer): Handle flags
     return re.sub(pattern, replacement, orig)
+
+
+def apply_url_mangle(expr: str, orig: str, base=None) -> str:
+    url = apply_subst_expr(expr, orig)
+    if base:
+        return urljoin(base, url)
+    return url
 
 
 class Release(object):
@@ -268,10 +279,15 @@ class Watch(object):
         return self.url.replace('@PACKAGE@', package)
 
     def discover(self, package):
-        from urllib.request import urlopen
+        from urllib.request import urlopen, Request
         from bs4 import BeautifulSoup
         url = self.format_url(package)
-        resp = urlopen(url)
+        try:
+            user_agent = self.get_option('user-agent')
+        except KeyError:
+            user_agent = DEFAULT_USER_AGENT
+        req = Request(url, headers={'User-Agent': user_agent})
+        resp = urlopen(req)
         soup = BeautifulSoup(resp.read(), 'html.parser')
         for a in soup.find_all('a'):
             href = a.attrs.get('href')
@@ -286,8 +302,9 @@ class Watch(object):
             except KeyError:
                 pgpsigurl = None
             else:
-                pgpsigurl = apply_subst_expr(pgpsigurlmangle, href)
-            yield Release(m.group(1), href, pgpsigurl=pgpsigurl)
+                pgpsigurl = apply_url_mangle(pgpsigurlmangle, href, base=url)
+            yield Release(
+                m.group(1), urljoin(url, href), pgpsigurl=pgpsigurl)
 
 
 class MissingVersion(Exception):
