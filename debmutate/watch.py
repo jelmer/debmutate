@@ -19,6 +19,7 @@
 
 from io import StringIO
 import re
+import sys
 from typing import Iterable, List, Union, Callable, Optional, TextIO, Iterator
 from warnings import warn
 
@@ -123,7 +124,7 @@ class WatchFile(object):
             f.write('\n')
 
 
-def parse_uversionmangle(vm):
+def parse_subst_expr(vm):
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
     parts = vm.split(vm[1])
@@ -133,6 +134,26 @@ def parse_uversionmangle(vm):
     replacement = parts[2]
     flags = parts[3]
     return (pattern, replacement, flags)
+
+
+def apply_subst_expr(vm: str, orig: str) -> str:
+    (pattern, replacement, flags) = parse_subst_expr(vm)
+    # TODO(jelmer): Handle flags
+    return re.sub(pattern, replacement, orig)
+
+
+class Release(object):
+    """A discovered release."""
+
+    def __init__(self, version, url, pgpsigurl=None):
+        self.version = version
+        self.url = url
+        self.pgpsigurl = pgpsigurl
+
+    def __repr__(self):
+        return "%s(%r, %r, pgpsigurl=%r)" % (
+            type(self).__name__, self.version, self.url,
+            self.pgpsigurl)
 
 
 class Watch(object):
@@ -153,7 +174,7 @@ class Watch(object):
             vm = self.get_option('uversionmangle')
         except KeyError:
             return version
-        (pattern, replacement, flags) = parse_uversionmangle(vm)
+        (pattern, replacement, flags) = parse_subst_expr(vm)
         return re.sub(pattern, replacement.replace('$', '\\'), version)
 
     def get_option(self, name):
@@ -199,6 +220,28 @@ class Watch(object):
         if callable(package):
             package = package()
         return self.url.replace('@PACKAGE@', package)
+
+    def discover(self, package):
+        from urllib.request import urlopen
+        from bs4 import BeautifulSoup
+        url = self.format_url(package)
+        resp = urlopen(url)
+        soup = BeautifulSoup(resp.read(), 'html.parser')
+        for a in soup.find_all('a'):
+            href = a.attrs.get('href')
+            if not href:
+                continue
+            m = re.fullmatch(self.matching_pattern, href)
+            # TODO(jelmer): Apply uversionmangle
+            if not m:
+                continue
+            try:
+                pgpsigurlmangle = self.get_option('pgpsigurlmangle')
+            except KeyError:
+                pgpsigurl = None
+            else:
+                pgpsigurl = apply_subst_expr(pgpsigurlmangle, href)
+            yield Release(m.group(1), href, pgpsigurl=pgpsigurl)
 
 
 class MissingVersion(Exception):
@@ -311,3 +354,22 @@ class WatchEditor(Editor):
         nf = StringIO()
         parsed.dump(nf)
         return nf.getvalue()
+
+
+def uscan(wf, package):
+    for entry in wf.entries:
+        for d in entry.discover(package):
+            print('%s' % d)
+
+
+def main(argv):
+    with open('debian/watch', 'r') as f:
+        wf = parse_watch_file(f)
+    from debian.deb822 import Deb822
+    with open('debian/control', 'r') as f:
+        source = Deb822(f)
+    uscan(wf, source['Source'])
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

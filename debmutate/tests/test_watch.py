@@ -188,7 +188,7 @@ https://samba.org/~jelmer/@PACKAGE@ blah-(\\d+).tar.gz
             'https://samba.org/~jelmer/blah',
             wf.entries[0].format_url('blah'))
 
-    def test_parse_uversionmangle(self):
+    def test_parse_subst_expr(self):
         wf = parse_watch_file(StringIO("""\
 version = 3
 opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$/$1~$2/ \\
@@ -199,7 +199,7 @@ opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$/$1~$2/ \\
         self.assertEqual(
             '1.0~alpha1', wf.entries[0].uversionmangle('1.0alpha1'))
 
-    def test_parse_uversionmangle_percent(self):
+    def test_parse_subst_expr_percent(self):
         wf = parse_watch_file(StringIO("""\
 version = 3
 opts=uversionmangle=s%(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$%$1~$2% \\
@@ -210,7 +210,7 @@ opts=uversionmangle=s%(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$%$1~$2% \\
         self.assertEqual(
             '1.0~alpha1', wf.entries[0].uversionmangle('1.0alpha1'))
 
-    def test_parse_uversionmangle_invalid(self):
+    def test_parse_subst_expr_invalid(self):
         wf = parse_watch_file(StringIO("""\
 version = 3
 opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$$1~$2 \\
