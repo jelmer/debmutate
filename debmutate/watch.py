@@ -23,6 +23,8 @@ import sys
 from typing import Iterable, List, Union, Callable, Optional, TextIO, Iterator
 from warnings import warn
 
+from debian.changelog import Version
+
 from .reformatting import (
     Editor,
     )
@@ -78,6 +80,22 @@ class WatchFile(object):
             if key == name:
                 return value
         raise KeyError(name)
+
+    def set_option(self, name, newvalue=None):
+        if newvalue is None:
+            nv = name
+        else:
+            nv = '%s=%s' % (name, newvalue)
+        for i, option in enumerate(self.options):
+            try:
+                key, value = option.split('=', 1)
+            except ValueError:
+                key = option
+                value = None
+            if key == value:
+                self.options[i] = nv
+                return
+        self.options.append(nv)
 
     def del_option(self, name):
         for i, option in enumerate(self.options):
@@ -150,6 +168,11 @@ class Release(object):
         self.url = url
         self.pgpsigurl = pgpsigurl
 
+    def __lt__(self, other):
+        if type(self) != type(other):
+            raise TypeError(other)
+        return Version(self.version) < Version(other.version)
+
     def __repr__(self):
         return "%s(%r, %r, pgpsigurl=%r)" % (
             type(self).__name__, self.version, self.url,
@@ -187,6 +210,29 @@ class Watch(object):
             if key == name:
                 return value
         raise KeyError(name)
+
+    def has_option(self, name):
+        try:
+            self.get_option(name)
+        except KeyError:
+            return False
+        return True
+
+    def set_option(self, name, newvalue=None):
+        if newvalue is None:
+            nv = name
+        else:
+            nv = '%s=%s' % (name, newvalue)
+        for i, option in enumerate(self.options):
+            try:
+                key, value = option.split('=', 1)
+            except ValueError:
+                key = option
+                value = None
+            if key == value:
+                self.options[i] = nv
+                return
+        self.options.append(nv)
 
     def del_option(self, name):
         for i, option in enumerate(self.options):
