@@ -1,8 +1,8 @@
-debmutate (0.16) UNRELEASED; urgency=medium
+debmutate (0.16) unstable; urgency=medium
 
   * Support plain search mode in debian/watch.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 06 Dec 2020 14:56:00 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 06 Dec 2020 14:58:26 +0000
 
 debmutate (0.15) unstable; urgency=medium
 
