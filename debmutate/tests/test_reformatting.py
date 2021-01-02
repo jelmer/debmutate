@@ -43,8 +43,9 @@ class CheckPreserveFormattingTests(TestCase):
             check_preserve_formatting, "FOO ", "FOO  ", 'debian/blah')
 
     def test_reformatting_allowed(self):
-        self.overrideEnv('REFORMATTING', 'allow')
-        check_preserve_formatting("FOO  ", "FOO ", 'debian/blah')
+        check_preserve_formatting(
+            "FOO  ", "FOO ", 'debian/blah',
+            allow_reformatting=True)
 
 
 class GeneratedFileTests(TestCaseInTempDir):

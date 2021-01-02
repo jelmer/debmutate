@@ -48,22 +48,22 @@ class FormattingUnpreservable(Exception):
 
 
 def check_preserve_formatting(
-        rewritten_text: Union[str, bytes], text: Union[str, bytes], path: str):
+        rewritten_text: Union[str, bytes], text: Union[str, bytes],
+        path: str,
+        allow_reformatting: bool = False):
     """Check that formatting can be preserved.
-
-    If the REFORMATTING environment variable is set to 'allow',
-    then reformatting will be allowed.
 
     Args:
       rewritten_text: The rewritten file contents
       text: The original file contents
       path: Path to the file (unused, just passed to the exception)
+      allow_reformatting: Whether to allow reformatting
     Raises:
       FormattingUnpreservable: Raised when formatting could not be preserved
     """
     if rewritten_text == text:
         return
-    if os.environ.get('REFORMATTING', 'disallow') == 'allow':
+    if allow_reformatting:
         return
     raise FormattingUnpreservable(path, text, rewritten_text)
 
@@ -119,7 +119,10 @@ def edit_formatted_file(
             rewritten_contents.strip()
             if rewritten_contents is not None else None,
             original_contents.strip()
-            if original_contents is not None else None, path)
+            if original_contents is not None else None, path,
+            allow_reformatting=(
+                os.environ.get('REFORMATTING', 'disallow') == 'allow'),
+            )
     mode = 'w' + ('b' if isinstance(updated_contents, bytes) else '')
     with open(path, mode) as f:
         f.write(updated_contents)
