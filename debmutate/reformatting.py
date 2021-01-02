@@ -95,7 +95,8 @@ def edit_formatted_file(
         path: str, original_contents: Union[str, bytes],
         rewritten_contents: Union[str, bytes],
         updated_contents: Union[str, bytes],
-        allow_generated: bool = False) -> bool:
+        allow_generated: bool = False,
+        allow_reformatting: bool = False) -> bool:
     """Edit a formatted file.
 
     Args:
@@ -106,6 +107,7 @@ def edit_formatted_file(
         after changes were made.
       allow_generated: Do not raise GeneratedFile when encountering a generated
         file
+      allow_reformatting: Whether to allow reformatting of the file
     """
     if (updated_contents is not None and rewritten_contents is not None and
             type(updated_contents) != type(rewritten_contents)):
@@ -120,8 +122,7 @@ def edit_formatted_file(
             if rewritten_contents is not None else None,
             original_contents.strip()
             if original_contents is not None else None, path,
-            allow_reformatting=(
-                os.environ.get('REFORMATTING', 'disallow') == 'allow'),
+            allow_reformatting=allow_reformatting
             )
     mode = 'w' + ('b' if isinstance(updated_contents, bytes) else '')
     with open(path, mode) as f:
@@ -185,5 +186,7 @@ class Editor(object):
         else:
             self.changed = edit_formatted_file(
                 self.path, self._orig_content, self._rewritten_content,
-                updated_content, self.allow_generated)
+                updated_content, self.allow_generated,
+                os.environ.get('REFORMATTING', 'disallow') == 'allow'
+                )
         return False
