@@ -24,14 +24,14 @@ __all__ = [
     'upstream_fields_in_copyright',
     ]
 
+from typing import Dict, Optional
+
 from debian.copyright import (
     Copyright,
     MachineReadableFormatError,
     NotMachineReadableError,
     )
 from debian.deb822 import RestrictedField
-
-from typing import Dict
 
 from .reformatting import Editor
 
@@ -40,8 +40,11 @@ class CopyrightEditor(Editor):
     """Update a machine-readable copyright file.
     """
 
-    def __init__(self, path: str = 'debian/copyright') -> None:
-        super(CopyrightEditor, self).__init__(path)
+    def __init__(
+            self, path: str = 'debian/copyright',
+            allow_reformatting: Optional[bool] = None) -> None:
+        super(CopyrightEditor, self).__init__(
+            path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
         return Copyright(content, strict=False)

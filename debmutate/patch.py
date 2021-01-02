@@ -20,7 +20,7 @@
 
 from collections import namedtuple
 import os
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from .reformatting import Editor
 
@@ -96,8 +96,11 @@ def write_quilt_series(entries):
 class QuiltSeriesEditor(Editor):
     """Edit a debian/patches/series file."""
 
-    def __init__(self, path='debian/patches/series'):
-        super(QuiltSeriesEditor, self).__init__(path, mode='b')
+    def __init__(
+            self, path: str = 'debian/patches/series',
+            allow_reformatting: Optional[bool] = None):
+        super(QuiltSeriesEditor, self).__init__(
+            path, mode='b', allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
         return list(read_quilt_series(content.splitlines(True)))

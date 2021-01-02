@@ -18,9 +18,12 @@
 
 """Utility functions for dealing with debcargo files."""
 
-from .reformatting import Editor
+from typing import Optional
+
 from toml.decoder import loads
 from toml.encoder import dumps
+
+from .reformatting import Editor
 
 
 class TomlEditor(Editor):
@@ -43,5 +46,8 @@ class TomlEditor(Editor):
 
 class DebcargoEditor(TomlEditor):
 
-    def __init__(self, path: str = 'debian/debcargo.toml'):
-        super(DebcargoEditor, self).__init__(path=path)
+    def __init__(
+            self, path: str = 'debian/debcargo.toml',
+            allow_reformatting: Optional[bool] = None):
+        super(DebcargoEditor, self).__init__(
+            path=path, allow_reformatting=allow_reformatting)

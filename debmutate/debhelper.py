@@ -208,8 +208,11 @@ def serialize_maintscript_line(args):
 
 class MaintscriptEditor(Editor):
 
-    def __init__(self, path: str = 'debian/maintscript'):
-        super(MaintscriptEditor, self).__init__(path=path)
+    def __init__(
+            self, path: str = 'debian/maintscript',
+            allow_reformatting: Optional[bool] = None):
+        super(MaintscriptEditor, self).__init__(
+            path=path, allow_reformatting=allow_reformatting)
 
     def _nonexistant(self):
         return None

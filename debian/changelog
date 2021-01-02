@@ -1,3 +1,10 @@
+debmutate (0.17) UNRELEASED; urgency=medium
+
+  * Add allow_reformatting argument to all Editor constructors, rather
+    than looking at the REFORMATTING environment variable.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 02 Jan 2021 14:54:20 +0000
+
 debmutate (0.16) unstable; urgency=medium
 
   * Support plain search mode in debian/watch.

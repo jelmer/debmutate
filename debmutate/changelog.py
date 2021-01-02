@@ -39,7 +39,11 @@ __all__ = [
     ]
 
 from datetime import datetime
-from email.utils import format_datetime
+from email.utils import format_datetime, parseaddr
+import re
+import textwrap
+from typing import List, Iterator, Tuple, Optional
+
 from io import StringIO
 from debian.changelog import (
     ChangeBlock,
@@ -50,12 +54,7 @@ from debian.changelog import (
     get_maintainer,
     Version,
     )
-from email.utils import parseaddr
-import re
-import textwrap
-from typing import List, Iterator, Tuple, Optional
-from debmutate.reformatting import Editor
-
+from .reformatting import Editor
 
 WIDTH = 80
 INITIAL_INDENT = '  * '
@@ -67,8 +66,11 @@ class ChangelogEditor(Editor):
     This will only write out the changelog file if it has been changed.
     """
 
-    def __init__(self, path='debian/changelog'):
-        super(ChangelogEditor, self).__init__(path)
+    def __init__(
+            self, path: str = 'debian/changelog',
+            allow_reformatting: Optional[bool] = False):
+        super(ChangelogEditor, self).__init__(
+            path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
         return Changelog(content)
