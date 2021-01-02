@@ -25,9 +25,10 @@ __all__ = [
     'Deb822Editor',
     ]
 
-from debian.deb822 import Deb822
 from io import BytesIO
-from typing import Iterable, List
+from typing import Iterable, List, Optional
+
+from debian.deb822 import Deb822
 
 from .reformatting import (
     Editor,
@@ -83,9 +84,12 @@ class Deb822Editor(Editor):
 
     """
 
-    def __init__(self, path: str, allow_generated: bool = False) -> None:
+    def __init__(self, path: str, allow_generated: bool = False,
+                 allow_reformatting: Optional[bool] = None) -> None:
         super(Deb822Editor, self).__init__(
-            path, allow_generated=allow_generated, mode='b')
+            path, allow_generated=allow_generated,
+            allow_reformatting=allow_reformatting,
+            mode='b')
 
     def apply_changes(self, changes, resolve_conflict=None):
         """Apply a set of changes to this deb822 instance.

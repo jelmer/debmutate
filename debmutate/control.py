@@ -233,9 +233,11 @@ class ControlEditor(object):
 
     changed: bool
 
-    def __init__(self, path: str = 'debian/control'):
+    def __init__(self, path: str = 'debian/control',
+                 allow_reformatting: Optional[bool] = None):
         self.path = path
-        self._primary = Deb822Editor(path)
+        self._primary = Deb822Editor(
+            path, allow_reformatting=allow_reformatting)
 
     @classmethod
     def from_tree(cls, tree, subpath=None):

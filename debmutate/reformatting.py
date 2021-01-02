@@ -25,7 +25,7 @@ __all__ = [
 
 
 import os
-from typing import Union
+from typing import Union, Optional
 
 
 class GeneratedFile(Exception):
@@ -135,10 +135,16 @@ class Editor(object):
 
     def __init__(
             self, path: str, mode: str = '',
-            allow_generated: bool = False) -> None:
+            allow_generated: bool = False,
+            allow_reformatting: Optional[bool] = None) -> None:
         self.path = path
         self.mode = mode
         self.allow_generated = allow_generated
+        # TODO(jelmer): Don't make this class check the environment
+        if allow_reformatting is None:
+            allow_reformatting = (
+                os.environ.get('REFORMATTING', 'disallow') == 'allow')
+        self.allow_reformatting = allow_reformatting
 
     def _nonexistant(self):
         raise
@@ -186,7 +192,5 @@ class Editor(object):
         else:
             self.changed = edit_formatted_file(
                 self.path, self._orig_content, self._rewritten_content,
-                updated_content, self.allow_generated,
-                os.environ.get('REFORMATTING', 'disallow') == 'allow'
-                )
+                updated_content, self.allow_generated, self.allow_reformatting)
         return False
