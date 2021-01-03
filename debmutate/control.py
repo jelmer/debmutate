@@ -98,6 +98,16 @@ def guess_template_type(template_path: str) -> Optional[str]:
     Returns:
       Name of template type; None if unknown
     """
+    # TODO(jelmer): This should use a proper make file parser of some sort..
+    try:
+        with open('debian/rules', 'rb') as f:
+            for line in f:
+                if line.startswith(b'debian/control:'):
+                    return 'rules'
+                if line.startswith(b'debian/%: debian/%.in'):
+                    return 'rules'
+    except FileNotFoundError:
+        pass
     try:
         with open(template_path, 'rb') as f:
             template = f.read()
@@ -120,13 +130,6 @@ def guess_template_type(template_path: str) -> Optional[str]:
         return 'directory'
     if os.path.exists('debian/debcargo.toml'):
         return 'debcargo'
-    try:
-        with open('debian/rules', 'rb') as f:
-            for line in f:
-                if line.startswith(b'debian/control:'):
-                    return 'rules'
-    except FileNotFoundError:
-        pass
     return None
 
 
@@ -159,8 +162,9 @@ def _cdbs_resolve_conflict(
 
 
 def _update_control_template(template_path: str, path: str, changes):
+    package_root = os.path.dirname(os.path.dirname(path)) or '.'
     template_type = guess_template_type(template_path)
-    if template_type is None or template_type == 'rules':
+    if template_type is None:
         raise GeneratedFile(path, template_path)
     with Deb822Editor(template_path) as updater:
         resolve_conflict: Optional[Callable[[
@@ -174,8 +178,11 @@ def _update_control_template(template_path: str, path: str, changes):
     if not updater.changed:
         # A bit odd, since there were changes to the output file. Anyway.
         return False
-    package_root = os.path.dirname(os.path.dirname(path)) or '.'
-    if template_type == 'cdbs':
+    if template_type == 'rules':
+        subprocess.check_call(
+            ['./debian/rules', 'debian/control'],
+            cwd=package_root)
+    elif template_type == 'cdbs':
         with Deb822Editor(path, allow_generated=True) as updater:
             updater.apply_changes(changes)
     elif template_type == 'gnome':
