@@ -206,6 +206,10 @@ opts=uversionmangle=tr/+/~/ \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
         self.assertEqual(3, wf.version)
+        try:
+            import tr  # noqa: F401
+        except ModuleNotFoundError:
+            self.skipTest('tr module not available')
         self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
         self.assertEqual(
             '1.0~alpha1', wf.entries[0].uversionmangle('1.0+alpha1'))
