@@ -20,7 +20,8 @@
 from io import StringIO
 import re
 import sys
-from typing import Iterable, List, Union, Callable, Optional, TextIO, Iterator
+from typing import (
+    Iterable, List, Union, Callable, Optional, TextIO, Iterator, Tuple)
 from urllib.parse import urljoin
 from warnings import warn
 
@@ -146,6 +147,14 @@ class WatchFile(object):
             f.write('\n')
 
 
+def parse_sed_expr(vm):
+    if vm.startswith('s'):
+        return ('s', parse_subst_expr(vm))
+    if vm.startswith('tr'):
+        return ('tr', parse_transl_expr(vm))
+    raise InvalidUVersionMangle(vm, 'not a substitution or translation regex')
+
+
 def parse_subst_expr(vm):
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
@@ -158,14 +167,32 @@ def parse_subst_expr(vm):
     return (pattern, replacement, flags)
 
 
-def apply_subst_expr(vm: str, orig: str) -> str:
-    (pattern, replacement, flags) = parse_subst_expr(vm)
-    # TODO(jelmer): Handle flags
-    return re.sub(pattern, replacement, orig)
+def parse_transl_expr(vm: str) -> Tuple[str, str, str]:
+    if not vm.startswith('tr'):
+        raise InvalidUVersionMangle(vm, 'not a translation regex')
+    parts = re.split(r'(?<!\\)' + vm[2], vm)
+    if len(parts) < 3:
+        raise InvalidUVersionMangle(vm)
+    pattern = parts[1]
+    replacement = parts[2]
+    flags = parts[3]
+    return (pattern, replacement, flags)
+
+
+def apply_sed_expr(vm: str, orig: str) -> str:
+    (kind, (pattern, replacement, flags)) = parse_sed_expr(vm)
+    if kind == 's':
+        # TODO(jelmer): Handle flags
+        return re.sub(pattern, replacement.replace('$', '\\'), orig)
+    elif kind == 'tr':
+        from tr import tr
+        return tr(pattern, replacement, orig, flags)
+    else:
+        raise ValueError(kind)
 
 
 def apply_url_mangle(expr: str, orig: str) -> str:
-    return apply_subst_expr(expr, orig)
+    return apply_sed_expr(expr, orig)
 
 
 class Release(object):
@@ -227,8 +254,7 @@ class Watch(object):
             vm = self.get_option('uversionmangle')
         except KeyError:
             return version
-        (pattern, replacement, flags) = parse_subst_expr(vm)
-        return re.sub(pattern, replacement.replace('$', '\\'), version)
+        return apply_sed_expr(vm, version)
 
     def get_option(self, name):
         for option in self.options:

@@ -1,3 +1,9 @@
+debmutate (0.18) UNRELEASED; urgency=medium
+
+  * watch: Add support for tr// expressions in version mangle.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 05 Jan 2021 18:26:25 +0000
+
 debmutate (0.17) unstable; urgency=medium
 
   * Add allow_reformatting argument to all Editor constructors, rather
