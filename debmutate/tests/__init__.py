@@ -77,6 +77,7 @@ def test_suite():
         'vcs',
         'versions',
         'watch',
+        '_rules',
         ]
     module_names = [__name__ + '.test_' + name for name in names]
     loader = unittest.TestLoader()
