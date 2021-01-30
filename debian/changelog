@@ -1,9 +1,9 @@
-debmutate (0.18) UNRELEASED; urgency=medium
+debmutate (0.18) unstable; urgency=medium
 
   * watch: Add support for tr// expressions in version mangle.
   * Import rules module from lintian-brush as debmutate._rules.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 05 Jan 2021 18:26:25 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 30 Jan 2021 16:36:05 +0000
 
 debmutate (0.17) unstable; urgency=medium
 
