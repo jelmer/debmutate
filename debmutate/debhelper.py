@@ -238,8 +238,16 @@ class MaintscriptEditor(Editor):
         return [entry for entry in self.lines
                 if not isinstance(entry, str)]
 
+    def append(self, entry):
+        if self._parsed is None:
+            self._parsed = [entry]
+        else:
+            self._parsed.append(entry)
+
     def _format(self, parsed):
         """Serialize the parsed object."""
+        if self._parsed is None:
+            return None
         ret = []
         for entry in self._parsed:
             if isinstance(entry, str):

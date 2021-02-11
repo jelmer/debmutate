@@ -1,6 +1,7 @@
 debmutate (0.19) UNRELEASED; urgency=medium
 
   * Install examples.
+  * Add MaintscriptEditor.append.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 30 Jan 2021 17:03:22 +0000
 
