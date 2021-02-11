@@ -71,6 +71,7 @@ def test_suite():
         'deb822',
         'debcargo',
         'debhelper',
+        'debmutate',
         'lintian_overrides',
         'patch',
         'reformatting',

@@ -1,3 +1,9 @@
+debmutate (0.20) UNRELEASED; urgency=medium
+
+  * Fix compatibility with Python 3.6.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 11 Feb 2021 23:53:39 +0000
+
 debmutate (0.19) unstable; urgency=medium
 
   * Install examples.

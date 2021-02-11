@@ -24,7 +24,7 @@ from typing import Iterator, Optional, List
 from .reformatting import Editor
 
 
-def wildcard_to_re(wildcard: str) -> re.Pattern:
+def wildcard_to_re(wildcard: str):
     wc = []
     for c in wildcard:
         if c == '%':
