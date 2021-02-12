@@ -33,20 +33,7 @@ debmutate currently provides editors for the following control files:
  * debian/patches/series
  * debian/tests/control
  * debian/watch
+ * debian/maintscripts, debian/\*.maintscripts
+ * debian/source/lintian-overrides, debian/\*.lintian-overrides
+ * debian/debcargo.toml
 
-Example Usage
-=============
-
-The easiest way to use the upstream ontologist is by invoking the
-``guess-upstream-metadata`` command in a software project:
-
-  $ guess-upstream-metadata ~/src/dulwich
-  X-Security-MD: https://github.com/dulwich/dulwich/tree/HEAD/SECURITY.md
-  Name: dulwich
-  X-Version: 0.20.15
-  Bug-Database: https://github.com/dulwich/dulwich/issues
-  Repository: https://www.dulwich.io/code/
-  X-Summary: Python Git Library
-  Bug-Submit: https://github.com/dulwich/dulwich/issues/new
-
-Alternatively, there is a Python API.
