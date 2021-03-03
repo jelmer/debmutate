@@ -18,12 +18,12 @@
 """Functions for working with watch files."""
 
 from io import StringIO
+import logging
 import re
 import sys
 from typing import (
     Iterable, List, Union, Callable, Optional, TextIO, Iterator, Tuple)
 from urllib.parse import urljoin
-from warnings import warn
 
 from debian.changelog import Version
 
@@ -214,19 +214,21 @@ class Release(object):
             self.pgpsigurl)
 
 
-def html_search(body, matching_pattern):
+def html_search(body, matching_pattern, base_url):
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(body, 'html.parser')
+    matching_pattern = urljoin(base_url.rstrip('/') + '/', matching_pattern)
     for a in soup.find_all('a'):
         href = a.attrs.get('href')
         if not href:
             continue
+        href = urljoin(base_url.rstrip('/') + '/', href)
         m = re.fullmatch(matching_pattern, href)
         if m:
             yield m
 
 
-def plain_search(body, matching_pattern):
+def plain_search(body, matching_pattern, base_url):
     return re.finditer(matching_pattern, body)
 
 
@@ -334,9 +336,11 @@ class Watch(object):
             searchmode = self.get_option('searchmode')
         except KeyError:
             searchmode = 'html'
+        logging.debug('Fetching url %s; searchmode=%s', url, searchmode)
         req = Request(url, headers={'User-Agent': user_agent})
         resp = urlopen(req)
-        for m in searchers[searchmode](resp.read(), self.matching_pattern):
+        for m in searchers[searchmode](
+                resp.read(), self.matching_pattern, url):
             # TODO(jelmer): Apply uversionmangle
             full_url = urljoin(url, m.group(0))
             try:
@@ -374,7 +378,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
             continued = []
     if continued:
         # Hmm, broken line?
-        warn('watchfile ended with \\; skipping last line')
+        logging.warning('watchfile ended with \\; skipping last line')
         lines.append(continued)
     if not lines:
         return None
@@ -424,7 +428,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
             m = re.findall(r'/([^/]*\([^/]*\)[^/]*)$', url)
             if m:
                 parts = [m[0]] + line.split(maxsplit=1)
-                url = url[:-len(m[0])-1]
+                url = url[:-len(m[0])-1].strip()
             else:
                 parts = line.split(maxsplit=2)
             entries.append(Watch(url, *parts, opts=opts))  # type: ignore
@@ -465,11 +469,20 @@ class WatchEditor(Editor):
 
 def uscan(wf, package):
     for entry in wf.entries:
+        logging.info('entry: %s' % entry)
         for d in entry.discover(package):
-            print('%s' % d)
+            logging.info('  %s' % d)
 
 
 def main(argv):
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', action='store_true')
+    args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+    else:
+        logging.basicConfig(level=logging.INFO, format='%(message)s')
     with open('debian/watch', 'r') as f:
         wf = parse_watch_file(f)
     from debian.deb822 import Deb822
