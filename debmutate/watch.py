@@ -229,7 +229,7 @@ def html_search(body, matching_pattern, base_url):
 
 
 def plain_search(body, matching_pattern, base_url):
-    return re.finditer(matching_pattern, body)
+    return re.finditer(matching_pattern.encode(), body)
 
 
 searchers = {
