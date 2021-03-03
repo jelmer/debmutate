@@ -79,7 +79,7 @@ class DebcargoSourceShimEditor(MutableMapping):
                     default = default(self)
                 if default is not None:
                     return default
-                raise
+                raise KeyError(name)
             else:
                 if isinstance(value, list):
                     return ', '.join(value)
@@ -93,7 +93,7 @@ class DebcargoSourceShimEditor(MutableMapping):
                     default = default(self)
                 if default is not None:
                     return default
-                raise
+                raise KeyError(name)
             else:
                 if isinstance(value, list):
                     return ', '.join(value)
@@ -217,7 +217,7 @@ class DebcargoBinaryShimEditor(MutableMapping):
                 if callable(default):
                     default = default(self)
                 if default is None:
-                    raise
+                    raise KeyError(name)
                 return default
         elif name == 'Package':
             return self.package_name
