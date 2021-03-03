@@ -1,8 +1,14 @@
-debmutate (0.21) UNRELEASED; urgency=medium
+debmutate (0.22) UNRELEASED; urgency=medium
+
+  * Fix binary package editing for debcargo.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 03 Mar 2021 14:26:21 +0000
+
+debmutate (0.21) unstable; urgency=medium
 
   * Add basic debcargo.toml support.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 03 Mar 2021 14:14:50 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 03 Mar 2021 14:14:54 +0000
 
 debmutate (0.20) unstable; urgency=medium
 

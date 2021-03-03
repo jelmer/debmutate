@@ -231,6 +231,19 @@ class DebcargoBinaryShimEditor(MutableMapping):
         else:
             raise KeyError(name)
 
+    def __delitem__(self, name):
+        if name in self.BINARY_KEY_MAP:
+            (toml_name, default) = self.BINARY_KEY_MAP[name]
+            if default is None:
+                try:
+                    del self._debcargo['packages.' + self._key][toml_name]
+                except KeyError:
+                    pass
+            else:
+                raise KeyError(name)
+        else:
+            raise KeyError(name)
+
     def __iter__(self):
         for name in chain(self.BINARY_KEY_MAP, ['Package']):
             try:
