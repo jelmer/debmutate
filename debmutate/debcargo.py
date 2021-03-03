@@ -61,19 +61,6 @@ class DebcargoEditor(TomlEditor):
 
 class DebcargoSourceShimEditor(object):
 
-    SOURCE_KEY_MAP = {
-        'Standards-Version': ('policy', None),
-        'Homepage': ('homepage', None),
-        'Vcs-Git': ('vcs_git', None),
-        'Vcs-Browser': ('vcs_browser', None),
-        'Section': ('section', None),
-        'Build-Depends': ('build_depends', None),
-        }
-    KEY_MAP = {
-        'Maintainer': ('maintainer', DEFAULT_MAINTAINER),
-        'Uploaders': ('uploaders', None),
-        }
-
     def __init__(self, debcargo, crate_name):
         self._debcargo = debcargo
         self.crate_name = crate_name
@@ -84,6 +71,8 @@ class DebcargoSourceShimEditor(object):
             try:
                 value = self._debcargo['source'][toml_name]
             except KeyError:
+                if callable(default):
+                    default = default(self)
                 if default is not None:
                     return default
                 raise
@@ -96,6 +85,8 @@ class DebcargoSourceShimEditor(object):
             try:
                 value = self._debcargo[toml_name]
             except KeyError:
+                if callable(default):
+                    default = default(self)
                 if default is not None:
                     return default
                 raise
@@ -110,15 +101,30 @@ class DebcargoSourceShimEditor(object):
         else:
             raise KeyError(name)
 
+    def _default_vcs_git(self):
+        return 'https://salsa.debian.org/rust-team/debcargo-conf.git [src/%s]' % self.crate_name
+
+    def _default_vcs_browser(self):
+        return 'https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/%s' % self.crate_name
+
     def __setitem__(self, name, value):
         if name in self.SOURCE_KEY_MAP:
             toml_name, default = self.SOURCE_KEY_MAP[name]
+            if callable(default):
+                default = default(self)
             if value == default:
-                del self._debcargo['source'][toml_name]
+                try:
+                    del self._debcargo['source'][toml_name]
+                except KeyError:
+                    pass
             else:
+                if not 'source' in self._debcargo:
+                    self._debcargo['source'] = {}
                 self._debcargo['source'][toml_name] = value
         elif name in self.KEY_MAP:
             toml_name, default = self.KEY_MAP[name]
+            if callable(default):
+                default = default(self)
             if value == default:
                 del self._debcargo[toml_name]
             else:
@@ -130,7 +136,10 @@ class DebcargoSourceShimEditor(object):
         if name in self.SOURCE_KEY_MAP:
             toml_name, default = self.SOURCE_KEY_MAP[name]
             if default is None:
-                del self._debcargo['source'][toml_name]
+                try:
+                    del self._debcargo['source'][toml_name]
+                except KeyError:
+                    pass
             else:
                 raise KeyError(name)
         elif name in self.KEY_MAP:
@@ -158,6 +167,20 @@ class DebcargoSourceShimEditor(object):
             except KeyError:
                 pass
 
+    SOURCE_KEY_MAP = {
+        'Standards-Version': ('policy', None),
+        'Homepage': ('homepage', None),
+        'Vcs-Git': ('vcs_git', _default_vcs_git),
+        'Vcs-Browser': (
+            'vcs_browser', _default_vcs_browser),
+        'Section': ('section', None),
+        'Build-Depends': ('build_depends', None),
+        }
+    KEY_MAP = {
+        'Maintainer': ('maintainer', DEFAULT_MAINTAINER),
+        'Uploaders': ('uploaders', None),
+        }
+
 
 class DebcargoBinaryShimEditor(object):
 
@@ -178,6 +201,8 @@ class DebcargoBinaryShimEditor(object):
             try:
                 return self._debcargo['packages.' + self._key][toml_name]
             except KeyError:
+                if callable(default):
+                    default = default(self)
                 if default is None:
                     raise
                 return default
@@ -242,8 +267,12 @@ class DebcargoControlShimEditor(object):
             except KeyError:
                 need_bin_package = False
         if need_bin_package:
+            try:
+                bin_name = self.debcargo_editor['bin_name']
+            except KeyError:
+                bin_name = self.crate
             ret.append(DebcargoBinaryShimEditor(
-                self.debcargo_editor, 'bin', self.crate))
+                self.debcargo_editor, 'bin', bin_name))
         # TODO(jelmer): Add lib+feature packages
         return ret
 
