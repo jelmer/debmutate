@@ -1,3 +1,9 @@
+debmutate (0.21) UNRELEASED; urgency=medium
+
+  * Add basic debcargo.toml support.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 03 Mar 2021 14:14:50 +0000
+
 debmutate (0.20) unstable; urgency=medium
 
   * Fix compatibility with Python 3.6.
