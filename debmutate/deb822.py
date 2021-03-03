@@ -78,6 +78,13 @@ class ChangeConflict(Exception):
         self.actual_old_value = actual_old_value
         self.new_value = new_value
 
+    def __repr__(self):
+        return ("%s(para_key=%r, field=%r, expected_old_value=%r, "
+                "actual_old_value=%r, new_value=%r)" % (
+                    type(self).__name__,
+                    self.paragraph_key, self.field, self.expected_old_value,
+                    self.actual_old_value, self.new_value))
+
 
 class Deb822Editor(Editor):
     """Update the contents of a Deb822-style file.
