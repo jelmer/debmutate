@@ -102,10 +102,20 @@ class DebcargoSourceShimEditor(object):
             raise KeyError(name)
 
     def _default_vcs_git(self):
-        return 'https://salsa.debian.org/rust-team/debcargo-conf.git [src/%s]' % self.crate_name
+        return ('https://salsa.debian.org/rust-team/debcargo-conf.git '
+                '[src/%s]' % self.crate_name)
 
     def _default_vcs_browser(self):
-        return 'https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/%s' % self.crate_name
+        return ('https://salsa.debian.org/rust-team/debcargo-conf/tree/'
+                'master/src/%s' % self.crate_name)
+
+    def _build_depends(self):
+        # TODO(jelmer): read Cargo.toml
+        return None
+
+    def _default_homepage(self):
+        # TODO(jelmer): read Cargo.toml
+        return None
 
     def __setitem__(self, name, value):
         if name in self.SOURCE_KEY_MAP:
@@ -118,7 +128,7 @@ class DebcargoSourceShimEditor(object):
                 except KeyError:
                     pass
             else:
-                if not 'source' in self._debcargo:
+                if 'source' not in self._debcargo:
                     self._debcargo['source'] = {}
                 self._debcargo['source'][toml_name] = value
         elif name in self.KEY_MAP:
@@ -158,7 +168,8 @@ class DebcargoSourceShimEditor(object):
             return default
 
     def __iter__(self):
-        for name in chain(self.KEY_MAP, self.SOURCE_KEY_MAP, ['Source', 'Priority']):
+        for name in chain(self.KEY_MAP, self.SOURCE_KEY_MAP,
+                          ['Source', 'Priority']):
             try:
                 self[name]
             except KeyError:
@@ -175,12 +186,12 @@ class DebcargoSourceShimEditor(object):
 
     SOURCE_KEY_MAP = {
         'Standards-Version': ('policy', None),
-        'Homepage': ('homepage', None),
+        'Homepage': ('homepage', _default_homepage),
         'Vcs-Git': ('vcs_git', _default_vcs_git),
         'Vcs-Browser': (
             'vcs_browser', _default_vcs_browser),
         'Section': ('section', None),
-        'Build-Depends': ('build_depends', None),
+        'Build-Depends': ('build_depends', _build_depends),
         }
     KEY_MAP = {
         'Maintainer': ('maintainer', DEFAULT_MAINTAINER),
