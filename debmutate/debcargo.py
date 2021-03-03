@@ -158,7 +158,13 @@ class DebcargoSourceShimEditor(object):
             return default
 
     def __iter__(self):
-        return chain(self.KEY_MAP, self.SOURCE_KEY_MAP, ['Source', 'Priority'])
+        for name in chain(self.KEY_MAP, self.SOURCE_KEY_MAP, ['Source', 'Priority']):
+            try:
+                self[name]
+            except KeyError:
+                pass
+            else:
+                yield name
 
     def items(self):
         for name in self:
@@ -188,6 +194,8 @@ class DebcargoBinaryShimEditor(object):
         'Section': ('section', DEFAULT_SECTION),
         'Depends': ('depends', None),
         'Recommends': ('recommends', None),
+        'Suggests': ('suggests', None),
+        'Provides': ('provides', None),
         }
 
     def __init__(self, debcargo, key, package_name):
@@ -224,7 +232,13 @@ class DebcargoBinaryShimEditor(object):
             return default
 
     def __iter__(self):
-        return chain(self.BINARY_KEY_MAP, ['Package'])
+        for name in chain(self.BINARY_KEY_MAP, ['Package']):
+            try:
+                self[name]
+            except KeyError:
+                pass
+            else:
+                yield name
 
     def items(self):
         for name in self:
@@ -235,7 +249,7 @@ class DebcargoBinaryShimEditor(object):
 
 
 class DebcargoControlShimEditor(object):
-    """Shim for debian/contrl that edits debian/debcargo.toml."""
+    """Shim for debian/control that edits debian/debcargo.toml."""
 
     def __init__(self, debcargo_editor):
         self.debcargo_editor = debcargo_editor
@@ -244,6 +258,7 @@ class DebcargoControlShimEditor(object):
 
     @property
     def crate(self):
+        # TODO(jelmer): Check changelog instead?
         return os.path.basename(os.path.abspath(
             os.path.join(os.path.dirname(self.debcargo_editor.path), '..')))
 
