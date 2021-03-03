@@ -29,5 +29,8 @@ setup(
         "Repository": "https://salsa.debian.org/jelmer/debmutate.git",
     },
     requires=['debian'],
+    extras_require={
+        'debcargo': ['tomlkit'],
+    },
     test_suite='debmutate.tests.test_suite',
 )

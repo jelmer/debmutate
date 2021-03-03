@@ -18,12 +18,18 @@
 
 """Utility functions for dealing with debcargo files."""
 
+from itertools import chain
+import os
 from typing import Optional
 
-from toml.decoder import loads
-from toml.encoder import dumps
+from tomlkit import loads, dumps
 
 from .reformatting import Editor
+
+
+DEFAULT_MAINTAINER = (
+    "Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>")
+DEFAULT_SECTION = 'rust'
 
 
 class TomlEditor(Editor):
@@ -51,3 +57,196 @@ class DebcargoEditor(TomlEditor):
             allow_reformatting: Optional[bool] = None):
         super(DebcargoEditor, self).__init__(
             path=path, allow_reformatting=allow_reformatting)
+
+
+class DebcargoSourceShimEditor(object):
+
+    SOURCE_KEY_MAP = {
+        'Standards-Version': ('policy', None),
+        'Homepage': ('homepage', None),
+        'Vcs-Git': ('vcs_git', None),
+        'Vcs-Browser': ('vcs_browser', None),
+        'Section': ('section', None),
+        'Build-Depends': ('build_depends', None),
+        }
+    KEY_MAP = {
+        'Maintainer': ('maintainer', DEFAULT_MAINTAINER),
+        'Uploaders': ('uploaders', None),
+        }
+
+    def __init__(self, debcargo, crate_name):
+        self._debcargo = debcargo
+        self.crate_name = crate_name
+
+    def __getitem__(self, name):
+        if name in self.SOURCE_KEY_MAP:
+            (toml_name, default) = self.SOURCE_KEY_MAP[name]
+            try:
+                value = self._debcargo['source'][toml_name]
+            except KeyError:
+                if default is not None:
+                    return default
+                raise
+            else:
+                if isinstance(value, list):
+                    return ', '.join(value)
+                return value
+        elif name in self.KEY_MAP:
+            (toml_name, default) = self.KEY_MAP[name]
+            try:
+                value = self._debcargo[toml_name]
+            except KeyError:
+                if default is not None:
+                    return default
+                raise
+            else:
+                if isinstance(value, list):
+                    return ', '.join(value)
+                return value
+        elif name == 'Source':
+            return 'rust-%s' % self.crate_name
+        elif name == 'Priority':
+            return 'optional'
+        else:
+            raise KeyError(name)
+
+    def __setitem__(self, name, value):
+        if name in self.SOURCE_KEY_MAP:
+            toml_name, default = self.SOURCE_KEY_MAP[name]
+            if value == default:
+                del self._debcargo['source'][toml_name]
+            else:
+                self._debcargo['source'][toml_name] = value
+        elif name in self.KEY_MAP:
+            toml_name, default = self.KEY_MAP[name]
+            if value == default:
+                del self._debcargo[toml_name]
+            else:
+                self._debcargo[toml_name] = value
+        else:
+            raise KeyError(name)
+
+    def __delitem__(self, name):
+        if name in self.SOURCE_KEY_MAP:
+            toml_name, default = self.SOURCE_KEY_MAP[name]
+            if default is None:
+                del self._debcargo['source'][toml_name]
+            else:
+                raise KeyError(name)
+        elif name in self.KEY_MAP:
+            toml_name, default = self.KEY_MAP[name]
+            if default is None:
+                del self._debcargo[toml_name]
+            else:
+                raise KeyError(name)
+        else:
+            raise KeyError(name)
+
+    def get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
+
+    def __iter__(self):
+        return chain(self.KEY_MAP, self.SOURCE_KEY_MAP, ['Source', 'Priority'])
+
+    def items(self):
+        for name in self:
+            try:
+                yield (name, self[name])
+            except KeyError:
+                pass
+
+
+class DebcargoBinaryShimEditor(object):
+
+    BINARY_KEY_MAP = {
+        'Section': ('section', DEFAULT_SECTION),
+        'Depends': ('depends', None),
+        'Recommends': ('recommends', None),
+        }
+
+    def __init__(self, debcargo, key, package_name):
+        self._debcargo = debcargo
+        self._key = key
+        self.package_name = package_name
+
+    def __getitem__(self, name):
+        if name in self.BINARY_KEY_MAP:
+            (toml_name, default) = self.BINARY_KEY_MAP[name]
+            try:
+                return self._debcargo['packages.' + self._key][toml_name]
+            except KeyError:
+                if default is None:
+                    raise
+                return default
+        elif name == 'Package':
+            return self.package_name
+        else:
+            raise KeyError(name)
+
+    def __setitem__(self, name, value):
+        if name in self.BINARY_KEY_MAP:
+            self._debcargo['packages.' + self._key][self.BINARY_KEY_MAP[name]] = value
+        else:
+            raise KeyError(name)
+
+    def get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
+
+    def __iter__(self):
+        return chain(self.BINARY_KEY_MAP, ['Package'])
+
+    def items(self):
+        for name in self:
+            try:
+                yield (name, self[name])
+            except KeyError:
+                pass
+
+
+class DebcargoControlShimEditor(object):
+    """Shim for debian/contrl that edits debian/debcargo.toml."""
+
+    def __init__(self, debcargo_editor):
+        self.debcargo_editor = debcargo_editor
+        self.source = DebcargoSourceShimEditor(
+            self.debcargo_editor, self.crate)
+
+    @property
+    def crate(self):
+        return os.path.basename(os.path.abspath(
+            os.path.join(os.path.dirname(self.debcargo_editor.path), '..')))
+
+    def __enter__(self):
+        self.debcargo_editor.__enter__()
+        return self
+
+    def __exit__(self, exc_typ, exc_val, exc_tb):
+        self.debcargo_editor.__exit__(exc_typ, exc_val, exc_tb)
+        return False
+
+    @property
+    def binaries(self):
+        ret = [DebcargoBinaryShimEditor(
+            self.debcargo_editor, 'lib', 'librust-%s-dev' % self.crate)]
+        try:
+            need_bin_package = self.debcargo_editor['bin']
+        except KeyError:
+            try:
+                need_bin_package = not self.debcargo_editor['semver_suffix']
+            except KeyError:
+                need_bin_package = False
+        if need_bin_package:
+            ret.append(DebcargoBinaryShimEditor(
+                self.debcargo_editor, 'bin', self.crate))
+        # TODO(jelmer): Add lib+feature packages
+        return ret
+
+    @property
+    def paragraphs(self):
+        return [self.source] + self.binaries
