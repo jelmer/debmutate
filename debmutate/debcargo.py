@@ -18,6 +18,7 @@
 
 """Utility functions for dealing with debcargo files."""
 
+from collections.abc import MutableMapping
 from itertools import chain
 import os
 from typing import Optional
@@ -40,6 +41,9 @@ class TomlEditor(Editor):
     def _format(self, parsed):
         return dumps(parsed)
 
+    def __contains__(self, key):
+        return key in self._parsed
+
     def __getitem__(self, key):
         return self._parsed[key]
 
@@ -59,7 +63,7 @@ class DebcargoEditor(TomlEditor):
             path=path, allow_reformatting=allow_reformatting)
 
 
-class DebcargoSourceShimEditor(object):
+class DebcargoSourceShimEditor(MutableMapping):
 
     def __init__(self, debcargo, crate_name):
         self._debcargo = debcargo
@@ -161,12 +165,6 @@ class DebcargoSourceShimEditor(object):
         else:
             raise KeyError(name)
 
-    def get(self, name, default=None):
-        try:
-            return self[name]
-        except KeyError:
-            return default
-
     def __iter__(self):
         for name in chain(self.KEY_MAP, self.SOURCE_KEY_MAP,
                           ['Source', 'Priority']):
@@ -177,12 +175,8 @@ class DebcargoSourceShimEditor(object):
             else:
                 yield name
 
-    def items(self):
-        for name in self:
-            try:
-                yield (name, self[name])
-            except KeyError:
-                pass
+    def __len__(self):
+        return len(self.KEY_MAP) + len(self.SOURCE_KEY_MAP) + 2
 
     SOURCE_KEY_MAP = {
         'Standards-Version': ('policy', None),
@@ -199,7 +193,7 @@ class DebcargoSourceShimEditor(object):
         }
 
 
-class DebcargoBinaryShimEditor(object):
+class DebcargoBinaryShimEditor(MutableMapping):
 
     BINARY_KEY_MAP = {
         'Section': ('section', DEFAULT_SECTION),
@@ -232,15 +226,10 @@ class DebcargoBinaryShimEditor(object):
 
     def __setitem__(self, name, value):
         if name in self.BINARY_KEY_MAP:
-            self._debcargo['packages.' + self._key][self.BINARY_KEY_MAP[name]] = value
+            (toml_name, default) = self.BINARY_KEY_MAP[name]
+            self._debcargo['packages.' + self._key][toml_name] = value
         else:
             raise KeyError(name)
-
-    def get(self, name, default=None):
-        try:
-            return self[name]
-        except KeyError:
-            return default
 
     def __iter__(self):
         for name in chain(self.BINARY_KEY_MAP, ['Package']):
@@ -251,12 +240,8 @@ class DebcargoBinaryShimEditor(object):
             else:
                 yield name
 
-    def items(self):
-        for name in self:
-            try:
-                yield (name, self[name])
-            except KeyError:
-                pass
+    def __len__(self):
+        return len(self.BINARY_KEY_MAP) + 1
 
 
 class DebcargoControlShimEditor(object):
