@@ -308,6 +308,14 @@ class DebcargoControlShimEditor(object):
 def parse_debcargo_source_name(
         source_name: str,
         semver_suffix: bool = False) -> Tuple[str, Optional[str]]:
+    """Parse a debcargo source name and return crate.
+
+    Args:
+      source_name: Source package name
+      semver_suffix: Whether semver_suffix is enabled
+    Returns:
+      tuple with crate name and optional semver
+    """
     if not source_name.startswith('rust-'):
         raise ValueError(source_name)
     crate = source_name[len('rust-'):]
@@ -315,5 +323,4 @@ def parse_debcargo_source_name(
         crate, crate_semver_version = crate.rsplit('-', 1)
     else:
         crate_semver_version = None
-    crate = crate.replace('-', '_')
     return crate, crate_semver_version
