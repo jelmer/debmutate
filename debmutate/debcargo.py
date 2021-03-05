@@ -184,7 +184,7 @@ class DebcargoSourceShimEditor(MutableMapping):
         'Vcs-Git': ('vcs_git', _default_vcs_git),
         'Vcs-Browser': (
             'vcs_browser', _default_vcs_browser),
-        'Section': ('section', None),
+        'Section': ('section', DEFAULT_SECTION),
         'Build-Depends': ('build_depends', _build_depends),
         }
     KEY_MAP = {
@@ -196,7 +196,7 @@ class DebcargoSourceShimEditor(MutableMapping):
 class DebcargoBinaryShimEditor(MutableMapping):
 
     BINARY_KEY_MAP = {
-        'Section': ('section', DEFAULT_SECTION),
+        'Section': ('section', None),
         'Depends': ('depends', None),
         'Recommends': ('recommends', None),
         'Suggests': ('suggests', None),
