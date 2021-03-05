@@ -21,7 +21,7 @@
 from collections.abc import MutableMapping
 from itertools import chain
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 from tomlkit import loads, dumps
 
@@ -303,3 +303,17 @@ class DebcargoControlShimEditor(object):
     @property
     def paragraphs(self):
         return [self.source] + self.binaries
+
+
+def parse_debcargo_source_name(
+        source_name: str,
+        semver_suffix: bool = False) -> Tuple[str, Optional[str]]:
+    if not source_name.startswith('rust-'):
+        raise ValueError(source_name)
+    crate = source_name[len('rust-'):]
+    if semver_suffix and '-' in crate:
+        crate, crate_semver_version = crate.rsplit('-', 1)
+    else:
+        crate_semver_version = None
+    crate = crate.replace('-', '_')
+    return crate, crate_semver_version
