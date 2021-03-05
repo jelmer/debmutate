@@ -99,6 +99,16 @@ def read_debhelper_compat_file(path: str) -> int:
         return int(line.strip())
 
 
+def get_debhelper_compat_level_from_control(control) -> Optional[int]:
+    try:
+        offset, [relation] = get_relation(
+            control.get("Build-Depends", ""), "debhelper-compat")
+    except (IndexError, KeyError):
+        return None
+    else:
+        return int(str(relation.version[1]))
+
+
 def get_debhelper_compat_level(path: str = '.') -> Optional[int]:
     try:
         return read_debhelper_compat_file(os.path.join(path, 'debian/compat'))
@@ -111,13 +121,7 @@ def get_debhelper_compat_level(path: str = '.') -> Optional[int]:
     except FileNotFoundError:
         return None
 
-    try:
-        offset, [relation] = get_relation(
-            control.get("Build-Depends", ""), "debhelper-compat")
-    except (IndexError, KeyError):
-        return None
-    else:
-        return int(str(relation.version[1]))
+    return get_debhelper_compat_level_from_control(control)
 
 
 @dataclass

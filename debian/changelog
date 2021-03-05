@@ -1,3 +1,10 @@
+debmutate (0.23) UNRELEASED; urgency=medium
+
+  * Split out
+    debmutate.debhelper.get_debhelper_compat_level_from_control.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 05 Mar 2021 16:45:45 +0000
+
 debmutate (0.22) unstable; urgency=medium
 
   * Fix binary package editing for debcargo.
