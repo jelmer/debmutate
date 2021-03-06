@@ -2,6 +2,7 @@ debmutate (0.24) UNRELEASED; urgency=medium
 
   * Set Section in source of debcargo packages, otherwise lintian-brush
     will attempt to move it.
+  * Add missing dependency on tomlkit.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 05 Mar 2021 22:18:29 +0000
 
