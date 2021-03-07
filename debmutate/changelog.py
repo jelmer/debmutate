@@ -308,8 +308,8 @@ def changelog_add_entry(
     if maintainer_name is None or maintainer_email is None:
         raise ValueError(
             'unable to determine maintainer details and none specified')
-    if (cl[0].distributions == 'UNRELEASED' or (
-            cl[0].author is None and cl[0].date is None)):
+    if (distribution_is_unreleased(cl[0].distributions) or (
+                cl[0].author is None and cl[0].date is None)):
         by_author = list(changes_by_author(cl[0].changes()))
         if all([author is None for (author, linenos, change) in by_author]):
             if cl[0].author is not None:
@@ -436,6 +436,12 @@ def all_sha_prefixed(cb: ChangeBlock) -> bool:
     return (sha_prefixed > 0)
 
 
+def distribution_is_unreleased(distribution):
+    return (
+        distribution == 'UNRELEASED' or
+        distribution.startswith('UNRELEASED-'))
+
+
 def changeblock_ensure_first_line(block, line, maintainer=None):
     """Ensure that the first line matches the specified line.
     """
@@ -463,7 +469,7 @@ def changeblock_ensure_first_line(block, line, maintainer=None):
 def release(cl, distribution="unstable", timestamp=None, localtime=True):
     """Create a release for a changelog file.
     """
-    if cl[0].distributions == 'UNRELEASED':
+    if distribution_is_unreleased(cl[0].distributions):
         cl[0].distributions = distribution
         cl[0].date = format_date(timestamp=timestamp, localtime=localtime)
 
@@ -478,7 +484,7 @@ def find_last_distribution(changelog):
     """
     for block in changelog._blocks:
         distribution = block.distributions.split(" ")[0]
-        if distribution != "UNRELEASED":
+        if not distribution_is_unreleased(distribution):
             return distribution
     return None
 
