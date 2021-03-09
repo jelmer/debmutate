@@ -249,7 +249,7 @@ class ControlEditor(object):
             allow_missing=allow_missing)
 
     @classmethod
-    def create(cls, path):
+    def create(cls, path: str = 'debian/control'):
         return cls(path, allow_reformatting=True, allow_missing=True)
 
     @classmethod
