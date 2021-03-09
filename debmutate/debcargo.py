@@ -23,6 +23,8 @@ from itertools import chain
 import os
 from typing import Optional, Tuple
 
+from debian.changelog import Changelog
+
 from tomlkit import loads, dumps
 
 from .reformatting import Editor
@@ -58,9 +60,16 @@ class DebcargoEditor(TomlEditor):
 
     def __init__(
             self, path: str = 'debian/debcargo.toml',
-            allow_reformatting: Optional[bool] = None):
+            allow_reformatting: Optional[bool] = None,
+            allow_missing: bool = False):
         super(DebcargoEditor, self).__init__(
             path=path, allow_reformatting=allow_reformatting)
+        self.allow_missing = allow_missing
+
+    def _nonexistant(self):
+        if self.allow_missing:
+            return {}
+        raise
 
 
 class DebcargoSourceShimEditor(MutableMapping):
@@ -260,16 +269,25 @@ class DebcargoBinaryShimEditor(MutableMapping):
 class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
-    def __init__(self, debcargo_editor):
+    def __init__(self, debcargo_editor, crate):
         self.debcargo_editor = debcargo_editor
-        self.source = DebcargoSourceShimEditor(
-            self.debcargo_editor, self.crate)
+        self.crate = crate
 
     @property
-    def crate(self):
-        # TODO(jelmer): Check changelog instead?
-        return os.path.basename(os.path.abspath(
-            os.path.join(os.path.dirname(self.debcargo_editor.path), '..')))
+    def source(self):
+        return DebcargoSourceShimEditor(
+            self.debcargo_editor, self.crate)
+
+    @classmethod
+    def from_debian_dir(cls, path, crate=None):
+        editor = DebcargoEditor(
+                os.path.join(path, 'debcargo.toml'), allow_missing=True)
+        if crate is None:
+            with open(os.path.join(path, 'changelog'), 'r') as f:
+                package = Changelog(f).package
+            semver_suffix = editor["source"]["semver_suffix"]
+            crate = parse_debcargo_source_name(package, semver_suffix)
+        return cls(editor, crate)
 
     def __enter__(self):
         self.debcargo_editor.__enter__()
