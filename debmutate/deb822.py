@@ -92,11 +92,13 @@ class Deb822Editor(Editor):
     """
 
     def __init__(self, path: str, allow_generated: bool = False,
-                 allow_reformatting: Optional[bool] = None) -> None:
+                 allow_reformatting: Optional[bool] = None,
+                 allow_missing: bool = False) -> None:
         super(Deb822Editor, self).__init__(
             path, allow_generated=allow_generated,
             allow_reformatting=allow_reformatting,
             mode='b')
+        self.allow_missing = allow_missing
 
     def apply_changes(self, changes, resolve_conflict=None):
         """Apply a set of changes to this deb822 instance.
@@ -151,3 +153,8 @@ class Deb822Editor(Editor):
 
     def _format(self, paragraphs):
         return dump_paragraphs(paragraphs)
+
+    def _nonexistant(self):
+        if self.allow_missing:
+            return [Deb822()]
+        raise

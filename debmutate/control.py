@@ -241,10 +241,16 @@ class ControlEditor(object):
     changed: bool
 
     def __init__(self, path: str = 'debian/control',
-                 allow_reformatting: Optional[bool] = None):
+                 allow_reformatting: Optional[bool] = None,
+                 allow_missing: bool = False):
         self.path = path
         self._primary = Deb822Editor(
-            path, allow_reformatting=allow_reformatting)
+            path, allow_reformatting=allow_reformatting,
+            allow_missing=allow_missing)
+
+    @classmethod
+    def create(cls, path):
+        return cls(path, allow_reformatting=True, allow_missing=True)
 
     @classmethod
     def from_tree(cls, tree, subpath=None):
@@ -261,9 +267,10 @@ class ControlEditor(object):
     @property
     def source(self) -> Deb822:
         """Source package."""
-        if not self._primary.paragraphs[0].get('Source'):
+        if (len(self.paragraphs[0]) > 0 and
+                not self.paragraphs[0].get('Source')):
             raise ValueError('first paragraph is not Source')
-        return self._primary.paragraphs[0]
+        return self.paragraphs[0]
 
     @property
     def binaries(self) -> List[Deb822]:
@@ -333,6 +340,13 @@ class ControlEditor(object):
         else:
             self.changed = self._primary.changed
         return False
+
+    def add_binary(self, contents):
+        if isinstance(contents, dict):
+            para = Deb822(contents)
+        else:
+            para = contents
+        return self._primary.paragraphs.append(para)
 
 
 def parse_relations(text: str):

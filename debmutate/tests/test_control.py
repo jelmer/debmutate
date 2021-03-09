@@ -66,6 +66,14 @@ Testsuite: autopkgtest
         self.assertRaises(
             GeneratedFile, update_control, source_package_cb=source_cb)
 
+    def test_create(self):
+        self.build_tree_contents([('debian/', )])
+        with ControlEditor.create('debian/control') as editor:
+            editor.source['Source'] = 'foo'
+        self.assertFileEqual("""\
+Source: foo
+""", 'debian/control')
+
     def test_do_not_edit_no_change(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 # DO NOT EDIT

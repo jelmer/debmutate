@@ -319,8 +319,7 @@ def parse_debcargo_source_name(
     if not source_name.startswith('rust-'):
         raise ValueError(source_name)
     crate = source_name[len('rust-'):]
+    crate_semver_version = None
     if semver_suffix and '-' in crate:
         crate, crate_semver_version = crate.rsplit('-', 1)
-    else:
-        crate_semver_version = None
     return crate, crate_semver_version
