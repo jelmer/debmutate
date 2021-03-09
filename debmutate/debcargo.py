@@ -35,6 +35,10 @@ DEFAULT_MAINTAINER = (
 DEFAULT_SECTION = 'rust'
 
 
+class AutomaticFieldUnknown(Exception):
+    """Field is generated automatically, and value can not be determined."""
+
+
 class TomlEditor(Editor):
 
     def _parse(self, content):
@@ -74,9 +78,12 @@ class DebcargoEditor(TomlEditor):
 
 class DebcargoSourceShimEditor(MutableMapping):
 
-    def __init__(self, debcargo, crate_name):
+    def __init__(self, debcargo, crate_name=None, cargo=None):
         self._debcargo = debcargo
+        if crate_name is None:
+            crate_name = cargo["package"]["name"]
         self.crate_name = crate_name
+        self.cargo = cargo
 
     def __getitem__(self, name):
         if name in self.SOURCE_KEY_MAP:
@@ -127,8 +134,10 @@ class DebcargoSourceShimEditor(MutableMapping):
         return None
 
     def _default_homepage(self):
-        # TODO(jelmer): read Cargo.toml
-        return None
+        if self.cargo:
+            return self.cargo["package"]["homepage"]
+        else:
+            raise AutomaticFieldUnknown("homepage")
 
     def __setitem__(self, name, value):
         if name in self.SOURCE_KEY_MAP:
