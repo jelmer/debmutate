@@ -70,6 +70,11 @@ class DebcargoEditor(TomlEditor):
             path=path, allow_reformatting=allow_reformatting)
         self.allow_missing = allow_missing
 
+    def __repr__(self):
+        return "%s(%r, allow_reformatting=%r, allow_missing=%r)" % (
+            type(self).__name__, self.path, self.allow_reformatting,
+            self.allow_missing)
+
     def _nonexistant(self):
         if self.allow_missing:
             return {}
@@ -282,10 +287,14 @@ class DebcargoControlShimEditor(object):
         self.debcargo_editor = debcargo_editor
         self.crate = crate
 
+    def __repr__(self):
+        return "%s(%r, %r)" % (
+            type(self).__name__, self.debcargo_editor,
+            self.crate)
+
     @property
     def source(self):
-        return DebcargoSourceShimEditor(
-            self.debcargo_editor, self.crate)
+        return DebcargoSourceShimEditor(self.debcargo_editor, self.crate)
 
     @classmethod
     def from_debian_dir(cls, path, crate=None):
@@ -295,8 +304,12 @@ class DebcargoControlShimEditor(object):
             with open(os.path.join(path, 'changelog'), 'r') as f:
                 package = Changelog(f).package
             with editor:
-                semver_suffix = editor["source"]["semver_suffix"]
-            crate = parse_debcargo_source_name(package, semver_suffix)
+                try:
+                    semver_suffix = editor["source"]["semver_suffix"]
+                except KeyError:
+                    semver_suffix = False
+            crate, crate_semver_version = parse_debcargo_source_name(
+                package, semver_suffix)
         return cls(editor, crate)
 
     def __enter__(self):
