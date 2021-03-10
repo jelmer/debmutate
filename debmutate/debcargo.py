@@ -195,6 +195,8 @@ class DebcargoSourceShimEditor(MutableMapping):
                 self[name]
             except KeyError:
                 pass
+            except AutomaticFieldUnknown:
+                yield name
             else:
                 yield name
 
@@ -273,6 +275,8 @@ class DebcargoBinaryShimEditor(MutableMapping):
                 self[name]
             except KeyError:
                 pass
+            except AutomaticFieldUnknown:
+                yield name
             else:
                 yield name
 
