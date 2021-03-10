@@ -294,7 +294,8 @@ class DebcargoControlShimEditor(object):
         if crate is None:
             with open(os.path.join(path, 'changelog'), 'r') as f:
                 package = Changelog(f).package
-            semver_suffix = editor["source"]["semver_suffix"]
+            with editor:
+                semver_suffix = editor["source"]["semver_suffix"]
             crate = parse_debcargo_source_name(package, semver_suffix)
         return cls(editor, crate)
 
