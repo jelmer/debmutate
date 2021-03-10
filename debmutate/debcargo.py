@@ -81,7 +81,17 @@ class DebcargoEditor(TomlEditor):
         raise
 
 
-class DebcargoSourceShimEditor(MutableMapping):
+class ShimParagraph(MutableMapping):
+
+    def items(self):
+        for key in iter(self):
+            try:
+                yield key, self[key]
+            except AutomaticFieldUnknown:
+                pass
+
+
+class DebcargoSourceShimEditor(ShimParagraph):
 
     def __init__(self, debcargo, crate_name=None, cargo=None):
         self._debcargo = debcargo
@@ -218,7 +228,7 @@ class DebcargoSourceShimEditor(MutableMapping):
         }
 
 
-class DebcargoBinaryShimEditor(MutableMapping):
+class DebcargoBinaryShimEditor(ShimParagraph):
 
     BINARY_KEY_MAP = {
         'Section': ('section', None),
