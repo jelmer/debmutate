@@ -35,7 +35,7 @@ DEFAULT_MAINTAINER = (
 DEFAULT_SECTION = 'rust'
 
 
-class AutomaticFieldUnknown(Exception):
+class AutomaticFieldUnknown(KeyError):
     """Field is generated automatically, and value can not be determined."""
 
 
