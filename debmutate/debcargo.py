@@ -146,7 +146,7 @@ class DebcargoSourceShimEditor(ShimParagraph):
 
     def _build_depends(self):
         # TODO(jelmer): read Cargo.toml
-        return None
+        raise AutomaticFieldUnknown('Build-Depends')
 
     def _default_homepage(self):
         if self.cargo:
