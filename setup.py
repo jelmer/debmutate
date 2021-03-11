@@ -28,7 +28,7 @@ setup(
     project_urls={
         "Repository": "https://salsa.debian.org/jelmer/debmutate.git",
     },
-    requires=['debian'],
+    requires=['debian', 'python-tr'],
     extras_require={
         'debcargo': ['tomlkit'],
     },
