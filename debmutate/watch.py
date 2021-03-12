@@ -256,7 +256,11 @@ class Watch(object):
             vm = self.get_option('uversionmangle')
         except KeyError:
             return version
-        return apply_sed_expr(vm, version)
+        try:
+            return apply_sed_expr(vm, version)
+        except re.error as e:
+            raise WatchSyntaxError(
+                'invalid uversionmangle %r: %s' % (vm, e)) from e
 
     def get_option(self, name):
         for option in self.options:
@@ -354,6 +358,10 @@ class Watch(object):
 
 class MissingVersion(Exception):
     """The version= line is missing."""
+
+
+class WatchSyntaxError(Exception):
+    """Syntax error in watch file."""
 
 
 def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
