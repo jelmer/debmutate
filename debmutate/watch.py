@@ -155,7 +155,7 @@ def parse_sed_expr(vm):
     raise InvalidUVersionMangle(vm, 'not a substitution or translation regex')
 
 
-def parse_subst_expr(vm):
+def parse_subst_expr(vm: str) -> Tuple[str, str, Optional[str]]:
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
     parts = re.split(r'(?<!\\)' + vm[1], vm)
@@ -163,11 +163,15 @@ def parse_subst_expr(vm):
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
     replacement = parts[2]
-    flags = parts[3]
+    flags: Optional[str]
+    try:
+        flags = parts[3]
+    except IndexError:
+        flags = None
     return (pattern, replacement, flags)
 
 
-def parse_transl_expr(vm: str) -> Tuple[str, str, str]:
+def parse_transl_expr(vm: str) -> Tuple[str, str, Optional[str]]:
     if not vm.startswith('tr'):
         raise InvalidUVersionMangle(vm, 'not a translation regex')
     parts = re.split(r'(?<!\\)' + vm[2], vm)
@@ -175,7 +179,10 @@ def parse_transl_expr(vm: str) -> Tuple[str, str, str]:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
     replacement = parts[2]
-    flags = parts[3]
+    try:
+        flags = parts[3]
+    except IndexError:
+        flags = None
     return (pattern, replacement, flags)
 
 
@@ -186,7 +193,7 @@ def apply_sed_expr(vm: str, orig: str) -> str:
         return re.sub(pattern, replacement.replace('$', '\\'), orig)
     elif kind == 'tr':
         from tr import tr
-        return tr(pattern, replacement, orig, flags)
+        return tr(pattern, replacement, orig, flags or '')
     else:
         raise ValueError(kind)
 
