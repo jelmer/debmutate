@@ -278,6 +278,17 @@ class Makefile(object):
         self.contents.append(rule)
         return rule
 
+    def mark_phony(self, rule):
+        for r in self.iter_rules(b'.PHONY'):
+            if rule in r.components:
+                return
+        try:
+            phony_rule = list(self.iter_rules(b'.PHONY'))[-1]
+        except IndexError:
+            self.add_rule(b'.PHONY', [rule])
+        else:
+            phony_rule.append_component(rule)
+
     def drop_phony(self, rule):
         for r in self.iter_rules(b'.PHONY'):
             if rule in r.components:
@@ -476,3 +487,4 @@ def check_cdbs(path='debian/rules'):
             if line.lstrip(b'-').startswith(b'include /usr/share/cdbs/'):
                 return True
     return False
+
