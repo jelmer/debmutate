@@ -487,4 +487,3 @@ def check_cdbs(path='debian/rules'):
             if line.lstrip(b'-').startswith(b'include /usr/share/cdbs/'):
                 return True
     return False
-

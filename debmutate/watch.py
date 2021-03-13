@@ -179,6 +179,7 @@ def parse_transl_expr(vm: str) -> Tuple[str, str, Optional[str]]:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
     replacement = parts[2]
+    flags: Optional[str]
     try:
         flags = parts[3]
     except IndexError:

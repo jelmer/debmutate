@@ -99,6 +99,47 @@ Testsuite: autopkgtest
             FormattingUnpreservable, update_control,
             source_package_cb=update_source)
 
+    def test_merge3(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Testsuite: autopkgtest
+
+Package: blah
+Description: Some description
+ And there are more lines
+ And more lines
+# A comment
+Multi-Arch: foreign
+""")])
+
+        def update_source(control):
+            control["NewField"] = "New Field"
+
+        try:
+            import merge3  # noqa: F401
+        except ModuleNotFoundError:
+            has_merge3 = False
+        else:
+            has_merge3 = (merge3.__version__ >= (0, 0, 7))
+        if has_merge3:
+            update_control(source_package_cb=update_source)
+            self.assertFileEqual("""\
+Source: blah
+Testsuite: autopkgtest
+NewField: New Field
+
+Package: blah
+Description: Some description
+ And there are more lines
+ And more lines
+# A comment
+Multi-Arch: foreign
+""", 'debian/control')
+        else:
+            self.assertRaises(
+                FormattingUnpreservable, update_control,
+                source_package_cb=update_source)
+
     def test_modify_source(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 Source: blah

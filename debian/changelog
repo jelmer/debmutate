@@ -1,6 +1,7 @@
 debmutate (0.25) UNRELEASED; urgency=medium
 
   * Support debcargo-style UNRELEASED distributions.
+  * Add support for resolving formatting issues with merge3.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 07 Mar 2021 18:45:10 +0000
 

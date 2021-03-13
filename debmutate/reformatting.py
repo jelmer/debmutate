@@ -24,6 +24,7 @@ __all__ = [
     ]
 
 
+import logging
 import os
 from typing import Union, Optional
 
@@ -117,13 +118,35 @@ def edit_formatted_file(
         return False
     if not allow_generated:
         check_generated_file(path)
-    check_preserve_formatting(
-            rewritten_contents.strip()
-            if rewritten_contents is not None else None,
-            original_contents.strip()
-            if original_contents is not None else None, path,
-            allow_reformatting=allow_reformatting
-            )
+    try:
+        check_preserve_formatting(
+                rewritten_contents.strip()
+                if rewritten_contents is not None else None,
+                original_contents.strip()
+                if original_contents is not None else None, path,
+                allow_reformatting=allow_reformatting
+                )
+    except FormattingUnpreservable as e:
+        # Run three way merge
+        logging.debug(
+            'Unable to preserve formatting; falling back to merge3')
+        try:
+            import merge3
+        except ModuleNotFoundError:
+            raise e
+        if (isinstance(rewritten_contents, bytes) and
+                merge3.__version__ < (0, 0, 7)):
+            raise e
+        m3 = merge3.Merge3(
+            rewritten_contents.splitlines(True),
+            original_contents.splitlines(True),
+            updated_contents.splitlines(True))
+        if any([y[0] == 'conflict' for y in m3.merge_regions()]):
+            raise
+        if isinstance(updated_contents, bytes):
+            updated_contents = b''.join(m3.merge_lines())
+        else:
+            updated_contents = ''.join(m3.merge_lines())
     mode = 'w' + ('b' if isinstance(updated_contents, bytes) else '')
     with open(path, mode) as f:
         f.write(updated_contents)
