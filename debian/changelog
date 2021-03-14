@@ -1,8 +1,8 @@
-debmutate (0.26) UNRELEASED; urgency=medium
+debmutate (0.26) unstable; urgency=medium
 
   * Fix maintscript reformatting.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 14 Mar 2021 22:57:57 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 14 Mar 2021 22:58:45 +0000
 
 debmutate (0.25) unstable; urgency=medium
 
