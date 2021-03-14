@@ -244,9 +244,9 @@ class MaintscriptEditor(Editor):
 
     def append(self, entry):
         if self._parsed is None:
-            self._parsed = [entry, '\n']
+            self._parsed = [entry]
         else:
-            self._parsed.extend([entry, '\n'])
+            self._parsed.extend([entry])
 
     def _format(self, parsed):
         """Serialize the parsed object."""
@@ -255,9 +255,9 @@ class MaintscriptEditor(Editor):
         ret = []
         for entry in self._parsed:
             if isinstance(entry, str):
-                ret.append(entry)
+                ret.append(entry + '\n')
             else:
-                ret.append(serialize_maintscript_line(entry.args()))
+                ret.append(serialize_maintscript_line(entry.args()) + '\n')
         if ret:
             return ''.join(ret)
         return None
