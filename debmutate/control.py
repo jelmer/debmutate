@@ -766,6 +766,8 @@ def delete_from_list(liststr: str, item_to_delete: str) -> str:
 
 def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
     """Check if one dependency is implied by another.
+
+    Is dep implied by outer?
     """
     if dep.name != outer.name:
         return False
@@ -802,6 +804,15 @@ def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
         if outer.version[0] in ('<=', '=', '<<'):
             return Version(outer.version[1]) <= Version(dep.version[1])
         elif outer.version[0] in ('>>', '>='):
+            return False
+        else:
+            raise AssertionError('unsupported: %s' % outer.version[0])
+    elif dep.version[0] == '>>':
+        if outer.version[0] == '>>':
+            return Version(outer.version[1]) >= Version(dep.version[1])
+        elif outer.version[0] in ('=', '>='):
+            return Version(outer.version[1]) > Version(dep.version[1])
+        elif outer.version[0] in ('<<', '<='):
             return False
         else:
             raise AssertionError('unsupported: %s' % outer.version[0])

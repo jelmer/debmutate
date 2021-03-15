@@ -667,6 +667,16 @@ class IsDepImpliedTests(TestCase):
             is_dep_implied(self.parse('bzr (<= 5)'), self.parse('bzr (= 3)')))
         self.assertFalse(
             is_dep_implied(self.parse('bzr (<= 5)'), self.parse('bzr (>= 3)')))
+        self.assertTrue(
+            is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (>> 6)')))
+        self.assertTrue(
+            is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (>> 5)')))
+        self.assertFalse(
+            is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (>> 4)')))
+        self.assertTrue(
+            is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (= 6)')))
+        self.assertFalse(
+            is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (= 5)')))
 
 
 class IsRelationImpliedTests(TestCase):
