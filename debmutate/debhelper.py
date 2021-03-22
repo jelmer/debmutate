@@ -226,7 +226,7 @@ class MaintscriptEditor(Editor):
         ret = []
         for line in content.splitlines(True):
             if line.startswith('#') or not line.strip():
-                ret.append(line)
+                ret.append(line.rstrip('\n'))
             else:
                 ret.append(parse_maintscript_line(line))
         return ret
@@ -241,6 +241,23 @@ class MaintscriptEditor(Editor):
     def entries(self):
         return [entry for entry in self.lines
                 if not isinstance(entry, str)]
+
+    def __delitem__(self, req):
+        ei = 0
+        # TODO(jelmer): Also remove preceding comments?
+        for i, e in enumerate(self.lines):
+            if not isinstance(e, str):
+                if ei == req:
+                    del self.lines[i]
+                    return
+                ei += 1
+        raise IndexError(req)
+
+    def __getitem__(self, req):
+        return self.entries[req]
+
+    def __len__(self):
+        return len(self.entries)
 
     def append(self, entry):
         if self._parsed is None:

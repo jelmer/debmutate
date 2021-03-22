@@ -93,3 +93,15 @@ mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
     def test_simple_missing(self):
         with MaintscriptEditor() as e:
             self.assertEqual([], e.entries)
+
+    def test_simple_comment(self):
+        self.build_tree_contents([('debian/', ), ('debian/maintscript', """\
+# I am a comment
+mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
+0.3.3-13.1~
+""")])
+        with MaintscriptEditor() as e:
+            del e[0]
+            self.assertRaises(IndexError, e.__delitem__, 0)
+        with open('debian/maintscript', 'r') as f:
+            self.assertEqual("# I am a comment\n", f.read())
