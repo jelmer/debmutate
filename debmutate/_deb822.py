@@ -25,8 +25,8 @@
 # TODO(jelmer): Contribute improvements back to python-debian
 
 import collections
+import logging
 import re
-import warnings
 
 
 class PkgRelation(object):
@@ -113,7 +113,7 @@ class PkgRelation(object):
                         parts['restrictions'])
                 return PkgRelation(**d)
 
-            warnings.warn(
+            logging.warning(
                 'cannot parse package'
                 ' relationship "%s", returning it raw' % raw)
             return PkgRelation(
