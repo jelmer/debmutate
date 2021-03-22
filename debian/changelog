@@ -1,3 +1,9 @@
+debmutate (0.27) UNRELEASED; urgency=medium
+
+  * Support >> in is_dep_implied.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 22 Mar 2021 04:01:48 +0000
+
 debmutate (0.26) unstable; urgency=medium
 
   * Fix maintscript reformatting.
