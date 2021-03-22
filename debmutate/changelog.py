@@ -44,7 +44,6 @@ import re
 import textwrap
 from typing import List, Iterator, Tuple, Optional
 
-from io import StringIO
 from debian.changelog import (
     ChangeBlock,
     Changelog,
@@ -73,12 +72,13 @@ class ChangelogEditor(Editor):
             path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
-        return Changelog(content)
+        cl = Changelog()
+        cl.parse_changelog(
+            content, max_blocks=None, allow_empty_author=True, strict=False)
+        return cl
 
     def _format(self, parsed):
-        f = StringIO()
-        parsed.write_to_open_file(f)
-        return f.getvalue()
+        return parsed._format(allow_missing_author=True)
 
     @property
     def changelog(self):
