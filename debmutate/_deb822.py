@@ -113,7 +113,7 @@ class PkgRelation(object):
                         parts['restrictions'])
                 return PkgRelation(**d)
 
-            logging.warning(
+            logging.debug(
                 'cannot parse package'
                 ' relationship "%s", returning it raw' % raw)
             return PkgRelation(
