@@ -67,9 +67,15 @@ class ChangelogEditor(Editor):
 
     def __init__(
             self, path: str = 'debian/changelog',
-            allow_reformatting: Optional[bool] = False):
+            allow_reformatting: Optional[bool] = False,
+            allow_missing: bool = False):
         super(ChangelogEditor, self).__init__(
             path, allow_reformatting=allow_reformatting)
+        self.allow_missing = allow_missing
+
+    @classmethod
+    def create(cls, path: str = 'debian/changelog'):
+        return cls(path, allow_reformatting=True, allow_missing=True)
 
     def _parse(self, content):
         cl = Changelog()
@@ -86,6 +92,11 @@ class ChangelogEditor(Editor):
 
     def __getitem__(self, i):
         return self.changelog[i]
+
+    def _nonexistant(self):
+        if self.allow_missing:
+            return Changelog()
+        raise
 
     def new_block(self, *args, **kwargs):
         return self.changelog.new_block(*args, **kwargs)
@@ -109,11 +120,10 @@ def changelog_auto_version(
         cl: Changelog, version: Version,
         maintainer: Optional[Tuple[str, str]] = None,
         timestamp: Optional[datetime] = None,
+        package: Optional[str] = None,
         urgency: str = 'low'):
     """Update current changelog entry to version or create a new one.
     """
-    if timestamp is None:
-        timestamp = datetime.now()
     if maintainer is None:
         maintainer_name, maintainer_email = get_maintainer()
     else:
@@ -121,12 +131,18 @@ def changelog_auto_version(
     if maintainer_name is None or maintainer_email is None:
         raise ValueError(
             'unable to determine maintainer details and none specified')
+    if package is None:
+        package = cl[0].package
+    if timestamp is None:
+        timestamp = datetime.now()
     if distribution_is_unreleased(cl[0].distributions):
         cl[0].version = version
         cl[0].date = format_datetime(timestamp)
+        cl[0].package = package
+        # TODO(jelmer): Also set maintainer again?
     else:
         cl.new_block(
-            version=version, package=cl[0].package,
+            version=version, package=package,
             distributions='UNRELEASED', urgency=urgency,
             author="%s <%s>" % (maintainer_name, maintainer_email),
             date=format_datetime(timestamp))

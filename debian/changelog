@@ -1,8 +1,9 @@
 debmutate (0.29) UNRELEASED; urgency=medium
 
   * Add ChangelogEditor.auto_version.
+  * Add ChangelogEditor.create.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 26 Mar 2021 15:03:22 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 26 Mar 2021 15:24:07 +0000
 
 debmutate (0.28) unstable; urgency=medium
 

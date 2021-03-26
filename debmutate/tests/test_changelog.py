@@ -49,6 +49,35 @@ from debian.changelog import Version
 from unittest import TestCase
 
 
+class CreateChangelogTests(TestCase):
+
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.test_dir)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.test_dir)
+        os.mkdir('debian')
+
+    def test_create(self):
+        with ChangelogEditor.create() as updater:
+            updater.new_block(
+                package='blah', version=Version('1.0-1'),
+                author='Jelmer Vernooij <jelmer@debian.org>',
+                date='Mon, 02 Sep 2019 00:23:11 +0000',
+                distributions='UNRELEASED',
+                changes=['', '  * New entry.', ''])
+
+        with open('debian/changelog', 'r') as f:
+            self.assertEqual("""\
+blah (1.0-1) UNRELEASED; urgency=unknown
+
+  * New entry.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+
+""", f.read())
+
+
 class UpdateChangelogTests(TestCase):
 
     def setUp(self):
