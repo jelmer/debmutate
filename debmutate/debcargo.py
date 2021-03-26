@@ -297,9 +297,10 @@ class DebcargoBinaryShimEditor(ShimParagraph):
 class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
-    def __init__(self, debcargo_editor, crate):
+    def __init__(self, debcargo_editor, crate, cargo=None):
         self.debcargo_editor = debcargo_editor
         self.crate = crate
+        self.cargo = cargo
 
     def __repr__(self):
         return "%s(%r, %r)" % (
@@ -308,12 +309,21 @@ class DebcargoControlShimEditor(object):
 
     @property
     def source(self):
-        return DebcargoSourceShimEditor(self.debcargo_editor, self.crate)
+        return DebcargoSourceShimEditor(
+            self.debcargo_editor, self.crate, self.cargo)
 
     @classmethod
-    def from_debian_dir(cls, path, crate=None):
+    def from_debian_dir(cls, path, crate=None, cargo=None):
         editor = DebcargoEditor(
                 os.path.join(path, 'debcargo.toml'), allow_missing=True)
+        cargo_path = os.path.join(path, '..', 'cargo.toml')
+        if cargo is None:
+            try:
+                with open(cargo_path, 'r') as f:
+                    cargo = loads(f.read())
+                    crate = cargo["package"]["name"]
+            except FileNotFoundError:
+                pass
         if crate is None:
             with open(os.path.join(path, 'changelog'), 'r') as f:
                 package = Changelog(f).package
@@ -324,7 +334,7 @@ class DebcargoControlShimEditor(object):
                     semver_suffix = False
             crate, crate_semver_version = parse_debcargo_source_name(
                 package, semver_suffix)
-        return cls(editor, crate)
+        return cls(editor, crate, cargo)
 
     def __enter__(self):
         self.debcargo_editor.__enter__()
