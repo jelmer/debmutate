@@ -559,3 +559,22 @@ def find_thanks(changes):
             thanks_str = re.sub(r"\s+", " ", thanks_str)
             thanks.append(thanks_str)
     return thanks
+
+
+def upstream_merge_changelog_line(upstream_version):
+    """Describe that a new upstream revision was merged.
+
+    This will either describe that a new upstream release or a new upstream
+    snapshot was merged.
+
+    :param upstream_version: Upstream version string
+    :return: Line string for use in changelog
+    """
+    vcs_suffixes = ["~bzr", "+bzr", "~svn", "+svn", "~git", "+git", "-git"]
+    for vcs_suffix in vcs_suffixes:
+        if vcs_suffix in str(upstream_version):
+            entry_description = "New upstream snapshot."
+            break
+    else:
+        entry_description = "New upstream release."
+    return entry_description

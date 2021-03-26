@@ -41,6 +41,7 @@ from debmutate.changelog import (
     new_upstream_package_version,
     changeblock_ensure_first_line,
     find_last_distribution,
+    upstream_merge_changelog_line,
     )
 
 from debian.changelog import Version
@@ -553,3 +554,26 @@ class ChangelogInfoTests(TestCase):
         self.assert_thanks_is(changes, [u"Adeodato Sim\xc3\xb3"])
         changes = [u"  * Thanks to \xc1deodato Sim\xc3\xb3"]
         self.assert_thanks_is(changes, [u"\xc1deodato Sim\xc3\xb3"])
+
+
+class UpstreamMergeChangelogLineTests(TestCase):
+
+    def test_release(self):
+        self.assertEquals(
+            "New upstream release.",
+            upstream_merge_changelog_line("1.0"))
+
+    def test_bzr_snapshot(self):
+        self.assertEquals(
+            "New upstream snapshot.",
+            upstream_merge_changelog_line("1.0+bzr3"))
+
+    def test_git_snapshot(self):
+        self.assertEquals(
+            "New upstream snapshot.",
+            upstream_merge_changelog_line("1.0~git20101212"))
+
+    def test_plus(self):
+        self.assertEquals(
+            "New upstream release.",
+            upstream_merge_changelog_line("1.0+dfsg1"))

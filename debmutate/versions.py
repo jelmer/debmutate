@@ -66,3 +66,18 @@ def mangle_version_for_git(version: Union[Version, str]) -> str:
     if manipulated.endswith('.lock'):
         manipulated = manipulated[:-4] + '#lock'
     return manipulated
+
+
+def new_package_version(upstream_version, distribution_name, epoch=None):
+    """Determine the package version for a new upstream.
+
+    :param upstream_version: Upstream version string
+    :param distribution_name: Distribution the package is for
+    :param epoch: Optional epoch
+    """
+    if distribution_name == "ubuntu":
+        ret = Version("%s-0ubuntu1" % upstream_version)
+    else:
+        ret = Version("%s-1" % upstream_version)
+    ret.epoch = epoch
+    return ret

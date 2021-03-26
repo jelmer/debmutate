@@ -20,8 +20,10 @@
 from debmutate.versions import (
     git_snapshot_data_from_version,
     mangle_version_for_git,
+    new_package_version,
     )
 
+from debian.changelog import Version
 from unittest import TestCase
 
 
@@ -48,3 +50,31 @@ class GitSnapshotDataFromVersionTests(TestCase):
         self.assertEqual(
             (None, '2020-01-01'),
             git_snapshot_data_from_version('1.1+git20200101'))
+
+
+class TestPackageVersion(TestCase):
+
+    def test_simple_debian(self):
+        self.assertEquals(
+            Version("1.2-1"),
+            new_package_version("1.2", "debian"))
+
+    def test_simple_ubuntu(self):
+        self.assertEquals(
+            Version("1.2-0ubuntu1"),
+            new_package_version("1.2", "ubuntu"))
+
+    def test_debian_with_dash(self):
+        self.assertEquals(
+            Version("1.2-0ubuntu1-1"),
+            new_package_version("1.2-0ubuntu1", "debian"))
+
+    def test_ubuntu_with_dash(self):
+        self.assertEquals(
+            Version("1.2-1-0ubuntu1"),
+            new_package_version("1.2-1", "ubuntu"))
+
+    def test_ubuntu_with_epoch(self):
+        self.assertEquals(
+            Version("3:1.2-1-0ubuntu1"),
+            new_package_version("1.2-1", "ubuntu", "3"))
