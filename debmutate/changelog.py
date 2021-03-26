@@ -135,7 +135,7 @@ def changelog_auto_version(
         package = cl[0].package
     if timestamp is None:
         timestamp = datetime.now()
-    if distribution_is_unreleased(cl[0].distributions):
+    if len(cl) > 0 and distribution_is_unreleased(cl[0].distributions):
         cl[0].version = version
         cl[0].date = format_datetime(timestamp)
         cl[0].package = package
@@ -371,7 +371,7 @@ def changelog_add_entry(
                 if cl[0]._changes[-1]:
                     cl[0]._changes.append('')
                 cl[0]._changes.append('  [ %s ]' % maintainer_name)
-        if not cl[0]._changes[-1].strip():
+        if cl[0] ._changes and not cl[0]._changes[-1].strip():
             del cl[0]._changes[-1]
     else:
         cl.new_block(

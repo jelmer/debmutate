@@ -1,3 +1,9 @@
+debmutate (0.30) UNRELEASED; urgency=medium
+
+  * Fix corner cases editing changelog versions.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 26 Mar 2021 15:38:27 +0000
+
 debmutate (0.29) unstable; urgency=medium
 
   * Add ChangelogEditor.auto_version.

@@ -77,6 +77,22 @@ blah (1.0-1) UNRELEASED; urgency=unknown
 
 """, f.read())
 
+    def test_auto_version(self):
+        with ChangelogEditor.create() as updater:
+            updater.auto_version(
+                Version('1.0-1'),
+                package='blah',
+                urgency='low',
+                maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
+                timestamp=datetime.fromtimestamp(1604934305))
+
+        with open('debian/changelog', 'r') as f:
+            self.assertEqual("""\
+blah (1.0-1) UNRELEASED; urgency=low
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+
+""", f.read())
+
 
 class UpdateChangelogTests(TestCase):
 
