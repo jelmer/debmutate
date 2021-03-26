@@ -1,3 +1,9 @@
+debmutate (0.29) UNRELEASED; urgency=medium
+
+  * Add ChangelogEditor.auto_version.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 26 Mar 2021 15:03:22 +0000
+
 debmutate (0.28) unstable; urgency=medium
 
   * Use logging rather than warnings for deb822 warnings.

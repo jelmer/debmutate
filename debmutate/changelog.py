@@ -90,6 +90,10 @@ class ChangelogEditor(Editor):
     def new_block(self, *args, **kwargs):
         return self.changelog.new_block(*args, **kwargs)
 
+    def auto_version(self, version, **kwargs):
+        return changelog_auto_version(
+            self.changelog, version=version, **kwargs)
+
     def add_entry(
             self,
             summary: List[str],
@@ -99,6 +103,33 @@ class ChangelogEditor(Editor):
         return changelog_add_entry(
             self.changelog, summary=summary, maintainer=maintainer,
             timestamp=timestamp, urgency=urgency)
+
+
+def changelog_auto_version(
+        cl: Changelog, version: Version,
+        maintainer: Optional[Tuple[str, str]] = None,
+        timestamp: Optional[datetime] = None,
+        urgency: str = 'low'):
+    """Update current changelog entry to version or create a new one.
+    """
+    if timestamp is None:
+        timestamp = datetime.now()
+    if maintainer is None:
+        maintainer_name, maintainer_email = get_maintainer()
+    else:
+        maintainer_name, maintainer_email = maintainer
+    if maintainer_name is None or maintainer_email is None:
+        raise ValueError(
+            'unable to determine maintainer details and none specified')
+    if distribution_is_unreleased(cl[0].distributions):
+        cl[0].version = version
+        cl[0].date = format_datetime(timestamp)
+    else:
+        cl.new_block(
+            version=version, package=cl[0].package,
+            distributions='UNRELEASED', urgency=urgency,
+            author="%s <%s>" % (maintainer_name, maintainer_email),
+            date=format_datetime(timestamp))
 
 
 def changes_sections(

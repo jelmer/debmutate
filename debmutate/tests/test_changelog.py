@@ -20,6 +20,7 @@
 
 """Tests for lintian_brush.changelog."""
 
+from datetime import datetime
 from debian.changelog import Changelog
 import os
 import shutil
@@ -54,8 +55,6 @@ class UpdateChangelogTests(TestCase):
         self.addCleanup(shutil.rmtree, self.test_dir)
         self.addCleanup(os.chdir, os.getcwd())
         os.chdir(self.test_dir)
-
-    def test_edit_simple(self):
         os.mkdir('debian')
         with open('debian/changelog', 'w') as f:
             f.write("""\
@@ -66,6 +65,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
 
+    def test_edit_simple(self):
         with ChangelogEditor() as updater:
             updater.changelog.version = '0.29'
         with open('debian/changelog', 'r') as f:
@@ -77,8 +77,48 @@ lintian-brush (0.29) UNRELEASED; urgency=medium
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """, f.read())
 
+    def test_auto_version_update(self):
+        with ChangelogEditor() as updater:
+            updater.auto_version(
+                Version('0.29'),
+                timestamp=datetime.fromtimestamp(1604934305))
+        with open('debian/changelog', 'r') as f:
+            self.assertEqual("""\
+lintian-brush (0.29) UNRELEASED; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+""", f.read())
+
+    def test_auto_version_add(self):
+        with open('debian/changelog', 'w') as f:
+            f.write("""\
+lintian-brush (0.28) unstable; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+
+        with ChangelogEditor() as updater:
+            updater.auto_version(
+                Version('0.29'),
+                maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
+                timestamp=datetime.fromtimestamp(1604934305))
+        with open('debian/changelog', 'r') as f:
+            self.assertEqual("""\
+lintian-brush (0.29) UNRELEASED; urgency=low
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+
+lintian-brush (0.28) unstable; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", f.read())
+
     def test_invalid(self):
-        os.mkdir('debian')
         with open('debian/changelog', 'w') as f:
             f.write("""\
 lalalalala
