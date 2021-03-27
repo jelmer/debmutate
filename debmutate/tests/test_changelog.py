@@ -84,7 +84,7 @@ blah (1.0-1) UNRELEASED; urgency=unknown
                 package='blah',
                 urgency='low',
                 maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
-                timestamp=datetime.fromtimestamp(1604934305))
+                timestamp=datetime.utcfromtimestamp(1604934305))
 
         with open('debian/changelog', 'r') as f:
             self.assertEqual("""\
@@ -127,7 +127,7 @@ lintian-brush (0.29) UNRELEASED; urgency=medium
         with ChangelogEditor() as updater:
             updater.auto_version(
                 Version('0.29'),
-                timestamp=datetime.fromtimestamp(1604934305))
+                timestamp=datetime.utcfromtimestamp(1604934305))
         with open('debian/changelog', 'r') as f:
             self.assertEqual("""\
 lintian-brush (0.29) UNRELEASED; urgency=medium
@@ -151,7 +151,7 @@ lintian-brush (0.28) unstable; urgency=medium
             updater.auto_version(
                 Version('0.29'),
                 maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
-                timestamp=datetime.fromtimestamp(1604934305))
+                timestamp=datetime.utcfromtimestamp(1604934305))
         with open('debian/changelog', 'r') as f:
             self.assertEqual("""\
 lintian-brush (0.29) UNRELEASED; urgency=low
