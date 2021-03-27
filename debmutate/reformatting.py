@@ -127,6 +127,10 @@ def edit_formatted_file(
                 allow_reformatting=allow_reformatting
                 )
     except FormattingUnpreservable as e:
+        if (rewritten_contents is None or
+                original_contents is None or
+                updated_contents is None):
+            raise
         # Run three way merge
         logging.debug(
             'Unable to preserve formatting; falling back to merge3')

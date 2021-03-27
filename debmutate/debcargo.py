@@ -45,6 +45,8 @@ class TomlEditor(Editor):
         return loads(content)
 
     def _format(self, parsed):
+        if not parsed:
+            return None
         return dumps(parsed)
 
     def __contains__(self, key):
