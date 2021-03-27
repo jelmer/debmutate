@@ -36,7 +36,10 @@ class DebmutateVersion(TestCase):
             )
         with open("debian/changelog", "r") as f:
             cl = Changelog(f, max_blocks=1)
-        self.assertEqual(str(cl.version).split("+")[0], version_string)
+        cl_version = str(cl.version)
+        cl_version = cl_version.split("+")[0]
+        cl_version = cl_version.split("~")[0]
+        self.assertEqual(cl_version, version_string)
 
     def test_matches_setup_version(self):
         if not os.path.exists("setup.py"):
