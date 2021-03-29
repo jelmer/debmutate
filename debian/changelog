@@ -1,8 +1,8 @@
-debmutate (0.31) UNRELEASED; urgency=medium
+debmutate (0.31) unstable; urgency=medium
 
   * Add debian.changelog.is_unreleased_inaugural.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 29 Mar 2021 15:10:30 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 29 Mar 2021 15:10:34 +0100
 
 debmutate (0.30) unstable; urgency=medium
 
