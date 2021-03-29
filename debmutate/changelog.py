@@ -36,6 +36,8 @@ __all__ = [
     'rewrap_change',
     'strip_changelog_message',
     'new_changelog_entries',
+    'is_unreleased_inaugural',
+    'upstream_merge_changelog_line',
     ]
 
 from datetime import datetime
@@ -577,14 +579,16 @@ def find_thanks(changes):
     return thanks
 
 
-def upstream_merge_changelog_line(upstream_version):
+def upstream_merge_changelog_line(upstream_version: str) -> str:
     """Describe that a new upstream revision was merged.
 
     This will either describe that a new upstream release or a new upstream
     snapshot was merged.
 
-    :param upstream_version: Upstream version string
-    :return: Line string for use in changelog
+    Args:
+      upstream_version: Upstream version string
+    Returns:
+       line string for use in changelog
     """
     vcs_suffixes = ["~bzr", "+bzr", "~svn", "+svn", "~git", "+git", "-git"]
     for vcs_suffix in vcs_suffixes:
@@ -594,3 +598,23 @@ def upstream_merge_changelog_line(upstream_version):
     else:
         entry_description = "New upstream release."
     return entry_description
+
+
+def is_unreleased_inaugural(cl: Changelog) -> bool:
+    """Check whether this is a traditional inaugural release.
+
+    Args:
+      cl: A changelog object to inspect
+    """
+    if cl is None:
+        return False
+    if len(cl) != 1:
+        return False
+    if not distribution_is_unreleased(cl[0].distributions):
+        return False
+    actual = [change for change in cl[0].changes() if change.strip()]
+    if len(actual) != 1:
+        return False
+    if not actual[0].startswith('  * Initial release'):
+        return False
+    return True
