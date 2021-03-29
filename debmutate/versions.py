@@ -68,6 +68,13 @@ def mangle_version_for_git(version: Union[Version, str]) -> str:
     return manipulated
 
 
+def initial_debian_revision(distribution_name):
+    if distribution_name == "ubuntu":
+        return "0ubuntu1"
+    else:
+        return "1"
+
+
 def new_package_version(upstream_version, distribution_name, epoch=None):
     """Determine the package version for a new upstream.
 
@@ -75,9 +82,7 @@ def new_package_version(upstream_version, distribution_name, epoch=None):
     :param distribution_name: Distribution the package is for
     :param epoch: Optional epoch
     """
-    if distribution_name == "ubuntu":
-        ret = Version("%s-0ubuntu1" % upstream_version)
-    else:
-        ret = Version("%s-1" % upstream_version)
+    debian_revision = initial_debian_revision(distribution_name)
+    ret = Version("%s-%s" % (upstream_version, debian_revision))
     ret.epoch = epoch
     return ret
