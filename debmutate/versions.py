@@ -75,6 +75,13 @@ def initial_debian_revision(distribution_name):
         return "1"
 
 
+def new_upstream_package_version(
+        upstream_version, debian_revision, epoch=None):
+    ret = Version("%s-%s" % (upstream_version, debian_revision))
+    ret.epoch = epoch
+    return ret
+
+
 def new_package_version(upstream_version, distribution_name, epoch=None):
     """Determine the package version for a new upstream.
 
@@ -83,6 +90,5 @@ def new_package_version(upstream_version, distribution_name, epoch=None):
     :param epoch: Optional epoch
     """
     debian_revision = initial_debian_revision(distribution_name)
-    ret = Version("%s-%s" % (upstream_version, debian_revision))
-    ret.epoch = epoch
-    return ret
+    return new_upstream_package_version(
+        upstream_version, debian_revision, epoch=epoch)
