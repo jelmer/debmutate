@@ -32,7 +32,12 @@ from debian.deb822 import Deb822
 
 from debian.changelog import Version
 
-from .control import ensure_minimum_version, get_relation
+from .control import (
+    ensure_minimum_version,
+    get_relation,
+    parse_relations,
+    ControlEditor,
+    )
 from .reformatting import Editor
 
 
@@ -278,3 +283,14 @@ class MaintscriptEditor(Editor):
         if ret:
             return ''.join(ret)
         return None
+
+
+def get_sequences(debian_path='debian', control_editor=None):
+    if control_editor is None:
+        control_editor = ControlEditor(os.path.join(debian_path, 'control'))
+    with control_editor:
+        for ws1, entry, ws2 in parse_relations(
+                control_editor.source.get('Build-Depends', '')):
+            for option in entry:
+                if option.name.startswith('dh-sequence-'):
+                    yield option.name[len('dh-sequence-'):]

@@ -1,3 +1,9 @@
+debmutate (0.33) UNRELEASED; urgency=medium
+
+  * Add get_snapshot_revision.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 01 Apr 2021 19:01:49 +0100
+
 debmutate (0.32) unstable; urgency=medium
 
   * Factor out debmutate.versions.initial_debian_revision for use

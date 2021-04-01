@@ -21,6 +21,7 @@ from debmutate.versions import (
     git_snapshot_data_from_version,
     mangle_version_for_git,
     new_package_version,
+    get_snapshot_revision,
     )
 
 from debian.changelog import Version
@@ -78,3 +79,36 @@ class TestPackageVersion(TestCase):
         self.assertEquals(
             Version("3:1.2-1-0ubuntu1"),
             new_package_version("1.2-1", "ubuntu", "3"))
+
+
+class GetRevisionSnapshotTests(TestCase):
+
+    def test_with_snapshot(self):
+        self.assertEquals(("bzr", "30"), get_snapshot_revision("0.4.4~bzr30"))
+
+    def test_with_snapshot_plus(self):
+        self.assertEquals(("bzr", "30"), get_snapshot_revision("0.4.4+bzr30"))
+
+    def test_without_snapshot(self):
+        self.assertEquals(None, get_snapshot_revision("0.4.4"))
+
+    def test_non_numeric_snapshot(self):
+        self.assertEquals(
+            None,
+            get_snapshot_revision("0.4.4~bzra"))
+
+    def test_with_svn_snapshot(self):
+        self.assertEquals(
+            ("svn", "4242"), get_snapshot_revision("0.4.4~svn4242"))
+
+    def test_with_svn_snapshot_plus(self):
+        self.assertEquals(
+            ("svn", "2424"), get_snapshot_revision("0.4.4+svn2424"))
+
+    def test_git(self):
+        self.assertEquals(
+            ("date", "20190101"),
+            get_snapshot_revision("0.4.4+git20190101"))
+        self.assertEquals(
+            ("git", "abc1def"),
+            get_snapshot_revision("0.4.4+git20190101.abc1def"))

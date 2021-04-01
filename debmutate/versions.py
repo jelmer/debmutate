@@ -27,6 +27,10 @@ __all__ = [
     ]
 
 
+# Ideally we wouldn't have a list like this, but unfortunately we do.
+COMMON_VENDORS = ['debian', 'ubuntu', 'kali']
+
+
 def git_snapshot_data_from_version(
         version: Union[str, Version]) -> Tuple[Optional[str], Optional[str]]:
     """Extract git snapshot information from an upstream version string.
@@ -92,3 +96,35 @@ def new_package_version(upstream_version, distribution_name, epoch=None):
     debian_revision = initial_debian_revision(distribution_name)
     return new_upstream_package_version(
         upstream_version, debian_revision, epoch=epoch)
+
+
+def get_snapshot_revision(upstream_version):
+    """Return the upstream revision specifier if specified in the upstream
+    version.
+
+    When packaging an upstream snapshot some people use +vcsnn or ~vcsnn to
+    indicate what revision number of the upstream VCS was taken for the
+    snapshot. This given an upstream version number this function will return
+    an identifier of the upstream revision if it appears to be a snapshot. The
+    identifier is a string containing a bzr revision spec, so it can be
+    transformed in to a revision.
+
+    :param upstream_version: a string containing the upstream version number.
+    :return: a string containing a revision specifier for the revision of the
+        upstream branch that the snapshot was taken from, or None if it
+        doesn't appear to be a snapshot.
+    """
+    match = re.search("(?:~|\\+)bzr([0-9]+)$", upstream_version)
+    if match is not None:
+        return ("bzr", match.groups()[0])
+    match = re.search("(?:~|\\+)svn([0-9]+)$", upstream_version)
+    if match is not None:
+        return ("svn", match.groups()[0])
+    match = re.match(r"^(.*)([\+~])git(\d{8})\.([a-f0-9]{7})$",
+                     upstream_version)
+    if match:
+        return ("git", match.group(4))
+    match = re.match(r"^(.*)([\+~])git(\d{8})$", upstream_version)
+    if match:
+        return ("date", match.group(3))
+    return None
