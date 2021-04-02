@@ -17,11 +17,14 @@
 
 """Tests for debmutate.versions."""
 
+from datetime import datetime
+
 from debmutate.versions import (
     git_snapshot_data_from_version,
     mangle_version_for_git,
     new_package_version,
     get_snapshot_revision,
+    upstream_version_add_revision,
     )
 
 from debian.changelog import Version
@@ -112,3 +115,92 @@ class GetRevisionSnapshotTests(TestCase):
         self.assertEquals(
             ("git", "abc1def"),
             get_snapshot_revision("0.4.4+git20190101.abc1def"))
+
+
+class TestUpstreamVersionAddRevision(TestCase):
+    """Test that updating the version string works."""
+
+    def setUp(self):
+        super(TestUpstreamVersionAddRevision, self).setUp()
+        self.revnos = {}
+        self.svn_revnos = {b"somesvnrev": 45}
+        self.git_shas = {
+            b"somegitrev": b"e7f47cf254a6ddd4996fe41fa6115bd32eff5437"}
+        self.revnos = {b"somerev": 42, b"somesvnrev": 12, b"somegitrev": 66}
+        self.repository = self
+
+    def revision_id_to_revno(self, revid):
+        return self.revnos[revid]
+
+    def revision_id_to_dotted_revno(self, revid):
+        return (self.revnos[revid], )
+
+    def test_update_plus_rev(self):
+        self.assertEquals(
+            "1.3+bzr42",
+            upstream_version_add_revision("1.3+bzr23", bzr_revno="42"))
+
+    def test_update_tilde_rev(self):
+        self.assertEquals(
+            "1.3~bzr42",
+            upstream_version_add_revision("1.3~bzr23", bzr_revno="42"))
+
+    def test_new_rev(self):
+        self.assertEquals(
+            "1.3+bzr42",
+            upstream_version_add_revision("1.3", bzr_revno="42"))
+
+    def test_svn_new_rev(self):
+        self.assertEquals(
+            "1.3+svn45",
+            upstream_version_add_revision("1.3", svn_revno=45))
+
+    def test_svn_plus_rev(self):
+        self.assertEquals(
+            "1.3+svn45",
+            upstream_version_add_revision("1.3+svn3", svn_revno=45))
+
+    def test_svn_tilde_rev(self):
+        self.assertEquals(
+            "1.3~svn45",
+            upstream_version_add_revision("1.3~svn800", svn_revno=45))
+
+    def test_git_tilde_rev(self):
+        self.assertEquals(
+            "1.3~git20180101.e7f47cf",
+            upstream_version_add_revision(
+                "1.3~git20171201.11b1d57",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
+
+    def test_git_new_rev(self):
+        self.assertEquals(
+            "1.3+git20180101.1.e7f47cf",
+            upstream_version_add_revision(
+                "1.3",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
+        self.assertEquals(
+            "1.0~git20180101",
+            upstream_version_add_revision(
+                "1.0~git20160320",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
+        self.assertEquals(
+            "1.0-git20180101",
+            upstream_version_add_revision(
+                "1.0-git20160320",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
+        self.assertEquals(
+            "1.0~git20180101.1.e7f47cf",
+            upstream_version_add_revision(
+                "1.0~git20180101.0.11b1d57",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
+        self.assertEquals(
+            "1.0~git20180101.0.e7f47cf",
+            upstream_version_add_revision(
+                "1.0~git20170101.0.11b1d57",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))

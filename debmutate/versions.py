@@ -17,6 +17,7 @@
 
 """Utility functions for dealing with Debian versions."""
 
+from datetime import datetime
 import re
 from typing import Optional, Tuple, Union
 from debian.changelog import Version
@@ -24,6 +25,7 @@ from debian.changelog import Version
 __all__ = [
     'git_snapshot_data_from_version',
     'mangle_version_for_git',
+    'upstream_version_add_revision',
     ]
 
 
@@ -89,9 +91,10 @@ def new_upstream_package_version(
 def new_package_version(upstream_version, distribution_name, epoch=None):
     """Determine the package version for a new upstream.
 
-    :param upstream_version: Upstream version string
-    :param distribution_name: Distribution the package is for
-    :param epoch: Optional epoch
+    Args:
+      upstream_version: Upstream version string
+      distribution_name: Distribution the package is for
+      epoch: Optional epoch
     """
     debian_revision = initial_debian_revision(distribution_name)
     return new_upstream_package_version(
@@ -109,10 +112,12 @@ def get_snapshot_revision(upstream_version):
     identifier is a string containing a bzr revision spec, so it can be
     transformed in to a revision.
 
-    :param upstream_version: a string containing the upstream version number.
-    :return: a string containing a revision specifier for the revision of the
-        upstream branch that the snapshot was taken from, or None if it
-        doesn't appear to be a snapshot.
+    Args:
+      upstream_version: a string containing the upstream version number.
+    Returns:
+      a string containing a revision specifier for the revision of the
+      upstream branch that the snapshot was taken from, or None if it
+      doesn't appear to be a snapshot.
     """
     match = re.search("(?:~|\\+)bzr([0-9]+)$", upstream_version)
     if match is not None:
@@ -128,3 +133,62 @@ def get_snapshot_revision(upstream_version):
     if match:
         return ("date", match.group(3))
     return None
+
+
+def upstream_version_add_revision(
+        version_string: str, sep: str = '+',
+        gitid: Optional[bytes] = None,
+        gitdate: Optional[datetime] = None,
+        bzr_revno: Optional[str] = None,
+        svn_revno: Optional[int] = None):
+    """Update the revision in a upstream version string.
+
+    Args:
+      branch: Branch in which the revision can be found
+      version_string: Original version string
+      sep: Separator to use when adding snapshot
+      gitid: git sha (as bytes)
+      gitdate: timestamp for git
+      bzr_revno: Bazaar dotted revno
+      svn_revno: Subversion revision number
+    """
+    if bzr_revno is not None:
+        m = re.match(r"^(.*)([\+~])bzr(\d+)$", version_string)
+        if m:
+            return "%s%sbzr%s" % (m.group(1), m.group(2), bzr_revno)
+
+    if gitid:
+        gitid = gitid[:7].decode('ascii')
+        gitdate = gitdate.strftime('%Y%m%d')
+
+    m = re.match(r"^(.*)([\+~-])git(\d{8})\.([a-f0-9]{7})$", version_string)
+    if m and gitid:
+        return "%s%sgit%s.%s" % (m.group(1), m.group(2), gitdate, gitid)
+
+    m = re.match(r"^(.*)([\+~-])git(\d{8})\.(\d+)\.([a-f0-9]{7})$",
+                 version_string)
+    if m and gitid:
+        if gitdate == m.group(3):
+            snapshot = int(m.group(4)) + 1
+        else:
+            snapshot = 0
+        return "%s%sgit%s.%d.%s" % (
+            m.group(1), m.group(2), gitdate, snapshot, gitid)
+
+    m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
+    if m and gitid:
+        return "%s%sgit%s" % (m.group(1), m.group(2), gitdate)
+
+    m = re.match(r"^(.*)([\+~])svn(\d+)$", version_string)
+    # FIXME: Raise error if +svn/~svn is present and svn_revno is not set?
+    if m and svn_revno:
+        return "%s%ssvn%d" % (m.group(1), m.group(2), svn_revno)
+
+    if svn_revno:
+        return "%s%ssvn%d" % (version_string, sep, svn_revno)
+    elif gitid:
+        return "%s%sgit%s.1.%s" % (version_string, sep, gitdate, gitid)
+    elif bzr_revno is not None:
+        return "%s%sbzr%s" % (version_string, sep, bzr_revno)
+    else:
+        raise ValueError
