@@ -8,6 +8,7 @@ Build-Depends: dh-python,
                python3-setuptools,
                python3-merge3,
                python3-tomlkit,
+               python3-semver,
                python3-tr,
                debhelper-compat (= 13)
 Standards-Version: 4.5.0
@@ -18,7 +19,7 @@ Vcs-Browser: https://salsa.debian.org/jelmer/debmutate
 Package: python3-debmutate
 Architecture: all
 Depends: python3-debian, ${misc:Depends}, ${python3:Depends}
-Recommends: python3-tr, python3-merge3, python3-tomlkit
+Recommends: python3-tr, python3-merge3, python3-tomlkit, python3-semver
 Description: Format-preserving manipulation of Debian control files in Python
  Debmutate is a set of Python modules for manipulating the control files of
  Debian packages, with the ability to preserve the existing formatting of

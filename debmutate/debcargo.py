@@ -39,6 +39,12 @@ class AutomaticFieldUnknown(KeyError):
     """Field is generated automatically, and value can not be determined."""
 
 
+def semver_pair(version):
+    import semver
+    parsed = semver.VersionInfo.parse(version)
+    return '%d.%d' % (parsed.major, parsed.minor)
+
+
 class TomlEditor(Editor):
 
     def _parse(self, content):
@@ -60,6 +66,9 @@ class TomlEditor(Editor):
 
     def __setitem__(self, key, value):
         self._parsed[key] = value
+
+    def get(self, key, default=None):
+        return self._parsed.get(key, default)
 
 
 class DebcargoEditor(TomlEditor):
@@ -95,10 +104,13 @@ class ShimParagraph(MutableMapping):
 
 class DebcargoSourceShimEditor(ShimParagraph):
 
-    def __init__(self, debcargo, crate_name=None, cargo=None):
+    def __init__(self, debcargo, crate_name=None, crate_version=None, cargo=None):
         self._debcargo = debcargo
         if crate_name is None:
             crate_name = cargo["package"]["name"]
+        if crate_version is None:
+            crate_version = cargo["package"]["version"]
+        self.crate_version = crate_version
         self.crate_name = crate_name
         self.cargo = cargo
 
@@ -132,6 +144,8 @@ class DebcargoSourceShimEditor(ShimParagraph):
                     return ', '.join(value)
                 return value
         elif name == 'Source':
+            if self._debcargo.get("semver_suffix", False):
+                return 'rust-%s-%s' % (self.crate_name, semver_pair(self.crate_version))
             return 'rust-%s' % self.crate_name
         elif name == 'Priority':
             return 'optional'
@@ -245,11 +259,15 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         self._key = key
         self.package_name = package_name
 
+    @property
+    def _section(self):
+        return 'packages.' + self._key
+
     def __getitem__(self, name):
         if name in self.BINARY_KEY_MAP:
             (toml_name, default) = self.BINARY_KEY_MAP[name]
             try:
-                return self._debcargo['packages.' + self._key][toml_name]
+                return self._debcargo[self._section][toml_name]
             except KeyError:
                 if callable(default):
                     default = default(self)
@@ -264,7 +282,9 @@ class DebcargoBinaryShimEditor(ShimParagraph):
     def __setitem__(self, name, value):
         if name in self.BINARY_KEY_MAP:
             (toml_name, default) = self.BINARY_KEY_MAP[name]
-            self._debcargo['packages.' + self._key][toml_name] = value
+            if not self._section in self._debcargo:
+                self._debcargo[self._section] = {}
+            self._debcargo[self._section][toml_name] = value
         else:
             raise KeyError(name)
 
@@ -273,7 +293,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
             (toml_name, default) = self.BINARY_KEY_MAP[name]
             if default is None:
                 try:
-                    del self._debcargo['packages.' + self._key][toml_name]
+                    del self._debcargo[self._section][toml_name]
                 except KeyError:
                     pass
             else:
@@ -299,23 +319,25 @@ class DebcargoBinaryShimEditor(ShimParagraph):
 class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
-    def __init__(self, debcargo_editor, crate, cargo=None):
+    def __init__(self, debcargo_editor, crate_name, crate_version, cargo=None):
         self.debcargo_editor = debcargo_editor
-        self.crate = crate
         self.cargo = cargo
+        self.crate_name = crate_name
+        self.crate_version = crate_version
 
     def __repr__(self):
-        return "%s(%r, %r)" % (
+        return "%s(%r, %r, %r)" % (
             type(self).__name__, self.debcargo_editor,
-            self.crate)
+            self.crate_name, self.crate_version)
 
     @property
     def source(self):
         return DebcargoSourceShimEditor(
-            self.debcargo_editor, self.crate, self.cargo)
+            self.debcargo_editor, crate_name=self.crate_name,
+            crate_version=self.crate_version, cargo=self.cargo)
 
     @classmethod
-    def from_debian_dir(cls, path, crate=None, cargo=None):
+    def from_debian_dir(cls, path, crate_name=None, crate_version=None, cargo=None):
         editor = DebcargoEditor(
                 os.path.join(path, 'debcargo.toml'), allow_missing=True)
         cargo_path = os.path.join(path, '..', 'cargo.toml')
@@ -323,20 +345,22 @@ class DebcargoControlShimEditor(object):
             try:
                 with open(cargo_path, 'r') as f:
                     cargo = loads(f.read())
-                    crate = cargo["package"]["name"]
+                    crate_name = cargo["package"]["name"]
+                    crate_version = cargo["package"]["version"]
             except FileNotFoundError:
                 pass
-        if crate is None:
+        if crate_name is None or crate_version is None:
             with open(os.path.join(path, 'changelog'), 'r') as f:
-                package = Changelog(f).package
+                cl = Changelog(f)
+                package = cl.package
+                crate_version = cl.version.upstream_version
             with editor:
-                try:
-                    semver_suffix = editor["source"]["semver_suffix"]
-                except KeyError:
-                    semver_suffix = False
-            crate, crate_semver_version = parse_debcargo_source_name(
+                semver_suffix = editor.get("semver_suffix", False)
+            crate_name, crate_semver_version = parse_debcargo_source_name(
                 package, semver_suffix)
-        return cls(editor, crate, cargo)
+        return cls(
+            editor, crate_name=crate_name, crate_version=crate_version,
+            cargo=cargo)
 
     def __enter__(self):
         self.debcargo_editor.__enter__()
@@ -348,20 +372,25 @@ class DebcargoControlShimEditor(object):
 
     @property
     def binaries(self):
+        semver_suffix = self.debcargo_editor.get('semver_suffix', False)
         ret = [DebcargoBinaryShimEditor(
-            self.debcargo_editor, 'lib', 'librust-%s-dev' % self.crate)]
+            self.debcargo_editor, 'lib',
+            ('librust-%s-dev' % self.crate_name)
+            if not semver_suffix else
+            ('librust-%s-%s-dev' % (self.crate_name, semver_pair(self.crate_version)))
+            )]
         try:
             need_bin_package = self.debcargo_editor['bin']
         except KeyError:
             try:
-                need_bin_package = not self.debcargo_editor['semver_suffix']
+                need_bin_package = not semver_suffix
             except KeyError:
                 need_bin_package = False
         if need_bin_package:
             try:
                 bin_name = self.debcargo_editor['bin_name']
             except KeyError:
-                bin_name = self.crate
+                bin_name = self.crate_name
             ret.append(DebcargoBinaryShimEditor(
                 self.debcargo_editor, 'bin', bin_name))
         # TODO(jelmer): Add lib+feature packages
