@@ -152,32 +152,41 @@ def upstream_version_add_revision(
       bzr_revno: Bazaar dotted revno
       svn_revno: Subversion revision number
     """
+    for known_suffix in ['+dfsg', '+ds']:
+        if version_string.endswith(known_suffix):
+            version_string = version_string[:-len(known_suffix)]
     if bzr_revno is not None:
         m = re.match(r"^(.*)([\+~])bzr(\d+)$", version_string)
         if m:
             return "%s%sbzr%s" % (m.group(1), m.group(2), bzr_revno)
 
     if gitid:
-        gitid = gitid[:7].decode('ascii')
-        gitdate = gitdate.strftime('%Y%m%d')
+        decoded_gitid: Optional[str] = gitid[:7].decode('ascii')
+    else:
+        decoded_gitid = None
+    if gitdate:
+        gitdate_formatted: Optional[str] = gitdate.strftime('%Y%m%d')
+    else:
+        gitdate_formatted = None
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})\.([a-f0-9]{7})$", version_string)
-    if m and gitid:
-        return "%s%sgit%s.%s" % (m.group(1), m.group(2), gitdate, gitid)
+    if m and decoded_gitid:
+        return "%s%sgit%s.%s" % (
+            m.group(1), m.group(2), gitdate_formatted, decoded_gitid)
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})\.(\d+)\.([a-f0-9]{7})$",
                  version_string)
-    if m and gitid:
-        if gitdate == m.group(3):
+    if m and decoded_gitid:
+        if gitdate_formatted == m.group(3):
             snapshot = int(m.group(4)) + 1
         else:
             snapshot = 0
         return "%s%sgit%s.%d.%s" % (
-            m.group(1), m.group(2), gitdate, snapshot, gitid)
+            m.group(1), m.group(2), gitdate_formatted, snapshot, decoded_gitid)
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
-    if m and gitid:
-        return "%s%sgit%s" % (m.group(1), m.group(2), gitdate)
+    if m and decoded_gitid:
+        return "%s%sgit%s" % (m.group(1), m.group(2), gitdate_formatted)
 
     m = re.match(r"^(.*)([\+~])svn(\d+)$", version_string)
     # FIXME: Raise error if +svn/~svn is present and svn_revno is not set?
@@ -186,8 +195,9 @@ def upstream_version_add_revision(
 
     if svn_revno:
         return "%s%ssvn%d" % (version_string, sep, svn_revno)
-    elif gitid:
-        return "%s%sgit%s.1.%s" % (version_string, sep, gitdate, gitid)
+    elif decoded_gitid:
+        return "%s%sgit%s.1.%s" % (
+            version_string, sep, gitdate_formatted, decoded_gitid)
     elif bzr_revno is not None:
         return "%s%sbzr%s" % (version_string, sep, bzr_revno)
     else:

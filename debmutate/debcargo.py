@@ -104,7 +104,8 @@ class ShimParagraph(MutableMapping):
 
 class DebcargoSourceShimEditor(ShimParagraph):
 
-    def __init__(self, debcargo, crate_name=None, crate_version=None, cargo=None):
+    def __init__(self, debcargo, crate_name=None, crate_version=None,
+                 cargo=None):
         self._debcargo = debcargo
         if crate_name is None:
             crate_name = cargo["package"]["name"]
@@ -145,7 +146,8 @@ class DebcargoSourceShimEditor(ShimParagraph):
                 return value
         elif name == 'Source':
             if self._debcargo.get("semver_suffix", False):
-                return 'rust-%s-%s' % (self.crate_name, semver_pair(self.crate_version))
+                return 'rust-%s-%s' % (
+                    self.crate_name, semver_pair(self.crate_version))
             return 'rust-%s' % self.crate_name
         elif name == 'Priority':
             return 'optional'
@@ -282,7 +284,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
     def __setitem__(self, name, value):
         if name in self.BINARY_KEY_MAP:
             (toml_name, default) = self.BINARY_KEY_MAP[name]
-            if not self._section in self._debcargo:
+            if self._section not in self._debcargo:
                 self._debcargo[self._section] = {}
             self._debcargo[self._section][toml_name] = value
         else:
@@ -337,7 +339,8 @@ class DebcargoControlShimEditor(object):
             crate_version=self.crate_version, cargo=self.cargo)
 
     @classmethod
-    def from_debian_dir(cls, path, crate_name=None, crate_version=None, cargo=None):
+    def from_debian_dir(cls, path, crate_name=None, crate_version=None,
+                        cargo=None):
         editor = DebcargoEditor(
                 os.path.join(path, 'debcargo.toml'), allow_missing=True)
         cargo_path = os.path.join(path, '..', 'cargo.toml')
@@ -377,7 +380,8 @@ class DebcargoControlShimEditor(object):
             self.debcargo_editor, 'lib',
             ('librust-%s-dev' % self.crate_name)
             if not semver_suffix else
-            ('librust-%s-%s-dev' % (self.crate_name, semver_pair(self.crate_version)))
+            ('librust-%s-%s-dev' % (
+                self.crate_name, semver_pair(self.crate_version)))
             )]
         try:
             need_bin_package = self.debcargo_editor['bin']
