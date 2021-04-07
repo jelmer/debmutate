@@ -360,6 +360,8 @@ def changelog_add_entry(
     if (distribution_is_unreleased(cl[0].distributions) or (
                 cl[0].author is None and cl[0].date is None)):
         by_author = list(changes_by_author(cl[0].changes()))
+        if cl[0]._changes == []:
+            cl[0]._changes.append('')
         if all([author is None for (author, linenos, change) in by_author]):
             if cl[0].author is not None:
                 entry_maintainer = parseaddr(cl[0].author)
@@ -373,7 +375,7 @@ def changelog_add_entry(
                 if cl[0]._changes[-1]:
                     cl[0]._changes.append('')
                 cl[0]._changes.append('  [ %s ]' % maintainer_name)
-        if cl[0] ._changes and not cl[0]._changes[-1].strip():
+        if len(cl[0] ._changes) > 1 and not cl[0]._changes[-1].strip():
             del cl[0]._changes[-1]
     else:
         cl.new_block(
@@ -618,3 +620,15 @@ def is_unreleased_inaugural(cl: Changelog) -> bool:
     if not actual[0].startswith('  * Initial release'):
         return False
     return True
+
+
+def gbp_dch(path: str) -> None:
+    """Run 'gbp dch'."""
+    import os
+    from gbp.scripts.dch import main
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(path)
+        main(['gbp-dch', '--ignore-branch'])
+    finally:
+        os.chdir(old_cwd)

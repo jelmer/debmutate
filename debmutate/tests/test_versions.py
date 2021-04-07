@@ -204,6 +204,12 @@ class TestUpstreamVersionAddRevision(TestCase):
                 "1.0~git20170101.0.11b1d57",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
+        self.assertEquals(
+            "0.0~git20180101.0.e7f47cf",
+            upstream_version_add_revision(
+                "0.0~git20161231.0.3435554",
+                gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
+                gitdate=datetime(2018, 1, 1)))
 
     def test_dfsg(self):
         self.assertEquals(

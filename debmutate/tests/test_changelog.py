@@ -171,6 +171,34 @@ lalalalala
 """)
         self.assertRaises(ChangelogCreateError, ChangelogEditor().__enter__)
 
+    def test_add_entry_to_new_block(self):
+        with ChangelogEditor.create() as updater:
+            updater[-1].distributions = 'unstable'
+            updater.auto_version(
+                Version('2.0-1'),
+                package='blah',
+                urgency='low',
+                maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
+                timestamp=datetime.utcfromtimestamp(1604934305))
+            updater.add_entry(
+                ['New release'],
+                maintainer=('Jelmer Vernooij', 'jelmer@debian.org'))
+
+        with open('debian/changelog', 'r') as f:
+            self.assertEqual("""\
+blah (2.0-1) UNRELEASED; urgency=low
+
+  * New release
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+
+lintian-brush (0.28) unstable; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", f.read())
+
 
 class TextWrapperTests(TestCase):
 
