@@ -55,6 +55,11 @@ class GitSnapshotDataFromVersionTests(TestCase):
             (None, '2020-01-01'),
             git_snapshot_data_from_version('1.1+git20200101'))
 
+    def test_next(self):
+        self.assertEqual(
+            (None, '2020-01-02'),
+            git_snapshot_data_from_version('1.1+next.20200102'))
+
 
 class TestPackageVersion(TestCase):
 

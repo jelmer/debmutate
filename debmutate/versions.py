@@ -59,6 +59,9 @@ def git_snapshot_data_from_version(
             m = re.match(".*[~+]git([0-9]{4})([0-9]{2})([0-9]{2}).*", version)
             if m:
                 date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+    m = re.match(r".*\+next\.([0-9]{4})([0-9]{2})([0-9]{2}).*", version)
+    if m:
+        date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
     return (git_id, date)
 
 
