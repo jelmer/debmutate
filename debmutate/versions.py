@@ -205,3 +205,10 @@ def upstream_version_add_revision(
         return "%s%sbzr%s" % (version_string, sep, bzr_revno)
     else:
         raise ValueError
+
+
+def debianize_upstream_version(version):
+    version = version.replace('-rc', '~rc')
+    version = version.replace('-beta', '~beta')
+    version = version.replace('-alpha', '~alpha')
+    return version
