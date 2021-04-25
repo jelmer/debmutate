@@ -208,6 +208,19 @@ def upstream_version_add_revision(
 
 
 def debianize_upstream_version(version):
+    """Make an upstream version string suitable for Debian.
+
+    Args:
+      version: original upstream version string
+    Returns:
+      mangled version string for use in Debian versions
+    """
+    if version.count('_') == 1 and version.startswith('0.'):
+        # This is a style commonly used for perl packages.
+        # Most debian packages seem to just drop the underscore.
+        version = version.replace('_', '')
+    if '_' in version and '.' not in version:
+        version = version.replace('_', '.')
     version = version.replace('-rc', '~rc')
     version = version.replace('-beta', '~beta')
     version = version.replace('-alpha', '~alpha')

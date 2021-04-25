@@ -25,6 +25,7 @@ from debmutate.versions import (
     new_package_version,
     get_snapshot_revision,
     upstream_version_add_revision,
+    debianize_upstream_version,
     )
 
 from debian.changelog import Version
@@ -223,3 +224,13 @@ class TestUpstreamVersionAddRevision(TestCase):
                 "1.3+dfsg",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
+
+
+class DebianizeUpstreamVersionTests(TestCase):
+
+    def test_unchanged(self):
+        self.assertEqual('1.0', debianize_upstream_version('1.0'))
+
+    def test_changed(self):
+        self.assertEqual('1.0~beta1', debianize_upstream_version('1.0-beta1'))
+        self.assertEqual('1.0~rc1', debianize_upstream_version('1.0-rc1'))
