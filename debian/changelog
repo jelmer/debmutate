@@ -2,6 +2,7 @@ debmutate (0.34) UNRELEASED; urgency=medium
 
   * Various improvements to debcargo package handling, including support
     for semver suffixes.
+  * Add debmutate.versions.debianize_upstream_version.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 03 Apr 2021 17:19:32 +0100
 
