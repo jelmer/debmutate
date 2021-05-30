@@ -219,7 +219,8 @@ def debianize_upstream_version(version, package=None):
     if version.count('_') == 1 and version.count('.') > 0:
         # This is a style commonly used for perl packages.
         # Most debian packages seem to just drop the underscore.
-        # See http://blogs.perl.org/users/grinnz/2018/04/a-guide-to-versions-in-perl.html
+        # See
+        # http://blogs.perl.org/users/grinnz/2018/04/a-guide-to-versions-in-perl.html
         version = version.replace('_', '')
     if '_' in version and '.' not in version:
         version = version.replace('_', '.')
