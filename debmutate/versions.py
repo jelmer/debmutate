@@ -227,3 +227,23 @@ def debianize_upstream_version(version, package=None):
     version = version.replace('-beta', '~beta')
     version = version.replace('-alpha', '~alpha')
     return version
+
+
+def matches_release(upstream_version: str, release_version: str) -> bool:
+    """Check whether an upstream version string matches a upstream release.
+
+    This will e.g. strip git and dfsg suffixes before comparing.
+
+    Args:
+      upstream_version: Upstream version string
+      release_version: Release to check for
+    """
+    release_version = release_version.lower()
+    upstream_version = upstream_version.lower()
+    m = re.match("(.*)([~+-])(dfsg|git|bzr|svn|hg).*", upstream_version)
+    if m and m.group(1) == release_version:
+        return True
+    m = re.match("(.*)([~+-]).*", upstream_version)
+    if m and m.group(1) == release_version:
+        return True
+    return False
