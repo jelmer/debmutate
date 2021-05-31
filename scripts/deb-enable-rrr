@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright (C) 2018-2020 Jelmer Vernooij
+# Copyright (C) 2020 Jelmer Vernooij <jelmer@jelmer.uk>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,23 +15,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from setuptools import setup
+import os
+import json
 
-setup(
-    name="debmutate",
-    version="0.34",
-    author="Jelmer Vernooij",
-    author_email="jelmer@debian.org",
-    packages=["debmutate", "debmutate.tests"],
-    url="https://salsa.debian.org/jelmer/debmutate",
-    description="manipulation of Debian package control files",
-    project_urls={
-        "Repository": "https://salsa.debian.org/jelmer/debmutate.git",
-    },
-    scripts=['scripts/deb-enable-rrr', 'scripts/drop-mia-uploaders'],
-    install_requires=['python_debian', 'python-tr', 'merge3'],
-    extras_require={
-        'debcargo': ['tomlkit'],
-    },
-    test_suite='debmutate.tests.test_suite',
-)
+from debmutate.control import ControlEditor
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.parse_args()
+
+    with ControlEditor() as updater:
+        updater.source["Rules-Requires-Root"] = "no"
+
+    if os.environ.get('SVP_API') == "1":
+        with open(os.environ['SVP_RESULT'], 'w') as f:
+            json.dump(f, {'description': 'Set Rules-Requires-Root.'})
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
