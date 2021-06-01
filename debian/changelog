@@ -3,6 +3,8 @@ debmutate (0.35) UNRELEASED; urgency=medium
   * Add debmutate.versions.matches_release.
   * Ship scripts for enabling Rules-Requires-Root and dropping MIA
     uploaders.
+  * Suggest gnome-pkg-tools and postgresql-common, for updating
+    templated control files.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 31 May 2021 00:21:20 +0100
 
