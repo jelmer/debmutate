@@ -423,3 +423,16 @@ def parse_debcargo_source_name(
     if semver_suffix and '-' in crate:
         crate, crate_semver_version = crate.rsplit('-', 1)
     return crate, crate_semver_version
+
+
+def cargo_translate_dashes(crate):
+    import subprocess
+    output = subprocess.check_output(['cargo', 'search', crate])
+    for line in output.splitlines(False):
+        name = line.split(b' = ')[0].decode()
+        return name
+    return crate
+
+
+def unmangle_debcargo_version(version):
+    return version.replace('~', '-')
