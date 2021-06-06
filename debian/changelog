@@ -1,4 +1,4 @@
-debmutate (0.35) UNRELEASED; urgency=medium
+debmutate (0.35) unstable; urgency=medium
 
   * Add debmutate.versions.matches_release.
   * Ship scripts for enabling Rules-Requires-Root and dropping MIA
@@ -6,7 +6,7 @@ debmutate (0.35) UNRELEASED; urgency=medium
   * Suggest gnome-pkg-tools and postgresql-common, for updating
     templated control files.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 31 May 2021 00:21:20 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 07 Jun 2021 00:35:40 +0100
 
 debmutate (0.34) unstable; urgency=medium
 
