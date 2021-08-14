@@ -27,10 +27,17 @@ __all__ = [
     ]
 
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, NamedTuple
 
 
-def split_vcs_url(url: str) -> Tuple[str, Optional[str], Optional[str]]:
+class VcsUrl(NamedTuple):
+
+    url: str
+    branch: Optional[str]
+    path: Optional[str]
+
+
+def split_vcs_url(url: str) -> VcsUrl:
     """Split a Debian VCS URL.
 
     Args:
@@ -51,7 +58,7 @@ def split_vcs_url(url: str) -> Tuple[str, Optional[str], Optional[str]]:
     except ValueError:
         branch = None
         repo_url = url
-    return (repo_url, branch, subpath)
+    return VcsUrl(repo_url, branch, subpath)
 
 
 def unsplit_vcs_url(repo_url: str,

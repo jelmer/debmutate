@@ -20,6 +20,7 @@
 from unittest import TestCase
 
 from debmutate.vcs import (
+    VcsUrl,
     split_vcs_url,
     unsplit_vcs_url,
     mangle_version_for_git,
@@ -31,28 +32,32 @@ class SplitVcsUrlTests(TestCase):
 
     def test_none(self):
         self.assertEqual(
-            ('https://github.com/jelmer/example', None, None),
+            VcsUrl('https://github.com/jelmer/example', None, None),
             split_vcs_url('https://github.com/jelmer/example'))
         self.assertEqual(
-            ('https://github.com/jelmer/example', None, 'path/to/packaging'),
+            VcsUrl(
+                'https://github.com/jelmer/example', None,
+                'path/to/packaging'),
             split_vcs_url(
                 'https://github.com/jelmer/example [path/to/packaging]'))
 
     def test_branch(self):
         self.assertEqual(
-            ('https://github.com/jelmer/example',
-                'master', 'path/to/packaging'),
+            VcsUrl(
+                'https://github.com/jelmer/example', 'master',
+                'path/to/packaging'),
             split_vcs_url(
                 'https://github.com/jelmer/example [path/to/packaging] '
                 '-b master'))
         self.assertEqual(
-            ('https://github.com/jelmer/example',
-                'master', 'path/to/packaging'),
+            VcsUrl(
+                'https://github.com/jelmer/example', 'master',
+                'path/to/packaging'),
             split_vcs_url(
                 'https://github.com/jelmer/example -b master '
                 '[path/to/packaging]'))
         self.assertEqual(
-            ('https://github.com/jelmer/example', 'master', None),
+            VcsUrl('https://github.com/jelmer/example', 'master', None),
             split_vcs_url(
                 'https://github.com/jelmer/example -b master'))
 
