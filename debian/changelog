@@ -1,3 +1,9 @@
+debmutate (0.36) UNRELEASED; urgency=medium
+
+  * Add debmutate.vcs.VcsUrl.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 14 Aug 2021 14:36:21 +0100
+
 debmutate (0.35) unstable; urgency=medium
 
   * Add debmutate.versions.matches_release.
