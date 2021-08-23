@@ -1,8 +1,8 @@
-debmutate (0.36) UNRELEASED; urgency=medium
+debmutate (0.36) unstable; urgency=medium
 
   * Add debmutate.vcs.VcsUrl.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 14 Aug 2021 14:36:21 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 23 Aug 2021 17:30:54 +0100
 
 debmutate (0.35) unstable; urgency=medium
 
