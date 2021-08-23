@@ -18,6 +18,8 @@
 
 """Tests for lintian_brush.control."""
 
+import os
+
 from . import (
     TestCase,
     TestCaseInTempDir,
@@ -237,6 +239,7 @@ Source: blah
 Testsuite: autopkgtest8
 Uploaders: @lintian-brush-test@
 """, "debian/control.in")
+        self.assertFalse(os.path.exists('debian/control'))
 
     def test_update_cdbs_template(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\

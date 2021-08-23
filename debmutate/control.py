@@ -182,7 +182,8 @@ def _expand_control_template(
         raise AssertionError
 
 
-def _update_control_template(template_path: str, path: str, changes):
+def _update_control_template(
+        template_path: str, path: str, changes, expand_template=True):
     template_type = guess_template_type(template_path)
     if template_type is None:
         raise GeneratedFile(path, template_path)
@@ -199,11 +200,12 @@ def _update_control_template(template_path: str, path: str, changes):
         # A bit odd, since there were changes to the output file. Anyway.
         return False
 
-    if template_type == 'cdbs':
-        with Deb822Editor(path, allow_generated=True) as updater:
-            updater.apply_changes(changes)
-    else:
-        _expand_control_template(template_path, path, template_type)
+    if expand_template:
+        if template_type == 'cdbs':
+            with Deb822Editor(path, allow_generated=True) as updater:
+                updater.apply_changes(changes)
+        else:
+            _expand_control_template(template_path, path, template_type)
     return True
 
 
@@ -262,6 +264,7 @@ class ControlEditor(object):
         self._primary = Deb822Editor(
             path, allow_reformatting=allow_reformatting,
             allow_missing=allow_missing)
+        self._template_only = False
 
     @classmethod
     def create(cls, path: str = 'debian/control'):
@@ -334,6 +337,7 @@ class ControlEditor(object):
         except FileNotFoundError:
             template_path = _find_template_path(self.path)
             if template_path:
+                self._template_only = True
                 template_type = guess_template_type(template_path)
                 if template_type is None:
                     raise GeneratedFile(self.path, template_path)
@@ -350,6 +354,9 @@ class ControlEditor(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._field_order_preserver.__exit__(exc_type, exc_val, exc_tb)
         try:
+            if self._template_only:
+                os.unlink(self.path)
+                raise FileNotFoundError
             self._primary.__exit__(exc_type, exc_val, exc_tb)
         except GeneratedFile as e:
             if not e.template_path:
@@ -360,7 +367,8 @@ class ControlEditor(object):
             template_path = _find_template_path(self.path)
             if template_path:
                 self.changed = _update_control_template(
-                    template_path, self.path, self.changes())
+                    template_path, self.path, self.changes(),
+                    expand_template=not self._template_only)
             else:
                 raise
         else:
