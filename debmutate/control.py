@@ -161,8 +161,28 @@ def _cdbs_resolve_conflict(
         actual_new_value)
 
 
-def _update_control_template(template_path: str, path: str, changes):
+def _expand_control_template(
+        template_path: str, path: str, template_type: str):
     package_root = os.path.dirname(os.path.dirname(path)) or '.'
+    if template_type == 'rules':
+        subprocess.check_call(
+            ['./debian/rules', 'debian/control'],
+            cwd=package_root)
+    elif template_type == 'gnome':
+        dh_gnome_clean(package_root)
+    elif template_type == 'postgresql':
+        pg_buildext_updatecontrol(package_root)
+    elif template_type == 'lintian-brush-test':
+        with open(template_path, 'rb') as inf, open(path, 'wb') as outf:
+            outf.write(
+                inf.read().replace(b'@lintian-brush-test@', b'testvalue'))
+    elif template_type == 'directory':
+        raise GeneratedFile(path, template_path)
+    else:
+        raise AssertionError
+
+
+def _update_control_template(template_path: str, path: str, changes):
     template_type = guess_template_type(template_path)
     if template_type is None:
         raise GeneratedFile(path, template_path)
@@ -178,25 +198,12 @@ def _update_control_template(template_path: str, path: str, changes):
     if not updater.changed:
         # A bit odd, since there were changes to the output file. Anyway.
         return False
-    if template_type == 'rules':
-        subprocess.check_call(
-            ['./debian/rules', 'debian/control'],
-            cwd=package_root)
-    elif template_type == 'cdbs':
+
+    if template_type == 'cdbs':
         with Deb822Editor(path, allow_generated=True) as updater:
             updater.apply_changes(changes)
-    elif template_type == 'gnome':
-        dh_gnome_clean(package_root)
-    elif template_type == 'postgresql':
-        pg_buildext_updatecontrol(package_root)
-    elif template_type == 'lintian-brush-test':
-        with open(template_path, 'rb') as inf, open(path, 'wb') as outf:
-            outf.write(
-                inf.read().replace(b'@lintian-brush-test@', b'testvalue'))
-    elif template_type == 'directory':
-        raise GeneratedFile(path, template_path)
     else:
-        raise AssertionError
+        _expand_control_template(template_path, path, template_type)
     return True
 
 
@@ -232,6 +239,14 @@ def update_control(path='debian/control', source_package_cb=None,
         for paragraph in updater.paragraphs:
             paragraph_cb(paragraph)
     return updater.changed
+
+
+def _find_template_path(path):
+    for template_path in [path + '.in', path + '.m4']:
+        if os.path.exists(template_path):
+            return template_path
+    else:
+        return None
 
 
 class ControlEditor(object):
@@ -314,7 +329,19 @@ class ControlEditor(object):
         return changes
 
     def __enter__(self):
-        self._primary.__enter__()
+        try:
+            self._primary.__enter__()
+        except FileNotFoundError:
+            template_path = _find_template_path(self.path)
+            if template_path:
+                template_type = guess_template_type(template_path)
+                if template_type is None:
+                    raise GeneratedFile(self.path, template_path)
+                _expand_control_template(
+                    template_path, self.path, template_type)
+                self._primary.__enter__()
+            else:
+                raise
         self._field_order_preserver = _preserve_field_order_preferences(
             self._primary.paragraphs)
         self._field_order_preserver.__enter__()
@@ -330,11 +357,10 @@ class ControlEditor(object):
             self.changed = _update_control_template(
                 e.template_path, self.path, self.changes())
         except FileNotFoundError:
-            for template_path in [self.path + '.in', self.path + '.m4']:
-                if os.path.exists(template_path):
-                    self.changed = _update_control_template(
-                        template_path, self.path, self.changes())
-                    break
+            template_path = _find_template_path(self.path)
+            if template_path:
+                self.changed = _update_control_template(
+                    template_path, self.path, self.changes())
             else:
                 raise
         else:

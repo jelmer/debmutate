@@ -221,6 +221,23 @@ Testsuite: autopkgtest8
 Uploaders: testvalue
 """, "debian/control")
 
+    def test_update_template_only(self):
+        self.build_tree_contents([('debian/', ), ('debian/control.in', """\
+Source: blah
+Testsuite: autopkgtest
+Uploaders: @lintian-brush-test@
+
+""")])
+
+        with ControlEditor() as updater:
+            updater.source['Testsuite'] = 'autopkgtest8'
+            updater.changes()
+        self.assertFileEqual("""\
+Source: blah
+Testsuite: autopkgtest8
+Uploaders: @lintian-brush-test@
+""", "debian/control.in")
+
     def test_update_cdbs_template(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 Source: blah
