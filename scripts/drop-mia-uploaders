@@ -81,37 +81,36 @@ def drop_uploaders(editor, mia_people):
     return removed_mia
 
 
-def control_drop_mia_uploaders(control_path):
+def control_drop_mia_uploaders(editor):
     changelog_entries = []
-    with ControlEditor(path=control_path) as editor:
-        source = editor.source["Source"]
-        bugs = all_mia_teammaint_bugs().intersection(get_package_bugs(source))
-        if not bugs:
-            return MIAResult()
-        removed_uploaders = []
-        fixed_bugs = []
-        for bug in bugs:
-            mia_people = get_mia_maintainers(bug)
+    source = editor.source["Source"]
+    bugs = all_mia_teammaint_bugs().intersection(get_package_bugs(source))
+    if not bugs:
+        return MIAResult()
+    removed_uploaders = []
+    fixed_bugs = []
+    for bug in bugs:
+        mia_people = get_mia_maintainers(bug)
 
-            if mia_people is None:
-                logging.warning('No MIA people (X-Debbugs-CC) found in bug %d', bug)
-                continue
+        if mia_people is None:
+            logging.warning('No MIA people (X-Debbugs-CC) found in bug %d', bug)
+            continue
 
-            removed_mia = drop_uploaders(editor, mia_people)
+        removed_mia = drop_uploaders(editor, mia_people)
 
-            if len(removed_mia) == 0:
-                continue
+        if len(removed_mia) == 0:
+            continue
 
-            if len(removed_mia) == 1:
-                description = "Remove MIA uploader %s." % removed_mia[0]
-            else:
-                description = "Remove MIA uploaders %s." % (
-                    ", ".join(removed_mia)
-                )
-            if removed_mia == mia_people:
-                description += " Closes: #%d" % bug
-            changelog_entries.append(description)
-            removed_uploaders.extend(removed_mia)
+        if len(removed_mia) == 1:
+            description = "Remove MIA uploader %s." % removed_mia[0]
+        else:
+            description = "Remove MIA uploaders %s." % (
+                ", ".join(removed_mia)
+            )
+        if removed_mia == mia_people:
+            description += " Closes: #%d" % bug
+        changelog_entries.append(description)
+        removed_uploaders.extend(removed_mia)
 
     if not changelog_entries:
         return MIAResult(source, removed_uploaders=[], bugs=fixed_bugs)
