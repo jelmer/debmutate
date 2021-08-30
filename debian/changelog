@@ -1,3 +1,9 @@
+debmutate (0.37) UNRELEASED; urgency=medium
+
+  * Fix drop-mia-uploaders.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 31 Aug 2021 10:07:27 +0100
+
 debmutate (0.36) unstable; urgency=medium
 
   * Add debmutate.vcs.VcsUrl.
