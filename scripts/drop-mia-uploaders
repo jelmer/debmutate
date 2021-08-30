@@ -93,7 +93,8 @@ def control_drop_mia_uploaders(editor):
         mia_people = get_mia_maintainers(bug)
 
         if mia_people is None:
-            logging.warning('No MIA people (X-Debbugs-CC) found in bug %d', bug)
+            logging.warning(
+                'No MIA people (X-Debbugs-CC) found in bug %d', bug)
             continue
 
         removed_mia = drop_uploaders(editor, mia_people)
@@ -111,10 +112,12 @@ def control_drop_mia_uploaders(editor):
             description += " Closes: #%d" % bug
         changelog_entries.append(description)
         removed_uploaders.extend(removed_mia)
+        fixed_bugs.append(bug)
 
     if not changelog_entries:
         return MIAResult(source, removed_uploaders=[], bugs=fixed_bugs)
-    return MIAResult(source, removed_uploaders=removed_uploaders, bugs=fixed_bugs)
+    return MIAResult(
+        source, removed_uploaders=removed_uploaders, bugs=fixed_bugs)
 
 
 def report_fatal(code: str, description: str) -> None:
@@ -130,6 +133,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     try:
         with ControlEditor(path='debian/control') as control:
