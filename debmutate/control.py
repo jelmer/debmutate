@@ -187,6 +187,9 @@ def _update_control_template(
     template_type = guess_template_type(template_path)
     if template_type is None:
         raise GeneratedFile(path, template_path)
+    if template_type == 'directory':
+        # We can't handle these yet
+        raise GeneratedFile(path, template_path)
     with Deb822Editor(template_path) as updater:
         resolve_conflict: Optional[Callable[[
             str, str, Optional[str], Optional[str], Optional[str]],
