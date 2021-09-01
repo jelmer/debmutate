@@ -152,6 +152,8 @@ def parse_sed_expr(vm):
         return ('s', parse_subst_expr(vm))
     if vm.startswith('tr'):
         return ('tr', parse_transl_expr(vm))
+    if vm.startswith('y'):
+        return ('y', parse_transl_expr(vm))
     raise InvalidUVersionMangle(vm, 'not a substitution or translation regex')
 
 
@@ -172,9 +174,13 @@ def parse_subst_expr(vm: str) -> Tuple[str, str, Optional[str]]:
 
 
 def parse_transl_expr(vm: str) -> Tuple[str, str, Optional[str]]:
-    if not vm.startswith('tr'):
+    if vm.startswith('tr'):
+        s = vm[2:]
+    elif vm.startswith('y'):
+        s = vm[1:]
+    else:
         raise InvalidUVersionMangle(vm, 'not a translation regex')
-    parts = re.split(r'(?<!\\)' + vm[2], vm)
+    parts = re.split(r'(?<!\\)' + s[0], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -193,6 +199,9 @@ def apply_sed_expr(vm: str, orig: str) -> str:
         # TODO(jelmer): Handle flags
         return re.sub(pattern, replacement.replace('$', '\\'), orig)
     elif kind == 'tr':
+        from tr import tr
+        return tr(pattern, replacement, orig, flags or '')
+    elif kind == 'y':
         from tr import tr
         return tr(pattern, replacement, orig, flags or '')
     else:
