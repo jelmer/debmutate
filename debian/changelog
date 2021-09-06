@@ -1,3 +1,9 @@
+debmutate (0.38) UNRELEASED; urgency=medium
+
+  * Add support for y// patterns in watch files.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 06 Sep 2021 16:10:31 +0100
+
 debmutate (0.37) unstable; urgency=medium
 
   * Fix drop-mia-uploaders.
