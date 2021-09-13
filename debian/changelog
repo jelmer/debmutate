@@ -1,6 +1,7 @@
 debmutate (0.38) UNRELEASED; urgency=medium
 
   * Add support for y// patterns in watch files.
+  * When removing phony rules, also update .PHONY.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 06 Sep 2021 16:10:31 +0100
 
