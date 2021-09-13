@@ -379,13 +379,13 @@ class RulesEditor(MakefileEditor):
             makefile_cb(self.makefile)
         if self.has_changed():
             for rule in self.makefile.iter_all_rules():
-                discard_pointless_override(rule)
+                discard_pointless_override(self.makefile, rule)
             return True
         else:
             return False
 
 
-def discard_pointless_override(rule):
+def discard_pointless_override(makefile, rule):
     if not rule.target.startswith(b'override_'):
         return
     command = rule.target[len(b'override_'):]
@@ -394,6 +394,7 @@ def discard_pointless_override(rule):
     if rule.components:
         return
     rule.clear()
+    makefile.drop_phony(rule.target)
 
 
 def update_rules(command_line_cb=None, global_line_cb=None,

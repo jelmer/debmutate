@@ -305,6 +305,15 @@ class MatchesWildcardTests(TestCase):
 class DiscardPointlessOverrideTests(TestCase):
 
     def test_simple(self):
-        rule = Rule(b'override_dh_blah', [b'dh_blah'])
-        discard_pointless_override(rule)
+        mf = Makefile.from_bytes(b"""\
+override_dh_blah:
+\tdh_blah
+
+.PHONY: override_dh_blah
+""")
+
+        rule = next(mf.iter_rules(b'override_dh_blah'))
+        discard_pointless_override(mf, rule)
         self.assertEqual(rule.lines, [])
+        phony = next(mf.iter_rules(b'.PHONY'))
+        self.assertEqual([], phony.components)
