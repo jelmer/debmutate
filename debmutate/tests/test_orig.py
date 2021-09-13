@@ -41,11 +41,11 @@ class ComponentFromOrigTarballTests(TestCase):
             component_from_orig_tarball, "foo_0.1.orig.unknown", "foo", "0.1")
 
     def test_component(self):
-        self.assertEquals(
+        self.assertEqual(
             "comp",
             component_from_orig_tarball(
                 "foo_0.1.orig-comp.tar.gz", "foo", "0.1"))
-        self.assertEquals(
+        self.assertEqual(
             "comp-dash",
             component_from_orig_tarball(
                 "foo_0.1.orig-comp-dash.tar.gz", "foo", "0.1"))

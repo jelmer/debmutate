@@ -65,27 +65,27 @@ class GitSnapshotDataFromVersionTests(TestCase):
 class TestPackageVersion(TestCase):
 
     def test_simple_debian(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-1"),
             new_package_version("1.2", "debian"))
 
     def test_simple_ubuntu(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-0ubuntu1"),
             new_package_version("1.2", "ubuntu"))
 
     def test_debian_with_dash(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-0ubuntu1-1"),
             new_package_version("1.2-0ubuntu1", "debian"))
 
     def test_ubuntu_with_dash(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-1-0ubuntu1"),
             new_package_version("1.2-1", "ubuntu"))
 
     def test_ubuntu_with_epoch(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("3:1.2-1-0ubuntu1"),
             new_package_version("1.2-1", "ubuntu", "3"))
 
@@ -93,32 +93,32 @@ class TestPackageVersion(TestCase):
 class GetRevisionSnapshotTests(TestCase):
 
     def test_with_snapshot(self):
-        self.assertEquals(("bzr", "30"), get_snapshot_revision("0.4.4~bzr30"))
+        self.assertEqual(("bzr", "30"), get_snapshot_revision("0.4.4~bzr30"))
 
     def test_with_snapshot_plus(self):
-        self.assertEquals(("bzr", "30"), get_snapshot_revision("0.4.4+bzr30"))
+        self.assertEqual(("bzr", "30"), get_snapshot_revision("0.4.4+bzr30"))
 
     def test_without_snapshot(self):
-        self.assertEquals(None, get_snapshot_revision("0.4.4"))
+        self.assertEqual(None, get_snapshot_revision("0.4.4"))
 
     def test_non_numeric_snapshot(self):
-        self.assertEquals(
+        self.assertEqual(
             None,
             get_snapshot_revision("0.4.4~bzra"))
 
     def test_with_svn_snapshot(self):
-        self.assertEquals(
+        self.assertEqual(
             ("svn", "4242"), get_snapshot_revision("0.4.4~svn4242"))
 
     def test_with_svn_snapshot_plus(self):
-        self.assertEquals(
+        self.assertEqual(
             ("svn", "2424"), get_snapshot_revision("0.4.4+svn2424"))
 
     def test_git(self):
-        self.assertEquals(
+        self.assertEqual(
             ("date", "20190101"),
             get_snapshot_revision("0.4.4+git20190101"))
-        self.assertEquals(
+        self.assertEqual(
             ("git", "abc1def"),
             get_snapshot_revision("0.4.4+git20190101.abc1def"))
 
@@ -142,37 +142,37 @@ class TestUpstreamVersionAddRevision(TestCase):
         return (self.revnos[revid], )
 
     def test_update_plus_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+bzr42",
             upstream_version_add_revision("1.3+bzr23", bzr_revno="42"))
 
     def test_update_tilde_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3~bzr42",
             upstream_version_add_revision("1.3~bzr23", bzr_revno="42"))
 
     def test_new_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+bzr42",
             upstream_version_add_revision("1.3", bzr_revno="42"))
 
     def test_svn_new_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+svn45",
             upstream_version_add_revision("1.3", svn_revno=45))
 
     def test_svn_plus_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+svn45",
             upstream_version_add_revision("1.3+svn3", svn_revno=45))
 
     def test_svn_tilde_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3~svn45",
             upstream_version_add_revision("1.3~svn800", svn_revno=45))
 
     def test_git_tilde_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3~git20180101.e7f47cf",
             upstream_version_add_revision(
                 "1.3~git20171201.11b1d57",
@@ -180,37 +180,37 @@ class TestUpstreamVersionAddRevision(TestCase):
                 gitdate=datetime(2018, 1, 1)))
 
     def test_git_new_rev(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+git20180101.1.e7f47cf",
             upstream_version_add_revision(
                 "1.3",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
-        self.assertEquals(
+        self.assertEqual(
             "1.0~git20180101",
             upstream_version_add_revision(
                 "1.0~git20160320",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
-        self.assertEquals(
+        self.assertEqual(
             "1.0-git20180101",
             upstream_version_add_revision(
                 "1.0-git20160320",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
-        self.assertEquals(
+        self.assertEqual(
             "1.0~git20180101.1.e7f47cf",
             upstream_version_add_revision(
                 "1.0~git20180101.0.11b1d57",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
-        self.assertEquals(
+        self.assertEqual(
             "1.0~git20180101.0.e7f47cf",
             upstream_version_add_revision(
                 "1.0~git20170101.0.11b1d57",
                 gitid=b'e7f47cfeaae7f47cfeaae7f47cfeaae7f47cfeaa',
                 gitdate=datetime(2018, 1, 1)))
-        self.assertEquals(
+        self.assertEqual(
             "0.0~git20180101.0.e7f47cf",
             upstream_version_add_revision(
                 "0.0~git20161231.0.3435554",
@@ -218,7 +218,7 @@ class TestUpstreamVersionAddRevision(TestCase):
                 gitdate=datetime(2018, 1, 1)))
 
     def test_dfsg(self):
-        self.assertEquals(
+        self.assertEqual(
             "1.3+git20180101.1.e7f47cf",
             upstream_version_add_revision(
                 "1.3+dfsg",

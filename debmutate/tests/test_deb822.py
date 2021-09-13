@@ -31,6 +31,12 @@ from ..deb822 import (
     dump_paragraphs,
     reformat_deb822,
     )
+try:
+    import debian._deb822_repro  # noqa: F401
+except ModuleNotFoundError:
+    has_deb822_repro = False
+else:
+    has_deb822_repro = True
 from ..reformatting import (
     FormattingUnpreservable,
     GeneratedFile,
@@ -40,15 +46,22 @@ from ..reformatting import (
 class ReformatDeb822Tests(TestCase):
 
     def test_comment(self):
-        self.assertEqual(reformat_deb822(b"""\
+        text_with_comment = b"""\
 Source: blah
 # A comment
 Testsuite: autopkgtest
 
-"""), b"""\
+"""
+        text_without_comment = b"""\
 Source: blah
 Testsuite: autopkgtest
-""")
+"""
+        if has_deb822_repro:
+            self.assertEqual(
+                reformat_deb822(text_with_comment), text_with_comment)
+        else:
+            self.assertEqual(
+                reformat_deb822(text_with_comment), text_without_comment)
 
     def test_fine(self):
         self.assertTrue(reformat_deb822(b"""\
@@ -141,13 +154,15 @@ Testsuite: autopkgtest
                 for control in updater.paragraphs:
                     control["NewField"] = "New Field"
 
-        self.assertRaises(FormattingUnpreservable, change)
+        if has_deb822_repro:
+            change()
+        else:
+            self.assertRaises(FormattingUnpreservable, change)
 
     def test_modify_paragraph(self):
         self.build_tree_contents([('controlfile', """\
 Source: blah
 Testsuite: autopkgtest
-
 """)])
 
         with Deb822Editor('controlfile') as updater:
@@ -194,7 +209,7 @@ Testsuite: autopkgtest
 Source: blah
 Testsuite: autopkgtest
 Build-Depends: foo
-""", 'controlfile')
+""", 'controlfile', strip_trailing_whitespace=True)
 
     def test_simple_change(self):
         with Deb822Editor('controlfile') as updater:
@@ -203,7 +218,7 @@ Build-Depends: foo
         self.assertFileEqual("""\
 Source: blah
 Testsuite: foo
-""", 'controlfile')
+""", 'controlfile', strip_trailing_whitespace=True)
 
     def test_change_conflict(self):
         with Deb822Editor('controlfile') as updater:
@@ -217,7 +232,7 @@ Testsuite: foo
                 {('Source', 'blah'): [('Testsuite', 'autopkgtest', None)]})
         self.assertFileEqual("""\
 Source: blah
-""", 'controlfile')
+""", 'controlfile', strip_trailing_whitespace=True)
 
     def test_delete_conflict(self):
         with Deb822Editor('controlfile') as updater:

@@ -352,27 +352,27 @@ class StripChangelogMessageTests(TestCase):
 class TestNewUpstreamPackageVersion(TestCase):
 
     def test_simple_debian(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-1"),
             new_upstream_package_version("1.2", "debian"))
 
     def test_simple_ubuntu(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-0ubuntu1"),
             new_upstream_package_version("1.2", "ubuntu"))
 
     def test_debian_with_dash(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-0ubuntu1-1"),
             new_upstream_package_version("1.2-0ubuntu1", "debian"))
 
     def test_ubuntu_with_dash(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("1.2-1-0ubuntu1"),
             new_upstream_package_version("1.2-1", "ubuntu"))
 
     def test_ubuntu_with_epoch(self):
-        self.assertEquals(
+        self.assertEqual(
             Version("3:1.2-1-0ubuntu1"),
             new_upstream_package_version("1.2-1", "ubuntu", "3"))
 
@@ -542,20 +542,20 @@ class FindLastDistributionTests(TestCase):
 
     def test_first(self):
         changelog = self.create_changelog("unstable")
-        self.assertEquals("unstable", find_last_distribution(changelog))
+        self.assertEqual("unstable", find_last_distribution(changelog))
 
     def test_second(self):
         changelog = self.create_changelog("unstable", "UNRELEASED")
-        self.assertEquals("UNRELEASED", changelog.distributions)
-        self.assertEquals("unstable", find_last_distribution(changelog))
+        self.assertEqual("UNRELEASED", changelog.distributions)
+        self.assertEqual("unstable", find_last_distribution(changelog))
 
     def test_empty(self):
         changelog = self.create_changelog()
-        self.assertEquals(None, find_last_distribution(changelog))
+        self.assertEqual(None, find_last_distribution(changelog))
 
     def test_only_unreleased(self):
         changelog = self.create_changelog("UNRELEASED")
-        self.assertEquals(None, find_last_distribution(changelog))
+        self.assertEqual(None, find_last_distribution(changelog))
 
 
 class ChangelogInfoTests(TestCase):
@@ -632,21 +632,21 @@ class ChangelogInfoTests(TestCase):
 class UpstreamMergeChangelogLineTests(TestCase):
 
     def test_release(self):
-        self.assertEquals(
+        self.assertEqual(
             "New upstream release.",
             upstream_merge_changelog_line("1.0"))
 
     def test_bzr_snapshot(self):
-        self.assertEquals(
+        self.assertEqual(
             "New upstream snapshot.",
             upstream_merge_changelog_line("1.0+bzr3"))
 
     def test_git_snapshot(self):
-        self.assertEquals(
+        self.assertEqual(
             "New upstream snapshot.",
             upstream_merge_changelog_line("1.0~git20101212"))
 
     def test_plus(self):
-        self.assertEquals(
+        self.assertEqual(
             "New upstream release.",
             upstream_merge_changelog_line("1.0+dfsg1"))

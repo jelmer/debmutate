@@ -49,6 +49,7 @@ from ..reformatting import (
     GeneratedFile,
     FormattingUnpreservable,
     )
+from .test_deb822 import has_deb822_repro
 
 
 class UpdateControlTests(TestCaseInTempDir):
@@ -97,9 +98,12 @@ Testsuite: autopkgtest
 
         def update_source(control):
             control["NewField"] = "New Field"
-        self.assertRaises(
-            FormattingUnpreservable, update_control,
-            source_package_cb=update_source)
+        if has_deb822_repro:
+            update_control(source_package_cb=update_source)
+        else:
+            self.assertRaises(
+                FormattingUnpreservable, update_control,
+                source_package_cb=update_source)
 
     def test_merge3(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
@@ -146,7 +150,6 @@ Multi-Arch: foreign
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 Source: blah
 Testsuite: autopkgtest
-
 """)])
 
         def add_header(control):
@@ -165,7 +168,6 @@ Testsuite: autopkgtest
 
 Package: libblah
 Section: extra
-
 """)])
 
         def add_header(control):
@@ -216,12 +218,12 @@ Uploaders: @lintian-brush-test@
 Source: blah
 Testsuite: autopkgtest8
 Uploaders: @lintian-brush-test@
-""", "debian/control.in")
+""", "debian/control.in", strip_trailing_whitespace=True)
         self.assertFileEqual("""\
 Source: blah
 Testsuite: autopkgtest8
 Uploaders: testvalue
-""", "debian/control")
+""", "debian/control", strip_trailing_whitespace=True)
 
     def test_update_template_only(self):
         self.build_tree_contents([('debian/', ), ('debian/control.in', """\
@@ -238,7 +240,7 @@ Uploaders: @lintian-brush-test@
 Source: blah
 Testsuite: autopkgtest8
 Uploaders: @lintian-brush-test@
-""", "debian/control.in")
+""", "debian/control.in", strip_trailing_whitespace=True)
         self.assertFalse(os.path.exists('debian/control'))
 
     def test_update_cdbs_template(self):
@@ -260,12 +262,12 @@ Build-Depends: @cdbs@, libc6
 Source: blah
 Testsuite: autopkgtest
 Build-Depends: some-foo, libc6, some-bar
-""", "debian/control")
+""", "debian/control", strip_trailing_whitespace=True)
         self.assertFileEqual("""\
 Source: blah
 Testsuite: autopkgtest
 Build-Depends: @cdbs@, libc6, some-bar
-""", "debian/control.in")
+""", "debian/control.in", strip_trailing_whitespace=True)
 
     def test_description_stays_last(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
@@ -282,7 +284,20 @@ Description: foo
         def add_header(control):
             control["Arch"] = "all"
         self.assertTrue(update_control(binary_package_cb=add_header))
-        self.assertFileEqual("""\
+        if has_deb822_repro:
+            self.assertFileEqual("""\
+Source: blah
+Testsuite: autopkgtest
+
+Arch: all
+Package: libblah
+Section: extra
+Description: foo
+ bar
+
+""", 'debian/control')
+        else:
+            self.assertFileEqual("""\
 Source: blah
 Testsuite: autopkgtest
 

@@ -46,12 +46,16 @@ import os
 from typing import Optional, Callable, Tuple, Union, List, Iterable, Dict
 
 from debian.changelog import Version
-from debian.deb822 import Deb822
 import subprocess
 import warnings
 
 from ._deb822 import PkgRelation
-from .deb822 import Deb822Editor, ChangeConflict
+from .deb822 import (
+    Deb822Editor,
+    ChangeConflict,
+    Deb822Paragraph,
+    parse_deb822_paragraph,
+    )
 from .reformatting import GeneratedFile
 
 
@@ -120,7 +124,7 @@ def guess_template_type(template_path: str) -> Optional[str]:
             elif b'@lintian-brush-test@' in template:
                 return 'lintian-brush-test'
             else:
-                deb822 = Deb822(template)
+                deb822 = parse_deb822_paragraph(template)
                 build_depends = deb822.get('Build-Depends', '')
                 if any(iter_relations(build_depends, 'gnome-pkg-tools')):
                     return 'gnome'
@@ -226,8 +230,16 @@ def _preserve_field_order_preferences(paragraphs):
             continue
         if para['Package'] not in description_is_not_last:
             # Make sure Description stays the last field
-            para._Deb822Dict__keys.add('Description')
-            para._Deb822Dict__keys.remove('Description')
+            if hasattr(para, '_Deb822Dict__keys'):
+                para._Deb822Dict__keys.add('Description')
+                para._Deb822Dict__keys.remove('Description')
+            else:
+                def description_last(k):
+                    if k == 'Description':
+                        return (1, 'Description')
+                    else:
+                        return (0, k)
+                para.sort_fields(description_last)
 
 
 def update_control(path='debian/control', source_package_cb=None,
@@ -281,22 +293,28 @@ class ControlEditor(object):
         return cls(tree.abspath(relpath))
 
     @property
-    def paragraphs(self) -> List[Deb822]:
+    def paragraphs(self) -> List[Deb822Paragraph]:
         """List of all the paragraphs."""
         return self._primary.paragraphs
 
     @property
-    def source(self) -> Deb822:
+    def source(self) -> Deb822Paragraph:
         """Source package."""
-        if (len(self.paragraphs[0]) > 0 and
-                not self.paragraphs[0].get('Source')):
-            raise ValueError('first paragraph is not Source')
-        return self.paragraphs[0]
+        for entry in self.paragraphs:
+            if not entry.get('Source'):
+                raise ValueError('first paragraph is not Source')
+            return entry
+        else:
+            p = Deb822Paragraph()
+            self.paragraphs.insert(0, p)
+            return p
 
     @property
-    def binaries(self) -> List[Deb822]:
+    def binaries(self) -> Iterable[Deb822Paragraph]:
         """List of binary packages."""
-        return self._primary.paragraphs[1:]
+        for entry in self.paragraphs:
+            if entry.get('Binary'):
+                yield entry
 
     def changes(self):
         """Return a dictionary describing the changes since the base.
@@ -380,7 +398,7 @@ class ControlEditor(object):
 
     def add_binary(self, contents):
         if isinstance(contents, dict):
-            para = Deb822(contents)
+            para = Deb822Paragraph(contents)
         else:
             para = contents
         return self._primary.paragraphs.append(para)
