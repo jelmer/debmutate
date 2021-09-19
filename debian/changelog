@@ -1,8 +1,8 @@
-debmutate (0.40) UNRELEASED; urgency=medium
+debmutate (0.40) unstable; urgency=medium
 
   * Fix iteration of binary packages.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 19 Sep 2021 16:59:26 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 19 Sep 2021 16:59:53 +0100
 
 debmutate (0.39) unstable; urgency=medium
 
