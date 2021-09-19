@@ -1,3 +1,10 @@
+debmutate (0.39) UNRELEASED; urgency=medium
+
+  * Add support for new formatting/comment-preserving debian/control
+    parser in python-debian.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 19 Sep 2021 12:22:59 +0100
+
 debmutate (0.38) unstable; urgency=medium
 
   * Add support for y// patterns in watch files.
