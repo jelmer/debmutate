@@ -54,6 +54,7 @@ from .deb822 import (
     Deb822Editor,
     ChangeConflict,
     Deb822Paragraph,
+    new_deb822_paragraph,
     parse_deb822_paragraph,
     )
 from .reformatting import GeneratedFile
@@ -305,7 +306,7 @@ class ControlEditor(object):
                 raise ValueError('first paragraph is not Source')
             return entry
         else:
-            p = Deb822Paragraph()
+            p = new_deb822_paragraph()
             self.paragraphs.insert(0, p)
             return p
 

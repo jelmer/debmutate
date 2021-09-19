@@ -23,6 +23,7 @@ __all__ = [
     'reformat_deb822',
     'ChangeConflict',
     'Deb822Editor',
+    'new_deb822_paragraph',
     'parse_deb822_file',
     'parse_deb822_paragraph',
     'Deb822Paragraph',
@@ -34,7 +35,7 @@ from typing import Iterable, List, Optional
 try:
     from debian._deb822_repro.parsing import (
         parse_deb822_file,
-        Deb822ValidParagraphElement as Deb822Paragraph,
+        Deb822ParagraphElement as Deb822Paragraph,
         Deb822FileElement as Deb822File,
         )
     if parse_deb822_file is None:
@@ -45,7 +46,7 @@ try:
         [p] = f.iter_parts_of_type(Deb822Paragraph)
         return p
     def new_deb822_paragraph():
-        return Deb822Paragraph.from_kvpairs([])
+        return Deb822Paragraph.new_empty_paragraph()
 except ModuleNotFoundError:
     from debian.deb822 import Deb822
     def parse_deb822_file(c):
