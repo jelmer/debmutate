@@ -1,3 +1,9 @@
+debmutate (0.40) UNRELEASED; urgency=medium
+
+  * Fix iteration of binary packages.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 19 Sep 2021 16:59:26 +0100
+
 debmutate (0.39) unstable; urgency=medium
 
   * Add support for new formatting/comment-preserving debian/control

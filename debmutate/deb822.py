@@ -41,14 +41,17 @@ try:
     if parse_deb822_file is None:
         # On python < 3.9, this is the case
         raise ModuleNotFoundError
+
     def parse_deb822_paragraph(p):
         f = parse_deb822_file(p)
         [p] = f.iter_parts_of_type(Deb822Paragraph)
         return p
+
     def new_deb822_paragraph():
         return Deb822Paragraph.new_empty_paragraph()
 except ModuleNotFoundError:
     from debian.deb822 import Deb822
+
     def parse_deb822_file(c):
         return list(Deb822.iter_paragraphs(c))
 

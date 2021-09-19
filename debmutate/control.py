@@ -314,7 +314,7 @@ class ControlEditor(object):
     def binaries(self) -> Iterable[Deb822Paragraph]:
         """List of binary packages."""
         for entry in self.paragraphs:
-            if entry.get('Binary'):
+            if entry.get('Package'):
                 yield entry
 
     def changes(self):

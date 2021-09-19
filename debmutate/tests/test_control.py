@@ -69,6 +69,19 @@ Testsuite: autopkgtest
         self.assertRaises(
             GeneratedFile, update_control, source_package_cb=source_cb)
 
+    def test_list_binaries(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Testsuite: autopkgtest
+
+Package: blah
+Description: Some description
+ And there are more lines
+ And more lines
+""")])
+        with ControlEditor('debian/control') as editor:
+            self.assertEqual(list(editor.binaries)[0]['Package'], 'blah')
+
     def test_create(self):
         self.build_tree_contents([('debian/', )])
         with ControlEditor.create('debian/control') as editor:

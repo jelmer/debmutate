@@ -59,7 +59,8 @@ class TestCaseInTempDir(TestCase):
                 with open(entry[0], 'w') as f:
                     f.write(entry[1])
 
-    def assertFileEqual(self, expected_content, path, strip_trailing_whitespace=False):
+    def assertFileEqual(
+            self, expected_content, path, strip_trailing_whitespace=False):
         with open(path, 'r') as f:
             content = f.read()
         if strip_trailing_whitespace:
