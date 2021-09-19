@@ -30,9 +30,13 @@ __all__ = [
     ]
 
 from io import BytesIO
+import sys
 from typing import Iterable, List, Optional
 
 try:
+    if sys.version_info[:2] < (3, 8):
+        #  Unsupported Python version for _deb822_repro
+        raise ModuleNotFoundError
     from debian._deb822_repro.parsing import (
         parse_deb822_file,
         Deb822ParagraphElement as Deb822Paragraph,
