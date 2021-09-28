@@ -289,6 +289,14 @@ class Makefile(object):
         else:
             phony_rule.append_component(rule)
 
+    def add_phony(self, rule):
+        try:
+            phony_rule = list(self.iter_rules(b'.PHONY'))[-1]
+        except IndexError:
+            return
+
+        phony_rule.append_component(rule)
+
     def drop_phony(self, rule):
         for r in self.iter_rules(b'.PHONY'):
             if rule in r.components:
