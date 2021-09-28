@@ -1,8 +1,8 @@
-debmutate (0.41) UNRELEASED; urgency=medium
+debmutate (0.41) unstable; urgency=medium
 
   * Add debmutate._rules.discard_pointless_override.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 28 Sep 2021 22:57:07 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 28 Sep 2021 22:57:13 +0100
 
 debmutate (0.40) unstable; urgency=medium
 
