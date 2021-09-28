@@ -378,18 +378,31 @@ class RulesEditor(MakefileEditor):
         if makefile_cb:
             makefile_cb(self.makefile)
         if self.has_changed():
-            for rule in self.makefile.iter_all_rules():
-                discard_pointless_override(self.makefile, rule)
+            discard_pointless_overrides(self.makefile)
             return True
         else:
             return False
 
 
-def discard_pointless_override(makefile, rule):
+def discard_pointless_overrides(makefile, ignore_comments=False):
+    for rule in makefile.iter_all_rules():
+        discard_pointless_override(
+            makefile, rule, ignore_comments=ignore_comments)
+
+
+def discard_pointless_override(makefile, rule, ignore_comments=False):
     if not rule.target.startswith(b'override_'):
         return
     command = rule.target[len(b'override_'):]
-    if [line for line in rule.lines[1:] if line.strip()] != [b'\t' + command]:
+    if ignore_comments:
+        effective_lines = [
+            line for line in rule.lines[1:]
+            if line.split(b'#', 1)[0].strip()]
+    else:
+        effective_lines = [
+            line for line in rule.lines[1:]
+            if line.strip()]
+    if effective_lines != [b'\t' + command]:
         return
     if rule.components:
         return
