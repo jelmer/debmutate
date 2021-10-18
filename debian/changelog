@@ -1,3 +1,9 @@
+debmutate (0.43) UNRELEASED; urgency=medium
+
+  * Support python-debian git snapshots.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 18 Oct 2021 18:16:30 +0100
+
 debmutate (0.42) unstable; urgency=medium
 
   * Re-enable use of the new python-debian repro parser.
