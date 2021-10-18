@@ -36,8 +36,9 @@ try:
     from debian import __version__ as python_debian_version
     parsed_python_debian_version = tuple(
         [int(x.split('+')[0]) for x in python_debian_version.split('.')])
-    if parsed_python_debian_version < (0, 1, 42):
-        # Avoid older versions since there are known bad issues.
+    if False:
+        # Disable for now until these bugs are fixed:
+        # 996783, 996784, 996785
         raise ModuleNotFoundError
     from debian._deb822_repro.parsing import (
         parse_deb822_file,
