@@ -1,6 +1,8 @@
 debmutate (0.43) UNRELEASED; urgency=medium
 
   * Support python-debian git snapshots.
+  * Revert use of deb822-repro parser for the moment until bug 996783,
+    996784 and 996785 are resolved.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 18 Oct 2021 18:16:30 +0100
 
