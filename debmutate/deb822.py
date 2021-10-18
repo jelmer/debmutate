@@ -34,7 +34,9 @@ from typing import Iterable, List, Optional
 
 try:
     from debian import __version__ as python_debian_version
-    if tuple([int(x.split('+')[0]) for x in python_debian_version.split('.')]) < (0, 1, 42):
+    parsed_python_debian_version = tuple(
+        [int(x.split('+')[0]) for x in python_debian_version.split('.')])
+    if parsed_python_debian_version < (0, 1, 42):
         # Avoid older versions since there are known bad issues.
         raise ModuleNotFoundError
     from debian._deb822_repro.parsing import (
