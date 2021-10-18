@@ -1,8 +1,8 @@
-debmutate (0.42) UNRELEASED; urgency=medium
+debmutate (0.42) unstable; urgency=medium
 
   * Re-enable use of the new python-debian repro parser.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 18 Oct 2021 09:26:18 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 18 Oct 2021 15:43:35 +0100
 
 debmutate (0.41) unstable; urgency=medium
 
