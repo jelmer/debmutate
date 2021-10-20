@@ -30,13 +30,8 @@ from ..deb822 import (
     Deb822Editor,
     dump_paragraphs,
     reformat_deb822,
+    has_deb822_repro,
     )
-try:
-    import debian._deb822_repro  # noqa: F401
-except ModuleNotFoundError:
-    has_deb822_repro = False
-else:
-    has_deb822_repro = True
 from ..reformatting import (
     FormattingUnpreservable,
     GeneratedFile,

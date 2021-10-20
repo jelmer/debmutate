@@ -56,6 +56,8 @@ try:
 
     def new_deb822_paragraph():
         return Deb822Paragraph.new_empty_paragraph()
+
+    has_deb822_repro = True
 except ModuleNotFoundError:
     from debian.deb822 import Deb822
 
@@ -66,6 +68,8 @@ except ModuleNotFoundError:
     Deb822File = Iterable[Deb822Paragraph]
     parse_deb822_paragraph = Deb822
     new_deb822_paragraph = Deb822
+
+    has_deb822_repro = False
 
 
 from .reformatting import (

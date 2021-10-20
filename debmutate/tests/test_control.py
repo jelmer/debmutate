@@ -45,11 +45,11 @@ from ..control import (
     ControlEditor,
     parse_standards_version,
     )
+from ..deb822 import has_deb822_repro
 from ..reformatting import (
     GeneratedFile,
     FormattingUnpreservable,
     )
-from .test_deb822 import has_deb822_repro
 
 
 class UpdateControlTests(TestCaseInTempDir):
