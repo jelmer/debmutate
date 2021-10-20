@@ -36,7 +36,7 @@ try:
     from debian import __version__ as python_debian_version
     parsed_python_debian_version = tuple(
         [int(x.split('+')[0]) for x in python_debian_version.split('.')])
-    if False:
+    if True:
         # Disable for now until these bugs are fixed:
         # 996783, 996784, 996785
         raise ModuleNotFoundError

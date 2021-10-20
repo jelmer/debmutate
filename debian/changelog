@@ -1,4 +1,10 @@
-debmutate (0.44) UNRELEASED; urgency=medium
+debmutate (0.45) UNRELEASED; urgency=medium
+
+  * Properly disable use of the deb822-repro parser.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 20 Oct 2021 22:30:34 +0100
+
+debmutate (0.44) unstable; urgency=medium
 
   * Drop version constraints on python3-debian >= 0.1.42, no longer
     necessary since deb822-repro support has been disabled.
