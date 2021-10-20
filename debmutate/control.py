@@ -232,8 +232,7 @@ def _preserve_field_order_preferences(paragraphs):
         if para['Package'] not in description_is_not_last:
             # Make sure Description stays the last field
             if hasattr(para, '_Deb822Dict__keys'):
-                para._Deb822Dict__keys.add('Description')
-                para._Deb822Dict__keys.remove('Description')
+                para.order_last('Description')
             else:
                 def description_last(k):
                     if k == 'Description':
