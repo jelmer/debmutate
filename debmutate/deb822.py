@@ -37,9 +37,7 @@ from debian.changelog import Version
 try:
     from debian import __version__ as python_debian_version
     parsed_python_debian_version = Version(python_debian_version)
-    if True:
-        # Disable for now until these bugs are fixed:
-        # 996783, 996784, 996785
+    if parsed_python_debian_version < Version('0.1.42+git20211123'):
         raise ModuleNotFoundError
     from debian._deb822_repro.parsing import (
         parse_deb822_file,
