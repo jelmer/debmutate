@@ -231,18 +231,10 @@ def _preserve_field_order_preferences(paragraphs):
             continue
         if para['Package'] not in description_is_not_last:
             # Make sure Description stays the last field
-            if hasattr(para, '_Deb822Dict__keys'):
-                try:
-                    para.order_last('Description')
-                except KeyError:
-                    pass  # it's okay if the field doesn't exist
-            else:
-                def description_last(k):
-                    if k == 'Description':
-                        return (1, 'Description')
-                    else:
-                        return (0, k)
-                para.sort_fields(description_last)
+            try:
+                para.order_last('Description')
+            except KeyError:
+                pass  # it's okay if the field doesn't exist
 
 
 def update_control(path='debian/control', source_package_cb=None,
