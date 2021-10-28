@@ -69,6 +69,22 @@ Testsuite: autopkgtest
         self.assertRaises(
             GeneratedFile, update_control, source_package_cb=source_cb)
 
+    def test_add_binary(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Testsuite: autopkgtest
+
+Package: blah
+Description: Some description
+ And there are more lines
+ And more lines
+""")])
+        with ControlEditor('debian/control') as editor:
+            editor.add_binary(
+                {'Package': 'foo', 'Description': 'A new package foo'})
+            self.assertEqual(
+                [b['Package'] for b in editor.binaries], ['blah', 'foo'])
+
     def test_list_binaries(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 Source: blah
@@ -297,20 +313,7 @@ Description: foo
         def add_header(control):
             control["Arch"] = "all"
         self.assertTrue(update_control(binary_package_cb=add_header))
-        if has_deb822_repro:
-            self.assertFileEqual("""\
-Source: blah
-Testsuite: autopkgtest
-
-Arch: all
-Package: libblah
-Section: extra
-Description: foo
- bar
-
-""", 'debian/control')
-        else:
-            self.assertFileEqual("""\
+        self.assertFileEqual("""\
 Source: blah
 Testsuite: autopkgtest
 
@@ -319,7 +322,7 @@ Section: extra
 Arch: all
 Description: foo
  bar
-""", 'debian/control')
+""", 'debian/control', strip_trailing_whitespace=True)
 
 
 class ParseRelationsTests(TestCase):

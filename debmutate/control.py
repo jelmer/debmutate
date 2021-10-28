@@ -393,7 +393,8 @@ class ControlEditor(object):
 
     def add_binary(self, contents):
         if isinstance(contents, dict):
-            para = Deb822Paragraph(contents)
+            para = new_deb822_paragraph()
+            para.update(contents)
         else:
             para = contents
         return self._primary.paragraphs.append(para)
