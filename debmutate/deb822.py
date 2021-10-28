@@ -60,11 +60,11 @@ try:
 except ModuleNotFoundError:
     from debian.deb822 import Deb822
 
-    def parse_deb822_file(c):
+    def parse_deb822_file(c):  # type: ignore
         return list(Deb822.iter_paragraphs(c))
 
-    Deb822Paragraph = Deb822
-    Deb822File = Iterable[Deb822Paragraph]
+    Deb822Paragraph = Deb822  # type: ignore
+    Deb822File = Iterable[Deb822Paragraph]  # type: ignore
     parse_deb822_paragraph = Deb822
     new_deb822_paragraph = Deb822
 
@@ -94,7 +94,7 @@ def dump_paragraphs(paragraphs: Deb822File) -> bytes:
             if paragraph:
                 if not first:
                     outf.write(b'\n')
-                paragraph.dump(fd=outf, encoding='utf-8')
+                paragraph.dump(fd=outf)
                 first = False
     return outf.getvalue()
 
