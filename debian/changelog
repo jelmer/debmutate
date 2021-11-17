@@ -1,9 +1,9 @@
-debmutate (0.46) UNRELEASED; urgency=medium
+debmutate (0.46) unstable; urgency=medium
 
   * Re-enable use of the deb822 repro parser.
   * Cope with the Description field missing from paragraphs.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 23 Oct 2021 15:33:25 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 17 Nov 2021 17:24:12 +0000
 
 debmutate (0.45) unstable; urgency=medium
 
