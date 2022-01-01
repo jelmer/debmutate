@@ -39,11 +39,15 @@ try:
     parsed_python_debian_version = Version(python_debian_version)
     if parsed_python_debian_version < Version('0.1.42+git20211123'):
         raise ModuleNotFoundError
-    from debian._deb822_repro.parsing import (
-        parse_deb822_file,
-        Deb822ParagraphElement as Deb822Paragraph,
-        Deb822FileElement as Deb822File,
-        )
+    try:
+        from debian._deb822_repro.parsing import (
+            parse_deb822_file,
+            Deb822ParagraphElement as Deb822Paragraph,
+            Deb822FileElement as Deb822File,
+            )
+    except TypeError:
+        # This happens on python 3.7 with older versions of python3-debian
+        raise ModuleNotFoundError
     if parse_deb822_file is None:
         # On python < 3.9, this is the case
         raise ModuleNotFoundError
