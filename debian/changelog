@@ -1,9 +1,9 @@
 debmutate (0.47) UNRELEASED; urgency=medium
 
-  * Drop use of the new repro parser for control files, due to bug
-    996785.
+  * Drop use of the new repro parser from python-debian for control files, due
+    to bug #996785.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 09 Jan 2022 12:54:24 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 09 Jan 2022 12:54:48 +0000
 
 debmutate (0.46) unstable; urgency=medium
 
