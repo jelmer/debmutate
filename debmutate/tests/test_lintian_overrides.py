@@ -106,3 +106,18 @@ class SerializeOverrideTests(TestCase):
             serialize_override(
                 LintianOverride(tag='sometag', archlist=['i386'])),
             '[i386]: sometag\n')
+
+
+class MatchesOverrideTests(TestCase):
+
+    def test_wildcard(self):
+        override = parse_override(
+            'debootstrap source: '
+            'debian-source-options-has-custom-compression-settings '
+            'compression = gzip (line *)')
+        self.assertTrue(
+            override.matches(
+                package='debootstrap',
+                tag='debian-source-options-has-custom-compression-settings',
+                info='compression = gzip (line 15)',
+                type='source'))
