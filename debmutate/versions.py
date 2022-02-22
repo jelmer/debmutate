@@ -207,7 +207,8 @@ def upstream_version_add_revision(
         raise ValueError
 
 
-def debianize_upstream_version(version, package=None):
+def debianize_upstream_version(
+        version: str, package: Optional[str] = None) -> str:
     """Make an upstream version string suitable for Debian.
 
     Args:
@@ -227,6 +228,9 @@ def debianize_upstream_version(version, package=None):
     version = version.replace('-rc', '~rc')
     version = version.replace('-beta', '~beta')
     version = version.replace('-alpha', '~alpha')
+    m = re.fullmatch('(.*)\.([0-9])(a|b|rc|alpha|beta)([0-9]*)', version)
+    if m:
+        version = m.group(1) + '.' + m.group(2) + '~' + m.group(3) + m.group(4)
     return version
 
 
