@@ -1,3 +1,9 @@
+debmutate (0.48) UNRELEASED; urgency=medium
+
+  * Add debmutate.vendor module.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 22 Feb 2022 01:59:59 +0000
+
 debmutate (0.47) unstable; urgency=medium
 
   * Drop use of the new repro parser from python-debian for control files, due
