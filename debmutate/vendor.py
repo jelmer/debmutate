@@ -18,7 +18,7 @@
 """Utility functions for dealing with changelog files."""
 
 __all__ = [
-    'get_vendor',
+    'get_vendor_name',
     ]
 
 

@@ -155,9 +155,9 @@ def upstream_version_add_revision(
       bzr_revno: Bazaar dotted revno
       svn_revno: Subversion revision number
     """
-    for known_suffix in ['+dfsg', '+ds']:
-        if version_string.endswith(known_suffix):
-            version_string = version_string[:-len(known_suffix)]
+    m = re.match(r'^(.*)[\+~](dfsg|ds)([0-9]*)$', version_string)
+    if m:
+        version_string = m.group(1)
     if bzr_revno is not None:
         m = re.match(r"^(.*)([\+~])bzr(\d+)$", version_string)
         if m:
@@ -207,7 +207,8 @@ def upstream_version_add_revision(
         raise ValueError
 
 
-def debianize_upstream_version(version, package=None):
+def debianize_upstream_version(
+        version: str, package: Optional[str] = None) -> str:
     """Make an upstream version string suitable for Debian.
 
     Args:
@@ -227,6 +228,9 @@ def debianize_upstream_version(version, package=None):
     version = version.replace('-rc', '~rc')
     version = version.replace('-beta', '~beta')
     version = version.replace('-alpha', '~alpha')
+    m = re.fullmatch(r'(.*)\.([0-9])(a|b|rc|alpha|beta)([0-9]*)', version)
+    if m:
+        version = m.group(1) + '.' + m.group(2) + '~' + m.group(3) + m.group(4)
     return version
 
 
