@@ -307,10 +307,10 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         for name in chain(self.BINARY_KEY_MAP, ['Package']):
             try:
                 self[name]
-            except KeyError:
-                pass
             except AutomaticFieldUnknown:
                 yield name
+            except KeyError:
+                pass
             else:
                 yield name
 
