@@ -16,3 +16,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 """Tests for debmutate.debcargo."""
+
+from ..debcargo import debcargo_version_to_semver
+from unittest import TestCase
+
+
+class DebcargoVersionToSemverTests(TestCase):
+
+    def test_prerelease(self):
+        self.assertEqual(
+            '1.0.0-rc1', debcargo_version_to_semver('1.0.0~rc1'))

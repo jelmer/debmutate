@@ -21,6 +21,7 @@
 from collections.abc import MutableMapping
 from itertools import chain
 import os
+import re
 from typing import Optional, Tuple
 
 from debian.changelog import Changelog
@@ -318,6 +319,13 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         return len(self.BINARY_KEY_MAP) + 1
 
 
+def debcargo_version_to_semver(version):
+    m = re.fullmatch('(.*)~([a-z]+)(.*)', version)
+    if m:
+        return '%s-%s%s' % (m.group(1), m.group(2), m.group(3))
+    return version
+
+
 class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
@@ -356,7 +364,8 @@ class DebcargoControlShimEditor(object):
             with open(os.path.join(path, 'changelog'), 'r') as f:
                 cl = Changelog(f)
                 package = cl.package
-                crate_version = cl.version.upstream_version
+                crate_version = debcargo_version_to_semver(
+                    cl.version.upstream_version)
             with editor:
                 semver_suffix = editor.get("semver_suffix", False)
             crate_name, crate_semver_version = parse_debcargo_source_name(
