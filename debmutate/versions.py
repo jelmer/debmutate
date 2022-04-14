@@ -245,6 +245,8 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     """
     release_version = release_version.lower()
     upstream_version = upstream_version.lower()
+    if upstream_version == release_version:
+        return True
     m = re.match("(.*)([~+-])(ds|dfsg|git|bzr|svn|hg).*", upstream_version)
     if m and m.group(1) == release_version:
         return True

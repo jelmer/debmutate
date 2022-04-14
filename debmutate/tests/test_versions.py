@@ -26,6 +26,7 @@ from debmutate.versions import (
     get_snapshot_revision,
     upstream_version_add_revision,
     debianize_upstream_version,
+    matches_release,
     )
 
 from debian.changelog import Version
@@ -241,3 +242,10 @@ class DebianizeUpstreamVersionTests(TestCase):
         self.assertEqual('1.0~beta1', debianize_upstream_version('1.0-beta1'))
         self.assertEqual('1.0~rc1', debianize_upstream_version('1.0-rc1'))
         self.assertEqual('1.0~a1', debianize_upstream_version('1.0a1'))
+
+
+class MatchesReleaseTests(TestCase):
+
+    def test_matches(self):
+        self.assertTrue(matches_release('1.0', '1.0'))
+        self.assertTrue(matches_release('1.0+ds1', '1.0'))
