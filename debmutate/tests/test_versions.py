@@ -249,3 +249,5 @@ class MatchesReleaseTests(TestCase):
     def test_matches(self):
         self.assertTrue(matches_release('1.0', '1.0'))
         self.assertTrue(matches_release('1.0+ds1', '1.0'))
+        self.assertTrue(
+            matches_release('1.14.3+dfsg+~0.15.3', '0.15.3'))

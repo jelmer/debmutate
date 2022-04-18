@@ -1,4 +1,4 @@
-check:: style testsuite typing
+check:: testsuite style typing
 
 .PHONY: style testsuite unsupported
 

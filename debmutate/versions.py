@@ -253,4 +253,7 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     m = re.match("(.*)([~+-]).*", upstream_version)
     if m and m.group(1) == release_version:
         return True
+    m = re.match('.*~([0-9.]+)$', upstream_version)
+    if m and m.group(1) == release_version:
+        return True
     return False
