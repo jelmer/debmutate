@@ -10,6 +10,7 @@ debmutate (0.51) unstable; urgency=medium
 debmutate (0.50) unstable; urgency=medium
 
   * Properly convert prerelease indicators back to cargo versions.
+  * Use pcre for better uscan compatibilty when parsing watch files.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 25 May 2022 10:43:58 +0100
 

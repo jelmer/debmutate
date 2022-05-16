@@ -19,6 +19,7 @@
 
 from io import StringIO
 import logging
+import pcre
 import re
 import sys
 from typing import (
@@ -160,7 +161,7 @@ def parse_sed_expr(vm):
 def parse_subst_expr(vm: str) -> Tuple[str, str, Optional[str]]:
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
-    parts = re.split(r'(?<!\\)' + vm[1], vm)
+    parts = pcre.split(r'(?<!\\)' + vm[1], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -180,7 +181,7 @@ def parse_transl_expr(vm: str) -> Tuple[str, str, Optional[str]]:
         s = vm[1:]
     else:
         raise InvalidUVersionMangle(vm, 'not a translation regex')
-    parts = re.split(r'(?<!\\)' + s[0], vm)
+    parts = pcre.split(r'(?<!\\)' + s[0], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -197,7 +198,9 @@ def apply_sed_expr(vm: str, orig: str) -> str:
     (kind, (pattern, replacement, flags)) = parse_sed_expr(vm)
     if kind == 's':
         # TODO(jelmer): Handle flags
-        return re.sub(pattern, replacement.replace('$', '\\'), orig)
+        replacement = re.sub(
+            r'\$([0-9]+)', lambda x: '{%s}' % x.group(1), replacement)
+        return pcre.sub(pattern, replacement, orig)
     elif kind == 'tr':
         from tr import tr
         return tr(pattern, replacement, orig, flags or '')
@@ -240,13 +243,13 @@ def html_search(body, matching_pattern, base_url):
         if not href:
             continue
         href = urljoin(base_url.rstrip('/') + '/', href)
-        m = re.fullmatch(matching_pattern, href)
+        m = pcre.fullmatch(matching_pattern, href)
         if m:
             yield m
 
 
 def plain_search(body, matching_pattern, base_url):
-    return re.finditer(matching_pattern.encode(), body)
+    return pcre.finditer(matching_pattern.encode(), body)
 
 
 searchers = {
@@ -275,7 +278,7 @@ class Watch(object):
             return version
         try:
             return apply_sed_expr(vm, version)
-        except re.error as e:
+        except pcre.error as e:
             raise WatchSyntaxError(
                 'invalid uversionmangle %r: %s' % (vm, e)) from e
 
@@ -450,7 +453,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
             except ValueError:
                 url = line
                 line = ''
-            m = re.findall(r'/([^/]*\([^/]*\)[^/]*)$', url)
+            m = pcre.findall(r'/([^/]*\([^/]*\)[^/]*)$', url)
             if m:
                 parts = [m[0]] + line.split(maxsplit=1)
                 url = url[:-len(m[0])-1].strip()
