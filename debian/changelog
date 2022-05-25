@@ -1,8 +1,8 @@
-debmutate (0.50) UNRELEASED; urgency=medium
+debmutate (0.50) unstable; urgency=medium
 
   * Properly convert prerelease indicators back to cargo versions.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 11 Apr 2022 23:50:06 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 25 May 2022 10:43:58 +0100
 
 debmutate (0.49) unstable; urgency=medium
 
