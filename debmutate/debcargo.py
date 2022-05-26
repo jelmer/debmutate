@@ -148,8 +148,9 @@ class DebcargoSourceShimEditor(ShimParagraph):
         elif name == 'Source':
             if self._debcargo.get("semver_suffix", False):
                 return 'rust-%s-%s' % (
-                    self.crate_name, semver_pair(self.crate_version))
-            return 'rust-%s' % self.crate_name
+                    self.crate_name.replace('_', '-'),
+                    semver_pair(self.crate_version))
+            return 'rust-%s' % self.crate_name.replace('_', '-')
         elif name == 'Priority':
             return 'optional'
         else:
