@@ -17,7 +17,7 @@
 
 """Tests for debmutate.debcargo."""
 
-from ..debcargo import debcargo_version_to_semver
+from ..debcargo import debcargo_version_to_semver, semver_pair
 from unittest import TestCase
 
 
@@ -26,3 +26,11 @@ class DebcargoVersionToSemverTests(TestCase):
     def test_prerelease(self):
         self.assertEqual(
             '1.0.0-rc1', debcargo_version_to_semver('1.0.0~rc1'))
+
+
+class SemverPairTests(TestCase):
+
+    def test_pair(self):
+        self.assertEqual('1.2', semver_pair('1.2.3-rc1'))
+        self.assertEqual('1.2', semver_pair('1.2.3'))
+        self.assertEqual('1.2', semver_pair('1.2.4+ds'))
