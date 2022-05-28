@@ -250,18 +250,39 @@ class DebcargoSourceShimEditor(ShimParagraph):
 
 class DebcargoBinaryShimEditor(ShimParagraph):
 
+    def _provides(self):
+        import semver
+        cargo_version = self._cargo['package']['version']
+        parsed = semver.VersionInfo.parse(cargo_version)
+        semver_suffix = self._debcargo.get('semver_suffix', False)
+        ret = []
+        suffixes = []
+        if not semver_suffix:
+            suffixes.append('')
+        suffixes.append('-%d.%d' % (parsed.major, parsed.minor))
+        suffixes.append(
+            '-%d.%d.%d' % (parsed.major, parsed.minor, parsed.patch))
+        for ver_suffix in suffixes:
+            for feature in chain(['default'], self._cargo.get('features', [])):
+                ret.append(debcargo_binary_name(
+                    self._cargo['package']['name'],
+                    suffix=ver_suffix + '+' + feature))
+        return ', '.join(['%s (= %s)' % (p, self.version) for p in ret])
+
     BINARY_KEY_MAP = {
         'Section': ('section', None),
         'Depends': ('depends', None),
         'Recommends': ('recommends', None),
         'Suggests': ('suggests', None),
-        'Provides': ('provides', None),
+        'Provides': ('provides', _provides),
         }
 
-    def __init__(self, debcargo, key, package_name):
+    def __init__(self, cargo, debcargo, key, package_name, version):
+        self._cargo = cargo
         self._debcargo = debcargo
         self._key = key
         self.package_name = package_name
+        self.version = version
 
     @property
     def _section(self):
@@ -306,7 +327,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
             raise KeyError(name)
 
     def __iter__(self):
-        for name in chain(self.BINARY_KEY_MAP, ['Package']):
+        for name in chain(self.BINARY_KEY_MAP, ['Package', 'Provides']):
             try:
                 self[name]
             except AutomaticFieldUnknown:
@@ -330,11 +351,13 @@ def debcargo_version_to_semver(version):
 class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
-    def __init__(self, debcargo_editor, crate_name, crate_version, cargo=None):
+    def __init__(self, debcargo_editor, crate_name, crate_version, cargo=None,
+                 binary_version=None):
         self.debcargo_editor = debcargo_editor
         self.cargo = cargo
         self.crate_name = crate_name
         self.crate_version = crate_version
+        self.binary_version = binary_version
 
     def __repr__(self):
         return "%s(%r, %r, %r)" % (
@@ -352,7 +375,7 @@ class DebcargoControlShimEditor(object):
                         cargo=None):
         editor = DebcargoEditor(
                 os.path.join(path, 'debcargo.toml'), allow_missing=True)
-        cargo_path = os.path.join(path, '..', 'cargo.toml')
+        cargo_path = os.path.join(path, '..', 'Cargo.toml')
         if cargo is None:
             try:
                 with open(cargo_path, 'r') as f:
@@ -361,19 +384,23 @@ class DebcargoControlShimEditor(object):
                     crate_version = cargo["package"]["version"]
             except FileNotFoundError:
                 pass
-        if crate_name is None or crate_version is None:
+        try:
             with open(os.path.join(path, 'changelog'), 'r') as f:
                 cl = Changelog(f)
                 package = cl.package
-                crate_version = debcargo_version_to_semver(
-                    cl.version.upstream_version)
-            with editor:
-                semver_suffix = editor.get("semver_suffix", False)
-            crate_name, crate_semver_version = parse_debcargo_source_name(
-                package, semver_suffix)
+                if crate_name is None or crate_version is None:
+                    crate_version = debcargo_version_to_semver(
+                        cl.version.upstream_version)
+                    with editor:
+                        semver_suffix = editor.get("semver_suffix", False)
+                    crate_name, crate_semver_version = (
+                        parse_debcargo_source_name(package, semver_suffix))
+                binary_version = cl.version
+        except FileNotFoundError:
+            binary_version = None
         return cls(
             editor, crate_name=crate_name, crate_version=crate_version,
-            cargo=cargo)
+            cargo=cargo, binary_version=binary_version)
 
     def __enter__(self):
         self.debcargo_editor.__enter__()
@@ -387,12 +414,11 @@ class DebcargoControlShimEditor(object):
     def binaries(self):
         semver_suffix = self.debcargo_editor.get('semver_suffix', False)
         ret = [DebcargoBinaryShimEditor(
-            self.debcargo_editor, 'lib',
-            ('librust-%s-dev' % self.crate_name)
-            if not semver_suffix else
-            ('librust-%s-%s-dev' % (
-                self.crate_name, semver_pair(self.crate_version)))
-            )]
+            self.cargo, self.debcargo_editor, 'lib',
+            debcargo_binary_name(
+                self.crate_name, '-' + semver_pair(self.crate_version)
+                if semver_suffix else ''),
+            self.binary_version)]
         try:
             need_bin_package = self.debcargo_editor['bin']
         except KeyError:
@@ -406,7 +432,8 @@ class DebcargoControlShimEditor(object):
             except KeyError:
                 bin_name = self.crate_name
             ret.append(DebcargoBinaryShimEditor(
-                self.debcargo_editor, 'bin', bin_name))
+                self.cargo, self.debcargo_editor, 'bin', bin_name,
+                self.binary_version))
         # TODO(jelmer): Add lib+feature packages
         return ret
 
@@ -446,3 +473,15 @@ def cargo_translate_dashes(crate):
 
 def unmangle_debcargo_version(version):
     return version.replace('~', '-')
+
+
+def debcargo_binary_name(crate_name, suffix=''):
+    return 'librust-%s%s-dev' % (crate_name.replace('_', '-'), suffix)
+
+
+if __name__ == '__main__':
+    from debian.deb822 import Deb822
+    with DebcargoControlShimEditor.from_debian_dir('debian') as editor:
+        print(Deb822(editor.source))
+        for binary in editor.binaries:
+            print(Deb822(binary))
