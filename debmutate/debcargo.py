@@ -34,6 +34,7 @@ from .reformatting import Editor
 DEFAULT_MAINTAINER = (
     "Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>")
 DEFAULT_SECTION = 'rust'
+CURRENT_STANDARDS_VERSION = '4.5.1'
 
 
 class AutomaticFieldUnknown(KeyError):
@@ -153,6 +154,8 @@ class DebcargoSourceShimEditor(ShimParagraph):
             return 'rust-%s' % self.crate_name.replace('_', '-')
         elif name == 'Priority':
             return 'optional'
+        elif name == 'Rules-Requires-Root':
+            return 'no'
         else:
             raise KeyError(name)
 
@@ -220,7 +223,7 @@ class DebcargoSourceShimEditor(ShimParagraph):
 
     def __iter__(self):
         for name in chain(self.KEY_MAP, self.SOURCE_KEY_MAP,
-                          ['Source', 'Priority']):
+                          ['Source', 'Priority', 'Rules-Requires-Root']):
             try:
                 self[name]
             except KeyError:
@@ -234,7 +237,7 @@ class DebcargoSourceShimEditor(ShimParagraph):
         return len(self.KEY_MAP) + len(self.SOURCE_KEY_MAP) + 2
 
     SOURCE_KEY_MAP = {
-        'Standards-Version': ('policy', None),
+        'Standards-Version': ('policy', CURRENT_STANDARDS_VERSION),
         'Homepage': ('homepage', _default_homepage),
         'Vcs-Git': ('vcs_git', _default_vcs_git),
         'Vcs-Browser': (
@@ -266,7 +269,17 @@ class DebcargoBinaryShimEditor(ShimParagraph):
                 ret.append(debcargo_binary_name(
                     self.crate_name,
                     suffix=ver_suffix + '+' + feature))
-        return ', '.join(['%s (= %s)' % (p, self.version) for p in ret])
+        if not ret:
+            return None
+        return '\n ' + ',\n '.join(
+            ['%s (= %s)' % (p, self.version) for p in ret])
+
+    def _description(self):
+        return (
+            self._debcargo['description'] + ' - Rust source code\n'
+            ' This package contains the source for the Rust mio crate, '
+            'packaged by debcargo\n'
+            'for use with cargo and dh-cargo.')
 
     BINARY_KEY_MAP = {
         'Section': ('section', None),
@@ -274,6 +287,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         'Recommends': ('recommends', None),
         'Suggests': ('suggests', None),
         'Provides': ('provides', _provides),
+        'Description': ('description', _description),
         }
 
     def __init__(self, crate_name, crate_version, debcargo, key, package_name,
@@ -303,6 +317,10 @@ class DebcargoBinaryShimEditor(ShimParagraph):
                 return default
         elif name == 'Package':
             return self.package_name
+        elif name == 'Architecture':
+            return 'any'
+        elif name == 'Multi-Arch':
+            return 'same'
         else:
             raise KeyError(name)
 
@@ -329,7 +347,9 @@ class DebcargoBinaryShimEditor(ShimParagraph):
             raise KeyError(name)
 
     def __iter__(self):
-        for name in chain(self.BINARY_KEY_MAP, ['Package', 'Provides']):
+        for name in chain(
+                self.BINARY_KEY_MAP,
+                ['Package', 'Provides', 'Multi-Arch', 'Architecture']):
             try:
                 self[name]
             except AutomaticFieldUnknown:
