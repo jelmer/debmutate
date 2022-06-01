@@ -60,7 +60,7 @@ class DebcargoControlShimEditorTests(TestCase):
         self.es = ExitStack()
         self.es.enter_context(self.debcargo)
         self.editor = DebcargoControlShimEditor(
-            self.debcargo, 'crate', '1.2.3', binary_version='1.2.3-1',
+            self.debcargo, 'crate', '1.2.3',
             features=['feature1', 'feature2'])
         self.es.enter_context(self.editor)
 
@@ -68,7 +68,6 @@ class DebcargoControlShimEditorTests(TestCase):
         self.assertEqual(['feature1', 'feature2'], self.editor.features)
         self.assertEqual('crate', self.editor.crate_name)
         self.assertEqual('1.2.3', self.editor.crate_version)
-        self.assertEqual('1.2.3-1', self.editor.binary_version)
 
     def test_source(self):
         self.assertEqual('rust-crate', self.editor.source['Source'])

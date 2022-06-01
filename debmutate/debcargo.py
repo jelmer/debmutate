@@ -261,18 +261,21 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         suffixes = []
         if not semver_suffix:
             suffixes.append('')
+        suffixes.append('-%d' % (parsed.major, ))
         suffixes.append('-%d.%d' % (parsed.major, parsed.minor))
         suffixes.append(
             '-%d.%d.%d' % (parsed.major, parsed.minor, parsed.patch))
         for ver_suffix in suffixes:
-            for feature in chain(['default'], self.features):
+            for feature in chain([None], self.features):
                 ret.append(debcargo_binary_name(
                     self.crate_name,
-                    suffix=ver_suffix + '+' + feature))
+                    suffix=ver_suffix + (('+' + feature) if feature else '')))
+        if self.package_name in ret:
+            ret.remove(self.package_name)
         if not ret:
             return None
         return '\n ' + ',\n '.join(
-            ['%s (= %s)' % (p, self.version) for p in ret])
+            ['%s (= ${binary:Version})' % p for p in ret])
 
     def _description(self):
         return (
@@ -291,13 +294,12 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         }
 
     def __init__(self, crate_name, crate_version, debcargo, key, package_name,
-                 version, features):
+                 features):
         self.crate_name = crate_name
         self.crate_version = crate_version
         self._debcargo = debcargo
         self._key = key
         self.package_name = package_name
-        self.version = version
         self.features = features
 
     @property
@@ -374,13 +376,12 @@ class DebcargoControlShimEditor(object):
     """Shim for debian/control that edits debian/debcargo.toml."""
 
     def __init__(self, debcargo_editor, crate_name, crate_version, cargo=None,
-                 binary_version=None, features=None):
+                 features=None):
         self.debcargo_editor = debcargo_editor
         self.cargo = cargo
         self.crate_name = crate_name
         self.crate_version = crate_version
         self.features = features
-        self.binary_version = binary_version
 
     def __repr__(self):
         return "%s(%r, %r, %r)" % (
@@ -419,12 +420,11 @@ class DebcargoControlShimEditor(object):
                         semver_suffix = editor.get("semver_suffix", False)
                     crate_name, crate_semver_version = (
                         parse_debcargo_source_name(package, semver_suffix))
-                binary_version = cl.version
         except FileNotFoundError:
-            binary_version = None
+            pass
         return cls(
             editor, crate_name=crate_name, crate_version=crate_version,
-            cargo=cargo, binary_version=binary_version, features=features)
+            cargo=cargo, features=features)
 
     def __enter__(self):
         self.debcargo_editor.__enter__()
@@ -442,7 +442,7 @@ class DebcargoControlShimEditor(object):
             debcargo_binary_name(
                 self.crate_name, '-' + semver_pair(self.crate_version)
                 if semver_suffix else ''),
-            self.binary_version, self.features)]
+            self.features)]
         try:
             need_bin_package = self.debcargo_editor['bin']
         except KeyError:
@@ -457,7 +457,7 @@ class DebcargoControlShimEditor(object):
                 bin_name = self.crate_name
             ret.append(DebcargoBinaryShimEditor(
                 self.crate_name, self.crate_version, self.debcargo_editor,
-                'bin', bin_name, self.binary_version, self.features))
+                'bin', bin_name, self.features))
         # TODO(jelmer): Add lib+feature packages
         return ret
 
