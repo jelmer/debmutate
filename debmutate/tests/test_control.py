@@ -190,6 +190,27 @@ Testsuite: autopkgtest
 XS-Vcs-Git: git://github.com/example/example
 """, 'debian/control')
 
+    def test_wrap_and_sort(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Testsuite: autopkgtest
+Depends: package3, package2
+
+Package: libblah
+Section: extra
+""")])
+        with ControlEditor() as editor:
+            editor.wrap_and_sort(trailing_comma=True)
+
+        self.assertFileEqual("""\
+Source: blah
+Testsuite: autopkgtest
+Depends: package2, package3,
+
+Package: libblah
+Section: extra
+""", 'debian/control')
+
     def test_modify_binary(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
 Source: blah

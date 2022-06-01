@@ -1,3 +1,9 @@
+debmutate (0.51) UNRELEASED; urgency=medium
+
+  * Add ControlEditor.wrap_and_sort.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 01 Jun 2022 21:17:29 +0100
+
 debmutate (0.50) unstable; urgency=medium
 
   * Properly convert prerelease indicators back to cargo versions.

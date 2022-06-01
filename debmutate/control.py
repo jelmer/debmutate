@@ -42,10 +42,13 @@ __all__ = [
 import collections
 import contextlib
 from itertools import takewhile
+import operator
 import os
+import re
 from typing import Optional, Callable, Tuple, Union, List, Iterable, Dict
 
 from debian.changelog import Version
+
 import subprocess
 import warnings
 
@@ -56,14 +59,71 @@ from .deb822 import (
     Deb822Paragraph,
     new_deb822_paragraph,
     parse_deb822_paragraph,
+    has_deb822_repro,
     )
 from .reformatting import GeneratedFile
+
+
+# TODO(jelmer): dedupe with scripts/wrap-and-sort in devscripts
+CONTROL_LIST_FIELDS = (
+    "Breaks",
+    "Build-Conflicts",
+    "Build-Conflicts-Arch",
+    "Build-Conflicts-Indep",
+    "Build-Depends",
+    "Build-Depends-Arch",
+    "Build-Depends-Indep",
+    "Built-Using",
+    "Conflicts",
+    "Depends",
+    "Enhances",
+    "Pre-Depends",
+    "Provides",
+    "Recommends",
+    "Replaces",
+    "Suggests",
+    "Xb-Npp-MimeType",
+)
 
 
 def parse_relation(t: str):
     with warnings.catch_warnings():
         suppress_substvar_warnings()
         return PkgRelation.parse(t)
+
+# From scripts/wrap-and-sort in devscripts
+# Copyright (C) 2010-2018, Benjamin Drung <bdrung@debian.org>
+#               2010, Stefano Rivera <stefanor@ubuntu.com>
+
+
+def _sort_packages_key(package):
+    # Sort dependencies starting with a "real" package name before ones
+    # starting with a substvar
+    return 0 if re.match("[a-z0-9]", package) else 1, package
+
+
+def _wrap_field(control, entry, sort, formatter):
+    from debian._deb822_repro import LIST_COMMA_SEPARATED_INTERPRETATION
+    view = control.as_interpreted_dict_view(
+        LIST_COMMA_SEPARATED_INTERPRETATION)
+    with view[entry] as field_content:
+        seen = set()
+        for package_ref in field_content.iter_value_references():
+            value = package_ref.value
+            new_value = " | ".join(x.strip() for x in value.split("|"))
+            if not sort or new_value not in seen:
+                package_ref.value = new_value
+                seen.add(new_value)
+            else:
+                package_ref.remove()
+        if sort:
+            field_content.sort(key=_sort_packages_key)
+            if formatter:
+                field_content.value_formatter(formatter)
+            field_content.reformat_when_finished()
+
+
+# End import from devscripts
 
 
 def dh_gnome_clean(path: str = '.') -> None:
@@ -390,6 +450,33 @@ class ControlEditor(object):
         else:
             self.changed = self._primary.changed
         return False
+
+    def sort_binary_packages(self, keep_first=False):
+        first = self.paragraphs[:1 + int(keep_first)]
+        sortable = self.paragraphs[1 + int(keep_first):]
+        sort_key = operator.itemgetter("Package")
+        self.paragraphs = first + sorted(sortable, key=sort_key)
+
+    def wrap_and_sort(self, short_indent=False, trailing_comma=False,
+                      wrap_always=False, max_line_length=79):
+        from devscripts.control import wrap_and_sort_formatter
+        formatter = wrap_and_sort_formatter(
+            1 if short_indent else "FIELD_NAME_LENGTH",
+            trailing_separator=trailing_comma,
+            immediate_empty_line=short_indent,
+            max_line_length_one_liner=0 if wrap_always else max_line_length
+        )
+        for paragraph in self.paragraphs:
+            for field in CONTROL_LIST_FIELDS:
+                if field in paragraph:
+                    _wrap_field(paragraph, field, True, formatter)
+            if "Uploaders" in paragraph:
+                _wrap_field(paragraph, "Uploaders", False, formatter)
+            if "Architecture" in paragraph:
+                archs = set(paragraph["Architecture"].split())
+                # Sort, with wildcard entries (such as linux-any) first:
+                archs = sorted(archs, key=lambda x: ("any" not in x, x))
+                paragraph["Architecture"] = " ".join(archs)
 
     def add_binary(self, contents):
         if isinstance(contents, dict):
