@@ -194,7 +194,10 @@ Package: libblah
 Section: extra
 """)])
         with ControlEditor() as editor:
-            editor.wrap_and_sort(trailing_comma=True)
+            try:
+                editor.wrap_and_sort(trailing_comma=True)
+            except NotImplementedError as e:
+                self.skipTest(str(e))
 
         self.assertFileEqual("""\
 Source: blah
@@ -218,13 +221,17 @@ Package: libblah
 Section: extra
 """)])
         with ControlEditor() as editor:
-            editor.sort_binary_packages()
+            try:
+                editor.sort_binary_packages()
+            except NotImplementedError:
+                self.skipTest(
+                    'python-debian too old; does not have '
+                    'Deb822FileElement.remove')
 
         self.assertFileEqual("""\
 Source: blah
 Testsuite: autopkgtest
 Depends: package3, package2
-
 
 Package: libblah
 Section: extra

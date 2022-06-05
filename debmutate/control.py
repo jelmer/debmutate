@@ -459,7 +459,10 @@ class ControlEditor(object):
                       trailing_comma: bool = False,
                       wrap_always: bool = False,
                       max_line_length: int = 79) -> None:
-        from devscripts.control import wrap_and_sort_formatter
+        try:
+            from devscripts.control import wrap_and_sort_formatter
+        except ImportError:
+            raise NotImplementedError('version of devscripts too old')
         formatter = wrap_and_sort_formatter(
             1 if short_indent else "FIELD_NAME_LENGTH",
             trailing_separator=trailing_comma,

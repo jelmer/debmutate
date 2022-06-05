@@ -202,6 +202,11 @@ class Deb822Editor(Editor):
         for i, p in reversed(list(enumerate(self.paragraphs))):
             if i < skip:
                 continue
-            self.paragraphs.remove(p)
+            try:
+                self.paragraphs.remove(p)
+            except AttributeError:
+                raise NotImplementedError(
+                    'version of python-debian does not have '
+                    'Deb822FileElement.remove')
         for p in sorted(sortable, key=sort_key):
             self.paragraphs.append(p)

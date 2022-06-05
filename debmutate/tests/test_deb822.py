@@ -244,4 +244,8 @@ Build-Depends: bar
 
     def test_sort_paragaphs(self):
         with Deb822Editor('controlfile') as updater:
-            updater.sort_paragraphs(sort_key=lambda m: m['Source'])
+            try:
+                updater.sort_paragraphs(sort_key=lambda m: m['Source'])
+            except NotImplementedError:
+                # Version of python-debian too old
+                pass
