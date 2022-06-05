@@ -30,10 +30,8 @@ from ..deb822 import (
     Deb822Editor,
     dump_paragraphs,
     reformat_deb822,
-    has_deb822_repro,
     )
 from ..reformatting import (
-    FormattingUnpreservable,
     GeneratedFile,
     )
 
@@ -47,16 +45,8 @@ Source: blah
 Testsuite: autopkgtest
 
 """
-        text_without_comment = b"""\
-Source: blah
-Testsuite: autopkgtest
-"""
-        if has_deb822_repro:
-            self.assertEqual(
-                reformat_deb822(text_with_comment), text_with_comment)
-        else:
-            self.assertEqual(
-                reformat_deb822(text_with_comment), text_without_comment)
+        self.assertEqual(
+            reformat_deb822(text_with_comment), text_with_comment)
 
     def test_fine(self):
         self.assertTrue(reformat_deb822(b"""\
@@ -144,15 +134,9 @@ Testsuite: autopkgtest
 
 """)])
 
-        def change():
-            with Deb822Editor('controlfile') as updater:
-                for control in updater.paragraphs:
-                    control["NewField"] = "New Field"
-
-        if has_deb822_repro:
-            change()
-        else:
-            self.assertRaises(FormattingUnpreservable, change)
+        with Deb822Editor('controlfile') as updater:
+            for control in updater.paragraphs:
+                control["NewField"] = "New Field"
 
     def test_modify_paragraph(self):
         self.build_tree_contents([('controlfile', """\
@@ -257,3 +241,7 @@ Build-Depends: bar
                 {('Source', 'new'): [
                     ('Source', None, 'new'),
                     ('Build-Depends', 'bar', 'bar')]})
+
+    def test_sort_paragaphs(self):
+        with Deb822Editor('controlfile') as updater:
+            updater.sort_paragraphs(sort_key=lambda m: m['Source'])

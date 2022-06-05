@@ -1,6 +1,8 @@
 debmutate (0.51) UNRELEASED; urgency=medium
 
   * Add ControlEditor.wrap_and_sort.
+  * Drop support for non-RTS parser in python-debian; bump minimum
+    python-debian to 0.1.44.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 01 Jun 2022 21:17:29 +0100
 

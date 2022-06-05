@@ -59,7 +59,6 @@ from .deb822 import (
     Deb822Paragraph,
     new_deb822_paragraph,
     parse_deb822_paragraph,
-    has_deb822_repro,
     )
 from .reformatting import GeneratedFile
 
@@ -451,14 +450,15 @@ class ControlEditor(object):
             self.changed = self._primary.changed
         return False
 
-    def sort_binary_packages(self, keep_first=False):
-        first = self.paragraphs[:1 + int(keep_first)]
-        sortable = self.paragraphs[1 + int(keep_first):]
+    def sort_binary_packages(self, keep_first: bool = False) -> None:
         sort_key = operator.itemgetter("Package")
-        self.paragraphs = first + sorted(sortable, key=sort_key)
+        self._primary.sort_paragraphs(
+            skip=1 + int(keep_first), sort_key=sort_key)
 
-    def wrap_and_sort(self, short_indent=False, trailing_comma=False,
-                      wrap_always=False, max_line_length=79):
+    def wrap_and_sort(self, short_indent: bool = False,
+                      trailing_comma: bool = False,
+                      wrap_always: bool = False,
+                      max_line_length: int = 79) -> None:
         from devscripts.control import wrap_and_sort_formatter
         formatter = wrap_and_sort_formatter(
             1 if short_indent else "FIELD_NAME_LENGTH",
@@ -473,7 +473,7 @@ class ControlEditor(object):
             if "Uploaders" in paragraph:
                 _wrap_field(paragraph, "Uploaders", False, formatter)
             if "Architecture" in paragraph:
-                archs = set(paragraph["Architecture"].split())
+                archs = list(paragraph["Architecture"].split())
                 # Sort, with wildcard entries (such as linux-any) first:
                 archs = sorted(archs, key=lambda x: ("any" not in x, x))
                 paragraph["Architecture"] = " ".join(archs)

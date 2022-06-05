@@ -394,6 +394,15 @@ class DebcargoControlShimEditor(object):
             self.debcargo_editor, crate_name=self.crate_name,
             crate_version=self.crate_version, cargo=self.cargo)
 
+    def wrap_and_sort(self, short_indent: bool = False,
+                      trailing_comma: bool = False,
+                      wrap_always: bool = False,
+                      max_line_length: int = 79) -> None:
+        pass
+
+    def sort_binary_packages(self, keep_first: bool = False):
+        pass
+
     @classmethod
     def from_debian_dir(cls, path, crate_name=None, crate_version=None,
                         features=None, cargo=None):

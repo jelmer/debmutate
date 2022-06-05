@@ -45,7 +45,6 @@ from ..control import (
     ControlEditor,
     parse_standards_version,
     )
-from ..deb822 import has_deb822_repro
 from ..reformatting import (
     GeneratedFile,
     FormattingUnpreservable,
@@ -127,12 +126,7 @@ Testsuite: autopkgtest
 
         def update_source(control):
             control["NewField"] = "New Field"
-        if has_deb822_repro:
-            update_control(source_package_cb=update_source)
-        else:
-            self.assertRaises(
-                FormattingUnpreservable, update_control,
-                source_package_cb=update_source)
+        update_control(source_package_cb=update_source)
 
     def test_merge3(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
@@ -209,6 +203,34 @@ Depends: package2, package3,
 
 Package: libblah
 Section: extra
+""", 'debian/control')
+
+    def test_sort_binaries(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Testsuite: autopkgtest
+Depends: package3, package2
+
+Package: libfoo
+Section: web
+
+Package: libblah
+Section: extra
+""")])
+        with ControlEditor() as editor:
+            editor.sort_binary_packages()
+
+        self.assertFileEqual("""\
+Source: blah
+Testsuite: autopkgtest
+Depends: package3, package2
+
+
+Package: libblah
+Section: extra
+
+Package: libfoo
+Section: web
 """, 'debian/control')
 
     def test_modify_binary(self):

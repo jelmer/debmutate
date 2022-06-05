@@ -30,54 +30,43 @@ __all__ = [
     ]
 
 from io import BytesIO
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from debian.changelog import Version
 
+from debian import __version__ as python_debian_version
 try:
-    from debian import __version__ as python_debian_version
-    parsed_python_debian_version = Version(python_debian_version)
-    if parsed_python_debian_version < Version('0.1.44'):
-        raise ModuleNotFoundError
-    try:
-        from debian._deb822_repro.parsing import (
-            parse_deb822_file,
-            Deb822ParagraphElement as Deb822Paragraph,
-            Deb822FileElement as Deb822File,
-            )
-    except TypeError:
-        # This happens on python 3.7 with older versions of python3-debian
-        raise ModuleNotFoundError
-    if parse_deb822_file is None:
-        # On python < 3.9, this is the case
-        raise ModuleNotFoundError
-
-    def parse_deb822_paragraph(p):
-        f = parse_deb822_file(p)
-        [p] = f.iter_parts_of_type(Deb822Paragraph)
-        return p
-
-    def new_deb822_paragraph():
-        return Deb822Paragraph.new_empty_paragraph()
-
-    has_deb822_repro = True
-except ModuleNotFoundError:
-    from debian.deb822 import Deb822
-
-    def parse_deb822_file(c):  # type: ignore
-        return list(Deb822.iter_paragraphs(c))
-
-    Deb822Paragraph = Deb822  # type: ignore
-    Deb822File = Iterable[Deb822Paragraph]  # type: ignore
-    parse_deb822_paragraph = Deb822
-    new_deb822_paragraph = Deb822
-
-    has_deb822_repro = False
-
+    from debian._deb822_repro.parsing import (
+        parse_deb822_file,
+        Deb822ParagraphElement as Deb822Paragraph,
+        Deb822FileElement as Deb822File,
+        )
+except TypeError:
+    # This happens on python 3.7 with older versions of python3-debian
+    raise ModuleNotFoundError('python too old; need >= 3.9')
 
 from .reformatting import (
     Editor,
     )
+
+parsed_python_debian_version = Version(python_debian_version)
+if parsed_python_debian_version < Version('0.1.44'):
+    raise ModuleNotFoundError('need python-debian >= 0.1.44')
+
+
+if parse_deb822_file is None:
+    # On python < 3.9, this is the case
+    raise ModuleNotFoundError('python too old; need >= 3.9')
+
+
+def parse_deb822_paragraph(p):
+    f = parse_deb822_file(p)
+    [p] = f.iter_parts_of_type(Deb822Paragraph)
+    return p
+
+
+def new_deb822_paragraph():
+    return Deb822Paragraph.new_empty_paragraph()
 
 
 def dump_paragraphs(paragraphs: Deb822File) -> bytes:
@@ -207,3 +196,12 @@ class Deb822Editor(Editor):
         if self.allow_missing:
             return parse_deb822_file([])
         raise
+
+    def sort_paragraphs(self, sort_key, skip=0):
+        sortable = list(self.paragraphs)[skip:]
+        for i, p in reversed(list(enumerate(self.paragraphs))):
+            if i < skip:
+                continue
+            self.paragraphs.remove(p)
+        for p in sorted(sortable, key=sort_key):
+            self.paragraphs.append(p)
