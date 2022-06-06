@@ -243,7 +243,7 @@ def html_search(body, matching_pattern, base_url):
         if not href:
             continue
         href = urljoin(base_url.rstrip('/') + '/', href)
-        m = pcre.fullmatch(matching_pattern, href)
+        m = pcre.match(matching_pattern, href)
         if m:
             yield m
 
