@@ -494,8 +494,14 @@ def distribution_is_unreleased(distribution):
         distribution.startswith('UNRELEASED-'))
 
 
-def changeblock_ensure_first_line(block, line, maintainer=None):
+def changeblock_ensure_first_line(
+        block, line, maintainer: Optional[Tuple[str, str]] = None):
     """Ensure that the first line matches the specified line.
+
+    Args:
+      block: Changelog block to edit
+      line: Line to add
+      maintainer: Maintainer to reference as (name, email)-tuple
     """
     if maintainer is None:
         maintainer_name, maintainer_email = get_maintainer()
@@ -518,7 +524,35 @@ def changeblock_ensure_first_line(block, line, maintainer=None):
         block.author = "%s <%s>" % (maintainer_name, maintainer_email)
 
 
-def release(cl, distribution=None, timestamp=None, localtime=True):
+def take_uploadership(
+        cl, maintainer: Optional[Tuple[str, str]] = None) -> None:
+    """Take uploaderhsip of a changelog entry, but attribute contributors.
+
+    Args:
+      cl: Changelog to modify
+      maintainer: Tuple with (name, email) of maintainer to take ownership
+    """
+    if maintainer is None:
+        maintainer_name, maintainer_email = get_maintainer()
+    else:
+        maintainer_name, maintainer_email = maintainer
+    if maintainer_name is None or maintainer_email is None:
+        raise ValueError(
+            'unable to determine maintainer details and none specified')
+    if cl[0].author is not None:
+        entry_maintainer = parseaddr(cl[0].author)
+        if (entry_maintainer != (maintainer_name, maintainer_email) and
+                len(cl[0]._changes) >= 2 and
+                not cl[0]._changes[1].startswith('  [ ')):
+            cl[0]._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
+            if cl[0]._changes[-1]:
+                cl[0]._changes.append('')
+    cl[0].author = '%s <%s>' % (maintainer_name, maintainer_email)
+
+
+def release(
+        cl, distribution: Optional[str] = None, timestamp=None,
+        localtime: bool = True):
     """Create a release for a changelog file.
     """
     if distribution is None:

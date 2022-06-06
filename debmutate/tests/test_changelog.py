@@ -42,6 +42,7 @@ from debmutate.changelog import (
     changeblock_ensure_first_line,
     find_last_distribution,
     upstream_merge_changelog_line,
+    take_uploadership,
     )
 
 from debian.changelog import Version
@@ -650,3 +651,73 @@ class UpstreamMergeChangelogLineTests(TestCase):
         self.assertEqual(
             "New upstream release.",
             upstream_merge_changelog_line("1.0+dfsg1"))
+
+
+class TakeUploadershipTests(TestCase):
+
+    def test_already_uploader(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
+
+    def test_other_author(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  [ Joe Example ]
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
+
+    def test_other_author_2(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  [ Jane Example ]
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  [ Jane Example ]
+  * Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
+
+    def test_other_author_empty(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+ -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        self.assertEqual("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
+""", str(cl))
