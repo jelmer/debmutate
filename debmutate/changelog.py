@@ -59,6 +59,7 @@ from .reformatting import Editor
 
 WIDTH = 80
 INITIAL_INDENT = '  * '
+DEFAULT_DISTRIBUTION = 'unstable'
 
 
 class ChangelogEditor(Editor):
@@ -517,9 +518,14 @@ def changeblock_ensure_first_line(block, line, maintainer=None):
         block.author = "%s <%s>" % (maintainer_name, maintainer_email)
 
 
-def release(cl, distribution="unstable", timestamp=None, localtime=True):
+def release(cl, distribution=None, timestamp=None, localtime=True):
     """Create a release for a changelog file.
     """
+    if distribution is None:
+        try:
+            distribution = cl[1].distributions
+        except IndexError:
+            distribution = DEFAULT_DISTRIBUTION
     if distribution_is_unreleased(cl[0].distributions):
         cl[0].distributions = distribution
         cl[0].date = format_date(timestamp=timestamp, localtime=localtime)
@@ -625,10 +631,10 @@ def is_unreleased_inaugural(cl: Changelog) -> bool:
 def gbp_dch(path: str) -> None:
     """Run 'gbp dch'."""
     import os
-    from gbp.scripts.dch import main
+    from gbp.scripts.dch import dch_main
     old_cwd = os.getcwd()
     try:
         os.chdir(path)
-        main(['gbp-dch', '--ignore-branch'])
+        dch_main(['gbp-dch', '--ignore-branch'])
     finally:
         os.chdir(old_cwd)
