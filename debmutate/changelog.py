@@ -667,7 +667,7 @@ def is_unreleased_inaugural(cl: Changelog) -> bool:
 def gbp_dch(path: str) -> None:
     """Run 'gbp dch'."""
     import os
-    from gbp.scripts.dch import dch_main
+    from gbp.scripts.dch import main as dch_main
     old_cwd = os.getcwd()
     try:
         os.chdir(path)
