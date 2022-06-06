@@ -503,7 +503,9 @@ lintian-brush (0.28) unstable; urgency=medium
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        release(cl, timestamp=1604934305, localtime=False)
+        release(
+                cl, timestamp=1604934305, localtime=False,
+                maintainer=("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual(str(cl), """\
 lintian-brush (0.28) unstable; urgency=medium
 
@@ -520,10 +522,30 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        release(cl, timestamp=1604934305, localtime=False)
+        release(cl, timestamp=1604934305, localtime=False,
+                maintainer=("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual(str(cl), """\
 lintian-brush (0.28) unstable; urgency=medium
 
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
+""")
+
+    def test_different_author(self):
+        cl = Changelog("""\
+lintian-brush (0.28) UNRELEASED; urgency=medium
+
+  * [217263e] Add fixer for obsolete-runtime-tests-restriction.
+
+ -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
+""")
+        release(cl, timestamp=1604934305, localtime=False,
+                maintainer=("Jelmer Vernooij", "jelmer@debian.org"))
+        self.assertEqual(str(cl), """\
+lintian-brush (0.28) unstable; urgency=medium
+
+  [ Joe Example ]
   * [217263e] Add fixer for obsolete-runtime-tests-restriction.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
@@ -663,7 +685,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        take_uploadership(cl[0], ("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual("""\
 lintian-brush (0.28) UNRELEASED; urgency=medium
 
@@ -680,7 +702,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        take_uploadership(cl[0], ("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual("""\
 lintian-brush (0.28) UNRELEASED; urgency=medium
 
@@ -699,7 +721,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        take_uploadership(cl[0], ("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual("""\
 lintian-brush (0.28) UNRELEASED; urgency=medium
 
@@ -715,7 +737,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
 
  -- Joe Example <joe@example.com>  Mon, 02 Sep 2019 00:23:11 +0000
 """)
-        take_uploadership(cl, ("Jelmer Vernooij", "jelmer@debian.org"))
+        take_uploadership(cl[0], ("Jelmer Vernooij", "jelmer@debian.org"))
         self.assertEqual("""\
 lintian-brush (0.28) UNRELEASED; urgency=medium
 

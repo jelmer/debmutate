@@ -525,11 +525,11 @@ def changeblock_ensure_first_line(
 
 
 def take_uploadership(
-        cl, maintainer: Optional[Tuple[str, str]] = None) -> None:
+        block, maintainer: Optional[Tuple[str, str]] = None) -> None:
     """Take uploaderhsip of a changelog entry, but attribute contributors.
 
     Args:
-      cl: Changelog to modify
+      block: Changelog block to modify
       maintainer: Tuple with (name, email) of maintainer to take ownership
     """
     if maintainer is None:
@@ -539,20 +539,21 @@ def take_uploadership(
     if maintainer_name is None or maintainer_email is None:
         raise ValueError(
             'unable to determine maintainer details and none specified')
-    if cl[0].author is not None:
-        entry_maintainer = parseaddr(cl[0].author)
+    if block.author is not None:
+        entry_maintainer = parseaddr(block.author)
         if (entry_maintainer != (maintainer_name, maintainer_email) and
-                len(cl[0]._changes) >= 2 and
-                not cl[0]._changes[1].startswith('  [ ')):
-            cl[0]._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
-            if cl[0]._changes[-1]:
-                cl[0]._changes.append('')
-    cl[0].author = '%s <%s>' % (maintainer_name, maintainer_email)
+                len(block._changes) >= 2 and
+                not block._changes[1].startswith('  [ ')):
+            block._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
+            if block._changes[-1]:
+                block._changes.append('')
+    block.author = '%s <%s>' % (maintainer_name, maintainer_email)
 
 
 def release(
         cl, distribution: Optional[str] = None, timestamp=None,
-        localtime: bool = True):
+        localtime: bool = True,
+        maintainer: Optional[Tuple[str, str]] = None):
     """Create a release for a changelog file.
     """
     if distribution is None:
@@ -561,6 +562,7 @@ def release(
         except IndexError:
             distribution = DEFAULT_DISTRIBUTION
     if distribution_is_unreleased(cl[0].distributions):
+        take_uploadership(cl[0], maintainer)
         cl[0].distributions = distribution
         cl[0].date = format_date(timestamp=timestamp, localtime=localtime)
 
