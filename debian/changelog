@@ -1,3 +1,9 @@
+debmutate (0.53) UNRELEASED; urgency=medium
+
+  * Bump python3-pcre from Recommends to Depends. Closes: #1012505
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 08 Jun 2022 16:34:09 +0100
+
 debmutate (0.52) unstable; urgency=medium
 
   * Use pcre for better uscan compatibilty when parsing watch files.

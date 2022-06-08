@@ -19,8 +19,8 @@ Vcs-Browser: https://salsa.debian.org/jelmer/debmutate
 
 Package: python3-debmutate
 Architecture: all
-Depends: python3-debian, ${misc:Depends}, ${python3:Depends}
-Recommends: python3-tr, python3-merge3, python3-tomlkit, python3-semver, python3-debian (>= 0.1.44), python3-pcre, devscripts (>= 2.22.2)
+Depends: python3-debian, ${misc:Depends}, ${python3:Depends}, python3-pcre
+Recommends: python3-tr, python3-merge3, python3-tomlkit, python3-semver, python3-debian (>= 0.1.44), devscripts (>= 2.22.2)
 Suggests: gnome-pkg-tools, postgresql-common
 Description: Format-preserving manipulation of Debian control files in Python
  Debmutate is a set of Python modules for manipulating the control files of
