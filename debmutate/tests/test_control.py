@@ -374,6 +374,23 @@ Description: foo
  bar
 """, 'debian/control', strip_trailing_whitespace=True)
 
+    def test_no_new_heading_whitespace(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Source: blah
+Build-Depends:
+ debhelper-compat (= 11),
+ uuid-dev
+""")])
+
+        with ControlEditor() as updater:
+            updater.source['Build-Depends'] = '\n debhelper-compat (= 12),\n uuid-dev'
+        self.assertFileEqual("""\
+Source: blah
+Build-Depends:
+ debhelper-compat (= 12),
+ uuid-dev
+""", 'debian/control', strip_trailing_whitespace=True)
+
 
 class ParseRelationsTests(TestCase):
 
@@ -563,6 +580,13 @@ class EnsureExactVersionTests(TestCase):
         self.assertEqual(
             'blah, debhelper (= 9)',
             ensure_exact_version('blah, debhelper (= 10)', 'debhelper', '9'))
+        self.assertEqual("""
+ debhelper-compat (= 12),
+ pkg-config,
+ uuid-dev""", ensure_exact_version("""
+ debhelper-compat (= 11),
+ pkg-config,
+ uuid-dev""", 'debhelper-compat', '12'))
 
 
 class DropDependencyTests(TestCase):

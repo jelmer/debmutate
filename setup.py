@@ -29,7 +29,7 @@ setup(
         "Repository": "https://salsa.debian.org/jelmer/debmutate.git",
     },
     scripts=['scripts/deb-enable-rrr', 'scripts/drop-mia-uploaders'],
-    install_requires=['python_debian', 'python-tr', 'merge3'],
+    install_requires=['python_debian>=0.1.44', 'python-tr', 'merge3'],
     extras_require={
         'debcargo': ['tomlkit'],
     },
