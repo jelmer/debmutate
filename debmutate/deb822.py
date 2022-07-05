@@ -49,16 +49,6 @@ from .reformatting import (
     Editor,
     )
 
-parsed_python_debian_version = Version(python_debian_version)
-if parsed_python_debian_version < Version('0.1.44'):
-    raise ModuleNotFoundError('need python-debian >= 0.1.44')
-
-
-if parse_deb822_file is None:
-    # On python < 3.9, this is the case
-    raise ModuleNotFoundError('python too old; need >= 3.9')
-
-
 def parse_deb822_paragraph(p):
     f = parse_deb822_file(p)
     [p] = f.iter_parts_of_type(Deb822Paragraph)
@@ -187,7 +177,7 @@ class Deb822Editor(Editor):
 
     @property
     def paragraphs(self) -> List[Deb822Paragraph]:
-        return self._parsed
+        return [p.configured_view(auto_map_initial_line_whitespace=False) for p in self._parsed]
 
     def _format(self, paragraphs):
         return dump_paragraphs(paragraphs)
