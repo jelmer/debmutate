@@ -35,15 +35,11 @@ from typing import List, Optional
 from debian.changelog import Version
 
 from debian import __version__ as python_debian_version
-try:
-    from debian._deb822_repro.parsing import (
-        parse_deb822_file,
-        Deb822ParagraphElement as Deb822Paragraph,
-        Deb822FileElement as Deb822File,
-        )
-except TypeError:
-    # This happens on python 3.7 with older versions of python3-debian
-    raise ModuleNotFoundError('python too old; need >= 3.9')
+from debian._deb822_repro.parsing import (
+    parse_deb822_file,
+    Deb822ParagraphElement as Deb822Paragraph,
+    Deb822FileElement as Deb822File,
+    )
 
 from .reformatting import (
     Editor,
@@ -177,7 +173,7 @@ class Deb822Editor(Editor):
 
     @property
     def paragraphs(self) -> List[Deb822Paragraph]:
-        return [p.configured_view(auto_map_initial_line_whitespace=False) for p in self._parsed]
+        return self._parsed
 
     def _format(self, paragraphs):
         return dump_paragraphs(paragraphs)

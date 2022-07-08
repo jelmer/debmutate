@@ -75,7 +75,6 @@ blah (1.0-1) UNRELEASED; urgency=unknown
   * New entry.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 02 Sep 2019 00:23:11 +0000
-
 """, f.read())
 
     def test_auto_version(self):
@@ -91,7 +90,6 @@ blah (1.0-1) UNRELEASED; urgency=unknown
             self.assertEqual("""\
 blah (1.0-1) UNRELEASED; urgency=low
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
-
 """, f.read())
 
 

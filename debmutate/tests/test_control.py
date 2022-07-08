@@ -221,12 +221,7 @@ Package: libblah
 Section: extra
 """)])
         with ControlEditor() as editor:
-            try:
-                editor.sort_binary_packages()
-            except NotImplementedError:
-                self.skipTest(
-                    'python-debian too old; does not have '
-                    'Deb822FileElement.remove')
+            editor.sort_binary_packages()
 
         self.assertFileEqual("""\
 Source: blah
