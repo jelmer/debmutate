@@ -1,6 +1,6 @@
 debmutate (0.54) UNRELEASED; urgency=medium
 
-  * Bump python-debian dependency to 0.1.45.
+  * Bump python-debian dependency to 0.1.46.
   * Fix handling of debcargo packages without features.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 05 Jul 2022 16:40:11 +0100
