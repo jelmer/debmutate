@@ -47,7 +47,10 @@ class CopyrightEditor(Editor):
             path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
-        return Copyright(content, strict=False)
+        try:
+            return Copyright(content, strict=False)
+        except ValueError as e:
+            raise NotMachineReadableError(str(e))
 
     def _format(self, parsed):
         return parsed.dump()
@@ -56,6 +59,27 @@ class CopyrightEditor(Editor):
     def copyright(self) -> Copyright:
         """The actual copyright file."""
         return self._parsed
+
+    @property
+    def _deb822(self):
+        return self._parsed._Copyright__file
+
+    def remove(self, paragraph):
+        self._parsed._Copyright__paragraphs.remove(paragraph)
+        self._deb822.remove(paragraph._underlying_paragraph)
+
+    def append(self, paragraph):
+        self._parsed._Copyright__paragraphs.append(paragraph)
+        self._deb822.append(paragraph._underlying_paragraph)
+
+    def insert(self, idx, paragraph):
+        self._parsed._Copyright__paragraphs.insert(idx, paragraph)
+        self._deb822.insert(idx + 1, paragraph._underlying_paragraph)
+
+    def pop(self, idx):
+        p = self._parsed._Copyright__paragraphs[idx]
+        self.remove(p)
+        return p
 
 
 def upstream_fields_in_copyright(
@@ -71,7 +95,7 @@ def upstream_fields_in_copyright(
     try:
         with open(path, 'r') as f:
             c = Copyright(f, strict=False)
-    except (FileNotFoundError, NotMachineReadableError,
+    except (ValueError, FileNotFoundError, NotMachineReadableError,
             MachineReadableFormatError):
         return {}
     else:

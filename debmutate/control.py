@@ -488,6 +488,9 @@ class ControlEditor(object):
             para = contents
         return self._primary.paragraphs.append(para)
 
+    def remove(self, para):
+        self._primary.paragraphs.remove(para)
+
 
 def parse_relations(text: str):
     """Parse a package relations string.

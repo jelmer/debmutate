@@ -47,12 +47,13 @@ class UpdateCopyrightTests(TestCase):
         os.chdir(self.test_dir)
         os.mkdir('debian')
 
-    def test_unpreservable(self):
+    def test_preservable_weird_spacing(self):
         with open('debian/copyright', 'w') as f:
             f.write("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
+# A comment
 
 
 Files: *
@@ -60,10 +61,8 @@ License: GPL
 Copyright: 2012...
 """)
 
-        def dummy():
-            with CopyrightEditor() as updater:
-                updater.copyright.header.upstream_name = 'llintian-brush'
-        self.assertRaises(FormattingUnpreservable, dummy)
+        with CopyrightEditor() as updater:
+            updater.copyright.header.upstream_name = 'llintian-brush'
 
     def test_old_style(self):
         with open('debian/copyright', 'w') as f:
@@ -91,9 +90,9 @@ Copyright: 2012...
 """)
 
         with CopyrightEditor() as updater:
-            updater.copyright.add_files_paragraph(FilesParagraph.create(
-                ['foo.c'], "2012 Joe Example",
-                License("Apache")))
+            p = FilesParagraph.create(
+                ['foo.c'], "2012 Joe Example", License("Apache"))
+            updater.copyright.add_files_paragraph(p)
         self.assertTrue(updater.changed)
         with open('debian/copyright', 'r') as f:
             self.assertEqual("""\
@@ -153,3 +152,87 @@ License: Blah
                 'License: Blah\n blah\n .\n',
                 license_para.dump())
             self.assertEqual("blah\n", license_para.license.text)
+
+    def test_remove_paragraph(self):
+        with open('debian/copyright', 'w') as f:
+            f.write("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+
+License: Blah
+ blah
+ .
+""")
+
+        with CopyrightEditor() as updater:
+            license_para = list(updater.copyright.all_license_paragraphs())[0]
+            updater.remove(license_para)
+        with open('debian/copyright', 'r') as f:
+            self.assertEqual("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+""", f.read())
+
+    def test_append_paragraph(self):
+        with open('debian/copyright', 'w') as f:
+            f.write("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+
+""")
+
+        with CopyrightEditor() as updater:
+            p = FilesParagraph.create(
+                ['foo.c'], "2012 Joe Example", License("Apache"))
+            updater.append(p)
+            p = FilesParagraph.create(
+                ['bar.c'], "2013 Joe Example", License("Apache"))
+            updater.append(p)
+        with open('debian/copyright', 'r') as f:
+            self.assertEqual("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+
+Files: foo.c
+Copyright: 2012 Joe Example
+License: Apache
+
+Files: bar.c
+Copyright: 2013 Joe Example
+License: Apache
+""", f.read())
+
+    def test_insert_paragraph(self):
+        with open('debian/copyright', 'w') as f:
+            f.write("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+
+Files: bar.c
+Copyright: 2013 Joe Example
+License: Apache
+""")
+
+        with CopyrightEditor() as updater:
+            p = FilesParagraph.create(
+                ['foo.c'], "2012 Joe Example", License("Apache"))
+            updater.insert(0, p)
+        with open('debian/copyright', 'r') as f:
+            self.assertEqual("""\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer <jelmer@samba.org>
+
+Files: foo.c
+Copyright: 2012 Joe Example
+License: Apache
+
+Files: bar.c
+Copyright: 2013 Joe Example
+License: Apache
+""", f.read())

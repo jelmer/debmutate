@@ -73,6 +73,7 @@ def test_suite():
     names = [
         'changelog',
         'control',
+        'copyright',
         'deb822',
         'debcargo',
         'debhelper',
