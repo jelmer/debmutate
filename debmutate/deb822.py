@@ -23,7 +23,6 @@ __all__ = [
     'reformat_deb822',
     'ChangeConflict',
     'Deb822Editor',
-    'new_deb822_paragraph',
     'parse_deb822_file',
     'parse_deb822_paragraph',
     'Deb822Paragraph',
@@ -49,10 +48,6 @@ def parse_deb822_paragraph(p):
     f = parse_deb822_file(p)
     [p] = f.iter_parts_of_type(Deb822Paragraph)
     return p
-
-
-def new_deb822_paragraph():
-    return Deb822Paragraph.new_empty_paragraph()
 
 
 def dump_paragraphs(paragraphs: Deb822File) -> bytes:
@@ -158,7 +153,7 @@ class Deb822Editor(Editor):
                         paragraph[key] = new_value
         # Add any new paragraphs that weren't processed earlier
         for key, p in changes.items():
-            paragraph = new_deb822_paragraph()
+            paragraph = Deb822Paragraph.new_empty_paragraph()
             for (field, old_value, new_value) in p:
                 if old_value is not None:
                     new_value = resolve_conflict(
@@ -188,11 +183,6 @@ class Deb822Editor(Editor):
         for i, p in reversed(list(enumerate(self.paragraphs))):
             if i < skip:
                 continue
-            try:
-                self.paragraphs.remove(p)
-            except AttributeError:
-                raise NotImplementedError(
-                    'version of python-debian does not have '
-                    'Deb822FileElement.remove')
+            self.paragraphs.remove(p)
         for p in sorted(sortable, key=sort_key):
             self.paragraphs.append(p)

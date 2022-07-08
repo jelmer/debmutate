@@ -57,7 +57,6 @@ from .deb822 import (
     Deb822Editor,
     ChangeConflict,
     Deb822Paragraph,
-    new_deb822_paragraph,
     parse_deb822_paragraph,
     )
 from .reformatting import GeneratedFile
@@ -359,7 +358,7 @@ class ControlEditor(object):
                 raise ValueError('first paragraph is not Source')
             return entry
         else:
-            p = new_deb822_paragraph()
+            p = Deb822Paragraph.new_empty_paragraph()
             self.paragraphs.insert(0, p)
             return p
 
@@ -459,6 +458,7 @@ class ControlEditor(object):
                       trailing_comma: bool = False,
                       wrap_always: bool = False,
                       max_line_length: int = 79) -> None:
+        """Wrap and sort this control file."""
         try:
             from devscripts.control import wrap_and_sort_formatter
         except ImportError:
@@ -483,8 +483,7 @@ class ControlEditor(object):
 
     def add_binary(self, contents):
         if isinstance(contents, dict):
-            para = new_deb822_paragraph()
-            para.update(contents)
+            para = Deb822Paragraph.from_dict(contents)
         else:
             para = contents
         return self._primary.paragraphs.append(para)
