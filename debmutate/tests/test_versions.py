@@ -20,6 +20,7 @@
 from datetime import datetime
 
 from debmutate.versions import (
+    add_dfsg_suffix,
     git_snapshot_data_from_version,
     mangle_version_for_git,
     new_package_version,
@@ -251,3 +252,16 @@ class MatchesReleaseTests(TestCase):
         self.assertTrue(matches_release('1.0+ds1', '1.0'))
         self.assertTrue(
             matches_release('1.14.3+dfsg+~0.15.3', '0.15.3'))
+
+
+class AddDfsgSuffixTests(TestCase):
+
+    def test_new(self):
+        self.assertEqual('1.0+ds', add_dfsg_suffix('1.0'))
+
+    def test_existing(self):
+        self.assertEqual('1.0+ds', add_dfsg_suffix('1.0', '0.9'))
+        self.assertEqual('1.0+ds', add_dfsg_suffix('1.0', '0.9+ds'))
+        self.assertEqual('1.0+ds1', add_dfsg_suffix('1.0', '0.9+ds1'))
+        self.assertEqual('1.0+dfsg1', add_dfsg_suffix('1.0', '0.9+dfsg2'))
+        self.assertEqual('1.0+dfsg', add_dfsg_suffix('1.0', '0.9+dfsg'))

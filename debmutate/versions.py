@@ -33,6 +33,9 @@ __all__ = [
 COMMON_VENDORS = ['debian', 'ubuntu', 'kali']
 
 
+DFSG_REGEX = re.compile(r'^(.*)([\+~])(dfsg|ds)([0-9]*)$')
+
+
 def git_snapshot_data_from_version(
         version: Union[str, Version]) -> Tuple[Optional[str], Optional[str]]:
     """Extract git snapshot information from an upstream version string.
@@ -155,7 +158,7 @@ def upstream_version_add_revision(
       bzr_revno: Bazaar dotted revno
       svn_revno: Subversion revision number
     """
-    m = re.match(r'^(.*)[\+~](dfsg|ds)([0-9]*)$', version_string)
+    m = DFSG_REGEX.match(version_string)
     if m:
         version_string = m.group(1)
     if bzr_revno is not None:
@@ -257,3 +260,19 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     if m and m.group(1) == release_version:
         return True
     return False
+
+
+def add_dfsg_suffix(upstream_version: str, old_upstream_version: Optional[str] = None) -> str:
+    """Add a dfsg suffix to an version version string.
+
+    Allow old_upstream_version to be passed in so optionally the format can be
+    kept consistent.
+    """
+    style = "+ds"
+    if old_upstream_version:
+        m = DFSG_REGEX.match(old_upstream_version)
+        if m:
+            style = m.group(2) + m.group(3)
+            if m.group(4):
+                style += "1"
+    return upstream_version + style
