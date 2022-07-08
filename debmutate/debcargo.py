@@ -266,7 +266,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         suffixes.append(
             '-%d.%d.%d' % (parsed.major, parsed.minor, parsed.patch))
         for ver_suffix in suffixes:
-            for feature in chain([None], self.features):
+            for feature in chain([None], self.features or []):
                 ret.append(debcargo_binary_name(
                     self.crate_name,
                     suffix=ver_suffix + (('+' + feature) if feature else '')))
