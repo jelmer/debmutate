@@ -31,9 +31,6 @@ __all__ = [
 from io import BytesIO
 from typing import List, Optional
 
-from debian.changelog import Version
-
-from debian import __version__ as python_debian_version
 from debian._deb822_repro.parsing import (
     parse_deb822_file,
     Deb822ParagraphElement as Deb822Paragraph,
@@ -43,6 +40,7 @@ from debian._deb822_repro.parsing import (
 from .reformatting import (
     Editor,
     )
+
 
 def parse_deb822_paragraph(p):
     f = parse_deb822_file(p)

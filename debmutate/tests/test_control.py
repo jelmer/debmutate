@@ -378,7 +378,8 @@ Build-Depends:
 """)])
 
         with ControlEditor() as updater:
-            updater.source['Build-Depends'] = '\n debhelper-compat (= 12),\n uuid-dev'
+            updater.source['Build-Depends'] = (
+                '\n debhelper-compat (= 12),\n uuid-dev')
         self.assertFileEqual("""\
 Source: blah
 Build-Depends:

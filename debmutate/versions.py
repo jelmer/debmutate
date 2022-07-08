@@ -262,7 +262,9 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     return False
 
 
-def add_dfsg_suffix(upstream_version: str, old_upstream_version: Optional[str] = None) -> str:
+def add_dfsg_suffix(
+        upstream_version: str,
+        old_upstream_version: Optional[str] = None) -> str:
     """Add a dfsg suffix to an version version string.
 
     Allow old_upstream_version to be passed in so optionally the format can be
