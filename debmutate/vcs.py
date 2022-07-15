@@ -36,6 +36,9 @@ class VcsUrl(NamedTuple):
     branch: Optional[str]
     path: Optional[str]
 
+    def __str__(self) -> str:
+        return unsplit_vcs_url(self.url, self.branch, self.path)
+
 
 def split_vcs_url(url: str) -> VcsUrl:
     """Split a Debian VCS URL.
