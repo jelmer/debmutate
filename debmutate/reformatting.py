@@ -139,7 +139,7 @@ def edit_formatted_file(
         except ModuleNotFoundError:
             raise e
         if (isinstance(rewritten_contents, bytes)
-                 and merge3.__version__ < (0, 0, 7)):
+                and merge3.__version__ < (0, 0, 7)):
             raise e
         m3 = merge3.Merge3(
             rewritten_contents.splitlines(True),
