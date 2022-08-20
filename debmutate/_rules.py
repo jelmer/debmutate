@@ -55,8 +55,8 @@ class Rule(object):
             self._component_str = b''
         if target:
             self.lines = (
-                [b'%s:%s' % (target, self._component_str)] +
-                [b'\t' + cmd for cmd in (commands or [])])
+                [b'%s:%s' % (target, self._component_str)]
+                + [b'\t' + cmd for cmd in (commands or [])])
         else:
             self.lines = []
 
@@ -143,12 +143,12 @@ class Rule(object):
 def _is_conditional(line):
     line = line.lstrip(b' ')
     return (
-        line.startswith(b'ifeq') or
-        line.startswith(b'ifneq') or
-        line.startswith(b'else') or
-        line.startswith(b'endif') or
-        line.startswith(b'include') or
-        line.startswith(b'-include'))
+        line.startswith(b'ifeq')
+        or line.startswith(b'ifneq')
+        or line.startswith(b'else')
+        or line.startswith(b'endif')
+        or line.startswith(b'include')
+        or line.startswith(b'-include'))
 
 
 def _is_rule(line):
@@ -225,9 +225,9 @@ class Makefile(object):
                 if rule:
                     mf.contents.extend(rule._finish())
                 precomment = []
-                while (len(mf.contents) > 1 and
-                        isinstance(mf.contents[-1], bytes) and
-                        mf.contents[-1].startswith(b'#')):
+                while (len(mf.contents) > 1
+                        and isinstance(mf.contents[-1], bytes)
+                        and mf.contents[-1].startswith(b'#')):
                     precomment.insert(0, mf.contents.pop(-1))
                 rule = Rule._from_first_line(line, precomment=precomment)
             elif not line.strip():

@@ -110,8 +110,8 @@ def edit_formatted_file(
         file
       allow_reformatting: Whether to allow reformatting of the file
     """
-    if (updated_contents is not None and rewritten_contents is not None and
-            type(updated_contents) != type(rewritten_contents)):
+    if (updated_contents is not None and rewritten_contents is not None
+            and type(updated_contents) != type(rewritten_contents)):
         raise TypeError('inconsistent types: %r, %r' % (
             type(updated_contents), type(rewritten_contents)))
     if updated_contents in (rewritten_contents, original_contents):
@@ -120,16 +120,16 @@ def edit_formatted_file(
         check_generated_file(path)
     try:
         check_preserve_formatting(
-                rewritten_contents.strip()
-                if rewritten_contents is not None else None,
-                original_contents.strip()
-                if original_contents is not None else None, path,
-                allow_reformatting=allow_reformatting
-                )
+            rewritten_contents.strip()
+            if rewritten_contents is not None else None,
+            original_contents.strip()
+            if original_contents is not None else None, path,
+            allow_reformatting=allow_reformatting
+        )
     except FormattingUnpreservable as e:
-        if (rewritten_contents is None or
-                original_contents is None or
-                updated_contents is None):
+        if (rewritten_contents is None
+                or original_contents is None
+                or updated_contents is None):
             raise
         # Run three way merge
         logging.debug(
@@ -138,8 +138,8 @@ def edit_formatted_file(
             import merge3
         except ModuleNotFoundError:
             raise e
-        if (isinstance(rewritten_contents, bytes) and
-                merge3.__version__ < (0, 0, 7)):
+        if (isinstance(rewritten_contents, bytes)
+                 and merge3.__version__ < (0, 0, 7)):
             raise e
         m3 = merge3.Merge3(
             rewritten_contents.splitlines(True),

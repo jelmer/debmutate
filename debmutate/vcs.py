@@ -24,7 +24,7 @@ __all__ = [
     'mangle_version_for_git',
     'source_package_vcs',
     'gbp_expand_tag_name',
-    ]
+]
 
 import re
 from typing import Optional, Tuple, NamedTuple
@@ -163,7 +163,7 @@ def gbp_expand_tag_name(tag_format: str, version: str) -> str:
     vars = {
         'version': version,
         'hversion': version.replace('.', '-'),
-        }
+    }
     try:
         return ret % vars
     except KeyError as e:

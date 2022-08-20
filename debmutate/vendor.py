@@ -19,7 +19,7 @@
 
 __all__ = [
     'get_vendor_name',
-    ]
+]
 
 
 import os

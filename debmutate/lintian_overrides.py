@@ -63,16 +63,16 @@ class LintianOverride(object):
     def matches(self, package: Optional[str] = None, tag: Optional[str] = None,
                 info: Optional[str] = None, arch: Optional[str] = None,
                 type: Optional[str] = None) -> bool:
-        if (self.package is not None and package is not None and
-                self.package != package):
+        if (self.package is not None and package is not None
+                and self.package != package):
             return False
         if self.type is not None and type is not None and self.type != type:
             return False
-        if (self.tag is not None and tag is not None and
-                not self._tag_match(tag)):
+        if (self.tag is not None and tag is not None
+                and not self._tag_match(tag)):
             return False
-        if (self.info is not None and info is not None and
-                not self._info_match(info)):
+        if (self.info is not None and info is not None
+                and not self._info_match(info)):
             return False
         # TODO(jelmer): wildcards in the arch list?
         if self.archlist and arch is not None and arch not in self.archlist:
@@ -80,12 +80,12 @@ class LintianOverride(object):
         return True
 
     def __eq__(self, other):
-        return (isinstance(other, type(self)) and
-                self.package == other.package and
-                self.archlist == other.archlist and
-                self.type == other.type and
-                self.tag == other.tag and
-                self.info == other.info)
+        return (isinstance(other, type(self))
+                and self.package == other.package
+                and self.archlist == other.archlist
+                and self.type == other.type
+                and self.tag == other.tag
+                and self.info == other.info)
 
 
 class LintianOverridesEditor(Editor):

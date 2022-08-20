@@ -22,7 +22,7 @@ __all__ = [
     'ensure_minimum_debhelper_version',
     'read_debhelper_compat_file',
     'get_debhelper_compat_level',
-    ]
+]
 
 from dataclasses import dataclass
 import os
@@ -37,7 +37,7 @@ from .control import (
     get_relation,
     parse_relations,
     ControlEditor,
-    )
+)
 from .reformatting import Editor
 
 
@@ -85,8 +85,8 @@ def ensure_minimum_debhelper_version(
         if Version(debhelper_compat[0].version[1]) >= minimum_version:
             return False
     new_build_depends = ensure_minimum_version(
-            build_depends,
-            "debhelper", minimum_version)
+        build_depends,
+        "debhelper", minimum_version)
     if new_build_depends != source.get('Build-Depends'):
         source['Build-Depends'] = new_build_depends
         return True
@@ -208,7 +208,7 @@ def parse_maintscript_line(line):
         'mv_conffile': MaintscriptMoveConffile,
         'symlink_to_dir': MaintscriptSymlinkToDir,
         'dir_to_symlink': MaintscriptDirToSymlink,
-        }.get(args[0], list)(*args[1:])
+    }.get(args[0], list)(*args[1:])
 
 
 def serialize_maintscript_line(args):

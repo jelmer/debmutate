@@ -120,7 +120,7 @@ class PkgRelation(object):
                 name=raw,
                 version=None,
                 arch=None
-                )
+            )
         if text == "":
             return []
         or_deps = cls.__pipe_sep_RE.split(text)
@@ -128,8 +128,8 @@ class PkgRelation(object):
 
     def __repr__(self):
         return "%s(%r, %r, %r, %r, %r)" % (
-                self.__class__.__name__, self.name, self.version, self.arch,
-                self.archqual, self.restrictions)
+            self.__class__.__name__, self.name, self.version, self.arch,
+            self.archqual, self.restrictions)
 
     def __tuple__(self):
         return (self.name, self.version, self.arch, self.archqual,

@@ -33,9 +33,6 @@ from ..copyright import (
     NotMachineReadableError,
     CopyrightEditor,
     )
-from ..reformatting import (
-    FormattingUnpreservable,
-    )
 
 
 class UpdateCopyrightTests(TestCase):

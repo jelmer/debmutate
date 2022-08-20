@@ -26,7 +26,7 @@ __all__ = [
     'git_snapshot_data_from_version',
     'mangle_version_for_git',
     'upstream_version_add_revision',
-    ]
+]
 
 
 # Ideally we wouldn't have a list like this, but unfortunately we do.

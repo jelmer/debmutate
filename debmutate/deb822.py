@@ -26,7 +26,7 @@ __all__ = [
     'parse_deb822_file',
     'parse_deb822_paragraph',
     'Deb822Paragraph',
-    ]
+]
 
 from io import BytesIO
 from typing import List, Optional
@@ -35,11 +35,11 @@ from debian._deb822_repro.parsing import (
     parse_deb822_file,
     Deb822ParagraphElement as Deb822Paragraph,
     Deb822FileElement as Deb822File,
-    )
+)
 
 from .reformatting import (
     Editor,
-    )
+)
 
 
 def parse_deb822_paragraph(p):
