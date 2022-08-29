@@ -1,9 +1,9 @@
-debmutate (0.55) UNRELEASED; urgency=medium
+debmutate (0.55) unstable; urgency=medium
 
   * Add strip_dfsg_suffix function.
   * Update standards version to 4.6.1, no changes needed.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 29 Aug 2022 17:50:21 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 29 Aug 2022 17:53:13 +0100
 
 debmutate (0.54) unstable; urgency=medium
 
