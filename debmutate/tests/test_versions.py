@@ -28,6 +28,7 @@ from debmutate.versions import (
     upstream_version_add_revision,
     debianize_upstream_version,
     matches_release,
+    strip_dfsg_suffix,
     )
 
 from debian.changelog import Version
@@ -265,3 +266,14 @@ class AddDfsgSuffixTests(TestCase):
         self.assertEqual('1.0+ds1', add_dfsg_suffix('1.0', '0.9+ds1'))
         self.assertEqual('1.0+dfsg1', add_dfsg_suffix('1.0', '0.9+dfsg2'))
         self.assertEqual('1.0+dfsg', add_dfsg_suffix('1.0', '0.9+dfsg'))
+
+
+class StripDfsgSuffixTests(TestCase):
+
+    def test_nothing(self):
+        self.assertEqual('1.0', strip_dfsg_suffix('1.0'))
+        self.assertEqual('1.0+bzr2', strip_dfsg_suffix('1.0+bzr2'))
+
+    def test_strip(self):
+        self.assertEqual('1.0', strip_dfsg_suffix('1.0+ds1'))
+        self.assertEqual('1.0', strip_dfsg_suffix('1.0+dfsg2'))

@@ -262,6 +262,14 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     return False
 
 
+def strip_dfsg_suffix(version: str) -> str:
+    """Strip the DFSG suffix from a version."""
+    m = DFSG_REGEX.match(version)
+    if m:
+        return m.group(1)
+    return version
+
+
 def add_dfsg_suffix(
         upstream_version: str,
         old_upstream_version: Optional[str] = None) -> str:
