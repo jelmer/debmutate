@@ -1,8 +1,8 @@
-debmutate (0.56) UNRELEASED; urgency=medium
+debmutate (0.56) unstable; urgency=medium
 
   * deb822: Don't silently discard comments inside of fields.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 04 Sep 2022 13:45:33 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 04 Sep 2022 13:47:02 +0100
 
 debmutate (0.55) unstable; urgency=medium
 
