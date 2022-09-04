@@ -37,6 +37,7 @@ __all__ = [
     'is_dep_implied',
     'is_relation_implied',
     'parse_standards_version',
+    'PkgRelationFieldEditor',
     ]
 
 import collections
@@ -583,6 +584,10 @@ def iter_relations(
       Tuples with offset and relation objects
     """
     relations = parse_relations(relationstr)
+    return _iter_relations(relations, package)
+
+
+def _iter_relations(relations, package):
     for i, (head_whitespace, relation, tail_whitespace) in enumerate(
             relations):
         if isinstance(relation, str):  # formatting
@@ -636,7 +641,7 @@ def ensure_minimum_version(
             changed = True
     if not found:
         changed = True
-        _add_dependency(
+        _add_relation(
             relations,
             [PkgRelation(name=package, version=('>=', minimum_version))])
     for i in reversed(obsolete_relations):
@@ -680,7 +685,7 @@ def ensure_exact_version(
             changed = True
     if not found:
         changed = True
-        _add_dependency(
+        _add_relation(
             relations,
             [PkgRelation(name=package, version=('=', version))],
             position=position)
@@ -719,7 +724,7 @@ def ensure_relation(
                 relations[i] = (relations[i][0], new_relation, relations[i][2])
                 added = True
     if not added:
-        _add_dependency(relations, new_relation)
+        _add_relation(relations, new_relation)
 
     for i in reversed(to_remove):
         del relations[i]
@@ -727,11 +732,11 @@ def ensure_relation(
     return format_relations(relations)
 
 
-def _add_dependency(
+def _add_relation(
         relations: List[Tuple[str, List[PkgRelation], str]],
         relation: List[PkgRelation],
         position: Optional[int] = None) -> None:
-    """Add a dependency to a depends line.
+    """Add a relation to a list of relations.
 
     Args:
       relations: existing list of relations
@@ -804,7 +809,7 @@ def add_dependency(relationstr, relation, position=None):
     relations = parse_relations(relationstr)
     if isinstance(relation, str):
         relation = parse_relation(relation)
-    _add_dependency(relations, relation, position=position)
+    _add_relation(relations, relation, position=position)
     return format_relations(relations)
 
 
@@ -829,7 +834,7 @@ def ensure_some_version(relationstr: str, package: str) -> str:
         if names != [package]:
             continue
         return relationstr
-    _add_dependency(relations, parse_relation(package))
+    _add_relation(relations, parse_relation(package))
     return format_relations(relations)
 
 
@@ -1010,3 +1015,109 @@ def suppress_substvar_warnings():
         category=UserWarning,
         message=(r'cannot parse package relationship \"\$\{.*\}\", returning '
                  r'it raw'))
+
+
+class PkgRelationFieldEditor(object):
+    """Convenience wrapper for editing pkg relation fields."""
+
+    def __init__(self, paragraph, name):
+        self.paragraph = paragraph
+        self.name = name
+        self._parsed = None
+
+    def __enter__(self):
+        v = self.paragraph.get(self.name)
+        if v is not None:
+            self._parsed = parse_relations(v)
+        else:
+            self._parsed = None
+
+        return self
+
+    def drop_relation(self, package):
+        """Drop a relation.
+
+        Args:
+          package: package name
+        """
+        if self.value is None:
+            return
+
+        def keep(relation):
+            names = [r.name for r in relation]
+            return set(names) != set([package])
+        new_parsed = filter_dependencies(self._parsed, keep)
+        ret = self._parsed != new_parsed
+        self._parsed = new_parsed
+        return ret
+
+    def __bool__(self):
+        return self._parsed is not None
+
+    def add_relation(self, relation, position=None):
+        """Add a relation.
+
+        Args:
+          relation: New relation
+          position: Optional position to insert relation at (defaults to last)
+        """
+        if isinstance(relation, str):
+            relation = parse_relation(relation)
+        return _add_relation(self._parsed, relation, position=position)
+
+    def iter_relations(self, package):
+        """Iterate over all relations with a particular package.
+
+        Args:
+          package: Package name
+        Yields:
+          Tuples with offset and relation objects
+        """
+        if self._parsed is None:
+            return
+        return _iter_relations(self._parsed, package)
+
+    def get_relation(self, package):
+        """Retrieve the relation for a particular package.
+
+        Args:
+          relationstr: package relation string
+          package: package name
+        Raises:
+          ValueError if there is more than one relation with the package
+        Returns:
+          Tuple with offset and relation object
+        """
+        for offset, relation in self.iter_relations(package):
+            names = [r.name for r in relation]
+            if len(names) > 1 and package in names:
+                raise ValueError("Complex rule for %s , aborting" % package)
+            if names != [package]:
+                continue
+            return offset, relation
+        raise KeyError(package)
+
+    def has_relation(self, package):
+        """Check whether there is a relation with specified package.
+
+        Args:
+          package: name of the package
+        Returns: boolean
+        """
+        try:
+            self.get_relation(package)
+        except KeyError:
+            return False
+        else:
+            return True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            if self._parsed is None:
+                try:
+                    del self.paragraph[self.name]
+                except KeyError:
+                    pass
+            else:
+                self.paragraph[self.name] = format_relations(self._parsed)
+        return False
