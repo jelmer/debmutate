@@ -42,6 +42,11 @@ from .reformatting import (
 )
 
 
+# Urgh; this is bad form as a library, but the alternative is
+# silently discarding comments.
+Deb822Paragraph._discard_comments_on_read = False
+
+
 def parse_deb822_paragraph(p):
     f = parse_deb822_file(p)
     [p] = f.iter_parts_of_type(Deb822Paragraph)
