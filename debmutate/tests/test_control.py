@@ -34,6 +34,7 @@ from ..control import (
     ensure_some_version,
     ensure_relation,
     get_relation,
+    guess_template_type,
     iter_relations,
     is_relation_implied,
     is_dep_implied,
@@ -849,3 +850,85 @@ class ParseStandardsVersionTests(TestCase):
 
     def test_parse(self):
         self.assertEqual((4, 5, 0), parse_standards_version('4.5.0'))
+
+
+class GuessTemplateTypeTests(TestCaseInTempDir):
+
+    def setUp(self):
+        super(GuessTemplateTypeTests, self).setUp()
+        os.mkdir('debian')
+
+    def test_rules_generates_control(self):
+        with open('debian/rules', 'w') as f:
+            f.write("""\
+%:
+    dh $@
+
+debian/control: debian/control.in
+    cp $@ $<
+""")
+        self.assertEqual(
+            'rules', guess_template_type('debian/control.in', 'debian'))
+
+        with open('debian/rules', 'w') as f:
+            f.write("""\
+%:
+    dh $@
+
+debian/%: debian/%.in
+    cp $@ $<
+""")
+        self.assertEqual(
+            'rules', guess_template_type('debian/control.in', 'debian'))
+
+    def test_gnome(self):
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Foo @GNOME_TEAM@
+""")
+        self.assertEqual(
+            'gnome', guess_template_type('debian/control.in'))
+
+    def test_gnome_build_depends(self):
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Build-Depends: gnome-pkg-tools, libc6-dev
+""")
+        self.assertEqual(
+            'gnome', guess_template_type('debian/control.in'))
+
+    def test_cdbs(self):
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Build-Depends: debhelper, cdbs
+""")
+        self.assertEqual(
+            'cdbs', guess_template_type('debian/control.in'))
+
+    def test_multiple_paragraphs(self):
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Build-Depends: debhelper, cdbs
+
+Package: foo
+""")
+        self.assertEqual(
+            'cdbs', guess_template_type('debian/control.in'))
+
+    def test_directory(self):
+        os.mkdir('debian/control.in')
+        self.assertEqual('directory', guess_template_type('debian/control.in'))
+
+    def test_debcargo(self):
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Build-Depends: bar
+""")
+        with open('debian/debcargo.toml', 'w') as f:
+            f.write('maintainer = Joe Example <joe@example.com>\n')
+        self.assertEqual(
+            'debcargo', guess_template_type('debian/control.in', 'debian'))

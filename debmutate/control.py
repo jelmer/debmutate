@@ -67,7 +67,7 @@ from .deb822 import (
     Deb822Editor,
     ChangeConflict,
     Deb822Paragraph,
-    parse_deb822_paragraph,
+    parse_deb822_file,
     )
 from .reformatting import GeneratedFile
 
@@ -163,24 +163,28 @@ def pg_buildext_updatecontrol(path: str = '.') -> None:
     subprocess.check_call(["pg_buildext", "updatecontrol"], cwd=path)
 
 
-def guess_template_type(template_path: str) -> Optional[str]:
+def guess_template_type(
+        template_path: str,
+        debian_path: Optional[str] = None) -> Optional[str]:
     """Guess the type for a control template.
 
     Args:
       template_path: Template path
+      debian_path: Path to debian directory
     Returns:
       Name of template type; None if unknown
     """
     # TODO(jelmer): This should use a proper make file parser of some sort..
-    try:
-        with open('debian/rules', 'rb') as f:
-            for line in f:
-                if line.startswith(b'debian/control:'):
-                    return 'rules'
-                if line.startswith(b'debian/%: debian/%.in'):
-                    return 'rules'
-    except FileNotFoundError:
-        pass
+    if debian_path is not None:
+        try:
+            with open(os.path.join(debian_path, 'rules'), 'rb') as f:
+                for line in f:
+                    if line.startswith(b'debian/control:'):
+                        return 'rules'
+                    if line.startswith(b'debian/%: debian/%.in'):
+                        return 'rules'
+        except FileNotFoundError:
+            pass
     try:
         with open(template_path, 'rb') as f:
             template = f.read()
@@ -193,7 +197,13 @@ def guess_template_type(template_path: str) -> Optional[str]:
             elif b'@lintian-brush-test@' in template:
                 return 'lintian-brush-test'
             else:
-                deb822 = parse_deb822_paragraph(template)
+                try:
+                    deb822 = next(iter(
+                        parse_deb822_file(template.splitlines())))
+                except StopIteration:
+                    pass
+                else:
+                    build_depends = ''
                 build_depends = deb822.get('Build-Depends', '')
                 if any(iter_relations(build_depends, 'gnome-pkg-tools')):
                     return 'gnome'
@@ -201,7 +211,8 @@ def guess_template_type(template_path: str) -> Optional[str]:
                     return 'cdbs'
     except IsADirectoryError:
         return 'directory'
-    if os.path.exists('debian/debcargo.toml'):
+    if (debian_path is not None
+            and os.path.exists(os.path.join(debian_path, 'debcargo.toml'))):
         return 'debcargo'
     return None
 
@@ -257,7 +268,8 @@ def _expand_control_template(
 
 def _update_control_template(
         template_path: str, path: str, changes, expand_template=True):
-    template_type = guess_template_type(template_path)
+    template_type = guess_template_type(
+            template_path, debian_path=os.path.dirname(path))
     if template_type is None:
         raise GeneratedFile(path, template_path)
     if template_type == 'directory':
@@ -423,7 +435,8 @@ class ControlEditor(object):
             template_path = _find_template_path(self.path)
             if template_path:
                 self._template_only = True
-                template_type = guess_template_type(template_path)
+                template_type = guess_template_type(
+                    template_path, debian_path=os.path.dirname(self.path))
                 if template_type is None:
                     raise GeneratedFile(self.path, template_path)
                 _expand_control_template(

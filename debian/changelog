@@ -1,3 +1,9 @@
+debmutate (0.57) UNRELEASED; urgency=medium
+
+  * Cope with multiple paragraphs in templated control files.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 07 Sep 2022 22:45:30 +0100
+
 debmutate (0.56) unstable; urgency=medium
 
   * deb822: Don't silently discard comments inside of fields.

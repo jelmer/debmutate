@@ -24,7 +24,6 @@ __all__ = [
     'ChangeConflict',
     'Deb822Editor',
     'parse_deb822_file',
-    'parse_deb822_paragraph',
     'Deb822Paragraph',
 ]
 
@@ -45,12 +44,6 @@ from .reformatting import (
 # Urgh; this is bad form as a library, but the alternative is
 # silently discarding comments.
 Deb822Paragraph._discard_comments_on_read = False  # type: ignore
-
-
-def parse_deb822_paragraph(p):
-    f = parse_deb822_file(p)
-    [p] = f.iter_parts_of_type(Deb822Paragraph)
-    return p
 
 
 def dump_paragraphs(paragraphs: Deb822File) -> bytes:
