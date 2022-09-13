@@ -194,8 +194,6 @@ def guess_template_type(
                 return 'cdbs'
             elif b'PGVERSION' in template:
                 return 'postgresql'
-            elif b'@lintian-brush-test@' in template:
-                return 'lintian-brush-test'
             else:
                 try:
                     deb822 = next(iter(
@@ -251,17 +249,15 @@ def _expand_control_template(
         template_path: str, path: str, template_type: str):
     package_root = os.path.dirname(os.path.dirname(path)) or '.'
     if template_type == 'rules':
+        # Specify -B because we may be running this command within seconds of
+        # editing the control template
         subprocess.check_call(
-            ['./debian/rules', 'debian/control'],
+            ['make', '-B', '-f', './debian/rules', 'debian/control'],
             cwd=package_root)
     elif template_type == 'gnome':
         dh_gnome_clean(package_root)
     elif template_type == 'postgresql':
         pg_buildext_updatecontrol(package_root)
-    elif template_type == 'lintian-brush-test':
-        with open(template_path, 'rb') as inf, open(path, 'wb') as outf:
-            outf.write(
-                inf.read().replace(b'@lintian-brush-test@', b'testvalue'))
     elif template_type == 'directory':
         raise GeneratedFile(path, template_path)
     else:

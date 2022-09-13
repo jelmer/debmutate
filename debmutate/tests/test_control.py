@@ -284,7 +284,13 @@ Source: blah
 Testsuite: autopkgtest
 Uploaders: @lintian-brush-test@
 
+"""), ('debian/rules', """\
+#!/usr/bin/make -f
+
+debian/control: debian/control.in
+\tsed -e 's/@lintian-brush-test@/testvalue/' < $< > $@
 """)])
+        os.chmod('debian/rules', 0o755)
 
         with ControlEditor() as updater:
             updater.source['Testsuite'] = 'autopkgtest8'
@@ -306,7 +312,13 @@ Source: blah
 Testsuite: autopkgtest
 Uploaders: @lintian-brush-test@
 
+"""), ('debian/rules', """\
+#!/usr/bin/make -f
+
+debian/control: debian/control.in
+\tsed -e 's/@lintian-brush-test@/testvalue/' < $< > $@
 """)])
+        os.chmod('debian/rules', 0o755)
 
         with ControlEditor() as updater:
             updater.source['Testsuite'] = 'autopkgtest8'
