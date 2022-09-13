@@ -44,7 +44,7 @@ from .reformatting import (
 
 # Urgh; this is bad form as a library, but the alternative is
 # silently discarding comments.
-Deb822Paragraph._discard_comments_on_read = False
+Deb822Paragraph._discard_comments_on_read = False  # type: ignore
 
 
 def parse_deb822_paragraph(p):
