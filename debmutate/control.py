@@ -199,7 +199,9 @@ def guess_template_type(
             else:
                 try:
                     deb822 = next(iter(
-                        parse_deb822_file(template.splitlines())))
+                        parse_deb822_file(
+                            template.splitlines(),
+                            accept_files_with_error_tokens=True)))
                 except StopIteration:
                     pass
                 else:
