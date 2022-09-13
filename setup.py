@@ -18,20 +18,9 @@
 from setuptools import setup
 
 setup(
-    name="debmutate",
-    version="0.56",
-    author="Jelmer Vernooij",
-    author_email="jelmer@debian.org",
-    packages=["debmutate", "debmutate.tests"],
-    url="https://salsa.debian.org/jelmer/debmutate",
-    description="manipulation of Debian package control files",
     project_urls={
         "Repository": "https://salsa.debian.org/jelmer/debmutate.git",
     },
     scripts=['scripts/deb-enable-rrr', 'scripts/drop-mia-uploaders'],
-    install_requires=['python_debian>=0.1.44', 'python-tr', 'merge3'],
-    extras_require={
-        'debcargo': ['tomlkit'],
-    },
     test_suite='debmutate.tests.test_suite',
 )
