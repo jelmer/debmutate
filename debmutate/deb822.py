@@ -107,12 +107,14 @@ class Deb822Editor(Editor):
 
     def __init__(self, path: str, allow_generated: bool = False,
                  allow_reformatting: Optional[bool] = None,
-                 allow_missing: bool = False) -> None:
+                 allow_missing: bool = False,
+                 accept_files_with_error_tokens: bool = False) -> None:
         super(Deb822Editor, self).__init__(
             path, allow_generated=allow_generated,
             allow_reformatting=allow_reformatting,
             mode='b')
         self.allow_missing = allow_missing
+        self.accept_files_with_error_tokens = accept_files_with_error_tokens
 
     def apply_changes(self, changes, resolve_conflict=None):
         """Apply a set of changes to this deb822 instance.
@@ -160,7 +162,9 @@ class Deb822Editor(Editor):
             self.paragraphs.append(paragraph)
 
     def _parse(self, content):
-        return parse_deb822_file(content.splitlines(True))
+        return parse_deb822_file(
+            content.splitlines(True),
+            accept_files_with_error_tokens=self.accept_files_with_error_tokens)
 
     @property
     def paragraphs(self) -> List[Deb822Paragraph]:
