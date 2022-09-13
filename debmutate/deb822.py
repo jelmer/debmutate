@@ -47,6 +47,12 @@ from .reformatting import (
 Deb822Paragraph._discard_comments_on_read = False  # type: ignore
 
 
+def parse_deb822_paragraph(p):
+    f = parse_deb822_file(p)
+    [p] = f.iter_parts_of_type(Deb822Paragraph)
+    return p
+
+
 def dump_paragraphs(paragraphs: Union[Deb822File, List[Deb822]]) -> bytes:
     """Dump a set of deb822 paragraphs to a file.
 
