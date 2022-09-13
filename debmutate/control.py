@@ -46,12 +46,21 @@ from itertools import takewhile
 import operator
 import os
 import re
-from typing import Optional, Callable, Tuple, Union, List, Iterable, Dict
-
-from debian.changelog import Version
+from typing import (
+    ContextManager,
+    Optional,
+    Callable,
+    Tuple,
+    Union,
+    List,
+    Iterable,
+    Dict,
+)
 
 import subprocess
 import warnings
+
+from debian.changelog import Version
 
 from ._deb822 import PkgRelation
 from .deb822 import (
@@ -325,6 +334,7 @@ class ControlEditor(object):
     """
 
     changed: bool
+    _field_order_preserver: ContextManager
 
     def __init__(self, path: str = 'debian/control',
                  allow_reformatting: Optional[bool] = None,
@@ -1040,7 +1050,7 @@ class PkgRelationFieldEditor(object):
         Args:
           package: package name
         """
-        if self.value is None:
+        if self._parsed is None:
             return
 
         def keep(relation):
