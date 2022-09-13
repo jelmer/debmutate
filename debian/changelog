@@ -1,6 +1,8 @@
 debmutate (0.57) UNRELEASED; urgency=medium
 
   * Cope with multiple paragraphs in templated control files.
+  * Support editing control file templates that aren't 100% correct
+    deb822 files.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 07 Sep 2022 22:45:30 +0100
 

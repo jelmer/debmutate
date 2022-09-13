@@ -249,10 +249,16 @@ def _expand_control_template(
         template_path: str, path: str, template_type: str):
     package_root = os.path.dirname(os.path.dirname(path)) or '.'
     if template_type == 'rules':
-        # Specify -B because we may be running this command within seconds of
-        # editing the control template
+        template_mtime = os.stat(template_path).st_mtime
+        try:
+            path_mtime = os.stat(path).st_mtime
+        except FileNotFoundError:
+            path_mtime = None
+        if template_mtime == path_mtime:
+            # Delete path to force it to be regenerated
+            os.unlink(path)
         subprocess.check_call(
-            ['make', '-B', '-f', './debian/rules', 'debian/control'],
+            ['./debian/rules', 'debian/control'],
             cwd=package_root)
     elif template_type == 'gnome':
         dh_gnome_clean(package_root)
@@ -273,7 +279,8 @@ def _update_control_template(
     if template_type == 'directory':
         # We can't handle these yet
         raise GeneratedFile(path, template_path)
-    with Deb822Editor(template_path) as updater:
+    with Deb822Editor(
+            template_path, accept_files_with_error_tokens=True) as updater:
         resolve_conflict: Optional[Callable[[
             str, str, Optional[str], Optional[str], Optional[str]],
             Optional[str]]]
