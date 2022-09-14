@@ -32,6 +32,15 @@ MIA_EMAIL = "mia@qa.debian.org"
 MIA_TEAMMAINT_USERTAG = "mia-teammaint"
 
 
+def versions_dict():
+    import debmutate
+    import debian
+    return {
+        'debmutate': debmutate.version_string,
+        'debian': debian.__version__,
+    }
+
+
 class MIAResult(object):
     def __init__(
         self, source=None, removed_uploaders=None, bugs=None
@@ -124,6 +133,7 @@ def report_fatal(code: str, description: str) -> None:
     if os.environ.get('SVP_API') == '1':
         with open(os.environ['SVP_RESULT'], 'w') as f:
             json.dump({
+                'versions': versions_dict(),
                 'result_code': code,
                 'description': description}, f)
     logging.fatal('%s', description)
@@ -164,6 +174,7 @@ def main():
     if 'SVP_RESULT' in os.environ:
         with open(os.environ['SVP_RESULT'], 'w') as f:
             json.dump({
+                'versions': versions_dict(),
                 'description': 'Remove MIA uploaders',
                 'context': {
                     'bugs': result.bugs,
