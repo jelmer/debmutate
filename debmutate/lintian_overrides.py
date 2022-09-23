@@ -102,12 +102,15 @@ class LintianOverridesEditor(Editor):
 
     @property
     def lines(self):
-        return self._parsed
+        return self._parsed or []
 
     @property
     def overrides(self):
         return [entry for entry in self.lines
                 if isinstance(entry, LintianOverride)]
+
+    def _nonexistant(self):
+        return None
 
     def override_exists(self, tag, info=None, package=None):
         """Check if a particular override exists.
@@ -124,15 +127,15 @@ class LintianOverridesEditor(Editor):
 
     def _format(self, parsed):
         """Serialize the parsed object."""
+        if self._parsed is None:
+            return None
         ret = []
         for entry in self._parsed:
             if isinstance(entry, str):
                 ret.append(entry)
             else:
                 ret.append(serialize_override(entry))
-        if ret:
-            return ''.join(ret)
-        return None
+        return ''.join(ret)
 
 
 def parse_override(line: str) -> LintianOverride:

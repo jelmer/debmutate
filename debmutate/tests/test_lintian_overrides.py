@@ -46,6 +46,19 @@ foo [any-i386] binary: another-tag optional-extra
             pass
         self.assertFileEqual(CONTENT, 'overrides')
 
+    def test_empty(self):
+        CONTENT = """\
+"""
+        self.build_tree_contents([('overrides', CONTENT)])
+
+        with LintianOverridesEditor(path='overrides'):
+            pass
+        self.assertFileEqual(CONTENT, 'overrides')
+
+    def test_missing(self):
+        with LintianOverridesEditor(path='overrides'):
+            pass
+
     def test_change_set_archlist(self):
         self.build_tree_contents([('overrides', """\
 # An architecture wildcard would look like:
