@@ -1,11 +1,11 @@
-debmutate (0.57) UNRELEASED; urgency=medium
+debmutate (0.57) unstable; urgency=medium
 
   * Cope with multiple paragraphs in templated control files.
   * Support editing control file templates that aren't 100% correct
     deb822 files.
   * Don't silently delete lintian overrides files when editing them.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 07 Sep 2022 22:45:30 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 24 Sep 2022 02:03:35 +0100
 
 debmutate (0.56) unstable; urgency=medium
 
