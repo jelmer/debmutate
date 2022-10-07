@@ -9,4 +9,4 @@ typing::
 	mypy debmutate
 
 testsuite::
-	python3 setup.py test
+	python3 -m unittest debmutate.tests.test_suite
