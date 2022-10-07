@@ -1,3 +1,10 @@
+debmutate (0.58) UNRELEASED; urgency=medium
+
+  * Migrate to setup.cfg.
+  * Provide watch extra.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 07 Oct 2022 12:12:00 +0100
+
 debmutate (0.57) unstable; urgency=medium
 
   * Cope with multiple paragraphs in templated control files.
