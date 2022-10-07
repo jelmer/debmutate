@@ -1,3 +1,9 @@
+debmutate (0.59) UNRELEASED; urgency=medium
+
+  * setup.cfg: Fix distribution name for python-pcre.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 07 Oct 2022 12:48:19 +0100
+
 debmutate (0.58) unstable; urgency=medium
 
   * Migrate to setup.cfg.
