@@ -26,7 +26,7 @@ Tests
 To run the testsuite, use:
 
 ```shell
-python3 setup.py test
+python3 -m unittest debmutate.tests.test_suite
 ```
 
 or simply:
