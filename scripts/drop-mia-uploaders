@@ -160,6 +160,11 @@ def main():
             "generated-file", "unable to edit generated file: %r" % e
         )
         return 1
+    except FileNotFoundError as e:
+        report_fatal(
+            "missing-control-file",
+            "Unable to find debian control file: %s" % e)
+        return 1
 
     if not result.bugs:
         report_fatal("nothing-to-do", "No MIA people")
