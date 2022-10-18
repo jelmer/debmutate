@@ -24,7 +24,7 @@ from . import (
 
 from io import StringIO
 
-from ..lintian_overrides import (
+from debmutate.lintian_overrides import (
     LintianOverride,
     LintianOverridesEditor,
     iter_overrides,

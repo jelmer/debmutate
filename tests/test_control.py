@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Tests for lintian_brush.control."""
+"""Tests for debmutate.control."""
 
 import os
 
@@ -25,7 +25,7 @@ from . import (
     TestCaseInTempDir,
     )
 
-from ..control import (
+from debmutate.control import (
     _cdbs_resolve_conflict,
     add_dependency,
     drop_dependency,
@@ -46,7 +46,7 @@ from ..control import (
     ControlEditor,
     parse_standards_version,
     )
-from ..reformatting import (
+from debmutate.reformatting import (
     GeneratedFile,
     FormattingUnpreservable,
     )

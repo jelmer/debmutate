@@ -17,19 +17,20 @@
 
 """Tests for debmutate.debcargo."""
 
-from ..debcargo import (
-    debcargo_version_to_semver,
-    semver_pair,
-    DebcargoControlShimEditor,
-    DebcargoEditor,
-    DEFAULT_MAINTAINER,
-    )
-
 from contextlib import ExitStack
 import os
 import shutil
 import tempfile
 from unittest import TestCase
+
+
+from debmutate.debcargo import (
+    debcargo_version_to_semver,
+    semver_pair,
+    DebcargoControlShimEditor,
+    DebcargoEditor,
+    DEFAULT_MAINTAINER,
+)
 
 
 class DebcargoVersionToSemverTests(TestCase):

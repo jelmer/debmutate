@@ -23,7 +23,7 @@ from . import (
     TestCaseInTempDir,
     )
 
-from ..reformatting import (
+from debmutate.reformatting import (
     FormattingUnpreservable,
     check_generated_file,
     check_preserve_formatting,

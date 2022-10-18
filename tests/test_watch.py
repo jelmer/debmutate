@@ -23,7 +23,7 @@ import shutil
 import tempfile
 from unittest import TestCase
 
-from ..watch import (
+from debmutate.watch import (
     parse_watch_file,
     MissingVersion,
     Watch,

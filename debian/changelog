@@ -1,3 +1,9 @@
+debmutate (0.61) UNRELEASED; urgency=medium
+
+  * Don't install tests.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 18 Oct 2022 19:21:26 +0100
+
 debmutate (0.60) unstable; urgency=medium
 
   * Ship py.typed.

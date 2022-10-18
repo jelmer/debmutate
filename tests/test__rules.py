@@ -15,11 +15,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Tests for lintian_brush.rules."""
+"""Tests for debmutate.rules."""
 
 from . import TestCase, TestCaseInTempDir
 
-from .._rules import (
+from debmutate._rules import (
     Makefile,
     Rule,
     dh_invoke_drop_with,

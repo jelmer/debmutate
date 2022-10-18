@@ -25,7 +25,7 @@ from . import (
     TestCaseInTempDir,
     )
 
-from ..patch import (
+from debmutate.patch import (
     find_common_patch_suffix,
     read_quilt_series,
     QuiltSeriesEditor,

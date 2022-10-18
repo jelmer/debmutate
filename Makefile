@@ -6,7 +6,7 @@ style::
 	flake8
 
 typing::
-	mypy debmutate
+	mypy debmutate tests
 
 testsuite::
-	python3 -m unittest debmutate.tests.test_suite
+	python3 -m unittest tests.test_suite

@@ -22,7 +22,7 @@ from . import (
     TestCaseInTempDir,
     )
 
-from ..debhelper import (
+from debmutate.debhelper import (
     ensure_minimum_debhelper_version,
     MaintscriptEditor,
     MaintscriptMoveConffile,

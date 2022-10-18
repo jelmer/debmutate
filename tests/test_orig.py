@@ -19,7 +19,7 @@
 
 from . import TestCase
 
-from ..orig import (
+from debmutate.orig import (
     component_from_orig_tarball,
     )
 

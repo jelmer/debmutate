@@ -25,13 +25,13 @@ from . import (
 
 from debian.deb822 import Deb822
 
-from ..deb822 import (
+from debmutate.deb822 import (
     ChangeConflict,
     Deb822Editor,
     dump_paragraphs,
     reformat_deb822,
     )
-from ..reformatting import (
+from debmutate.reformatting import (
     GeneratedFile,
     )
 
