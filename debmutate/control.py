@@ -94,6 +94,15 @@ CONTROL_LIST_FIELDS = (
 )
 
 
+class TemplateExpandCommandMissing(Exception):
+
+    def __init__(self, command):
+        self.command = command
+        super(TemplateExpandCommandMissing, self).__init__(
+            "Command for expanding template file missing: %s" %
+            command)
+
+
 def parse_relation(t: str):
     with warnings.catch_warnings():
         suppress_substvar_warnings()
@@ -148,7 +157,10 @@ def dh_gnome_clean(path: str = '.') -> None:
             raise AssertionError('pre-existing .debhelper.log files')
     if not os.path.exists(os.path.join(path, 'debian/changelog')):
         raise AssertionError('no changelog file in %s' % path)
-    subprocess.check_call(["dh_gnome_clean"], cwd=path)
+    try:
+        subprocess.check_call(["dh_gnome_clean"], cwd=path)
+    except FileNotFoundError as e:
+        raise TemplateExpandCommandMissing("dh_gnome_clean") from e
     for n in os.listdir(os.path.join(path, 'debian')):
         if n.endswith('.debhelper.log'):
             os.unlink(os.path.join(path, 'debian', n))
@@ -160,7 +172,10 @@ def pg_buildext_updatecontrol(path: str = '.') -> None:
     Args:
       path: path to run pg_buildext updatecontrol in
     """
-    subprocess.check_call(["pg_buildext", "updatecontrol"], cwd=path)
+    try:
+        subprocess.check_call(["pg_buildext", "updatecontrol"], cwd=path)
+    except FileNotFoundError as e:
+        raise TemplateExpandCommandMissing("pg_buildext") from e
 
 
 def guess_template_type(
