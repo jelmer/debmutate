@@ -147,7 +147,14 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     try:
-        with ControlEditor(path='debian/control') as control:
+        if os.path.exists('debian/debcargo.toml'):
+            from debmutate.debcargo import DebcargoControlShimEditor, DebcargoEditor
+
+            control = DebcargoControlShimEditor.from_debian_dir('debian')
+        else:
+            control = ControlEditor(path='debian/control')
+
+        with control:
             result = control_drop_mia_uploaders(control)
     except FormattingUnpreservable as e:
         report_fatal(
