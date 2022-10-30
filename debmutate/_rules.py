@@ -327,7 +327,8 @@ class RulesEditor(MakefileEditor):
         super(RulesEditor, self).__init__(path)
 
     def legacy_update(self, command_line_cb=None, global_line_cb=None,
-                      rule_cb=None, makefile_cb=None):
+                      rule_cb=None, makefile_cb=None,
+                      drop_related_comments=False):
         """Update a debian/rules file.
 
         Args:
@@ -374,7 +375,13 @@ class RulesEditor(MakefileEditor):
                 if global_line_cb:
                     line = global_line_cb(line)
                 if line is None:
-                    pass
+                    if drop_related_comments:
+                        while newcontents and newcontents[-1].startswith(b'#'):
+                            del newcontents[-1]
+                    if newcontents and not newcontents[-1]:
+                        del newcontents[-1]
+                    # TODO(jelmer): If there is no preceding whitespace, drop
+                    # next line if it's empty?
                 elif isinstance(line, list):
                     newcontents.extend(line)
                 elif isinstance(line, bytes):
@@ -420,7 +427,8 @@ def discard_pointless_override(makefile, rule, ignore_comments=False):
 
 def update_rules(command_line_cb=None, global_line_cb=None,
                  rule_cb=None,
-                 makefile_cb=None, path='debian/rules'):
+                 makefile_cb=None, path='debian/rules',
+                 drop_related_comments=False):
     """Update a debian/rules file.
 
     Args:
@@ -438,7 +446,8 @@ def update_rules(command_line_cb=None, global_line_cb=None,
             command_line_cb=command_line_cb,
             global_line_cb=global_line_cb,
             rule_cb=rule_cb,
-            makefile_cb=makefile_cb)
+            makefile_cb=makefile_cb,
+            drop_related_comments=drop_related_comments)
     return updater.changed
 
 

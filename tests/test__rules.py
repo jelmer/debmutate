@@ -149,6 +149,50 @@ all:
 \techo bloe
 """, 'debian/rules')
 
+    def test_remove_variable(self):
+        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+# Comment
+SOMETHING = 1
+
+all:
+\techo blah
+""")])
+
+        def remove(line):
+            if line == b'SOMETHING = 1':
+                return None
+            return line
+        self.assertTrue(update_rules(global_line_cb=remove))
+        self.assertFalse(update_rules(global_line_cb=remove))
+        self.assertFileEqual("""\
+# Comment
+
+all:
+\techo blah
+""", 'debian/rules')
+
+    def test_remove_variable_with_comment(self):
+        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+# Comment
+SOMETHING = 1
+
+all:
+\techo blah
+""")])
+
+        def remove(line):
+            if line == b'SOMETHING = 1':
+                return None
+            return line
+        self.assertTrue(update_rules(
+            global_line_cb=remove, drop_related_comments=True))
+        self.assertFalse(update_rules(global_line_cb=remove))
+        self.assertFileEqual("""\
+
+all:
+\techo blah
+""", 'debian/rules')
+
     def test_keep_rule_cb(self):
         self.build_tree_contents([('debian/', ), ('debian/rules', """\
 SOMETHING = 1
