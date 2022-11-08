@@ -349,7 +349,7 @@ class Watch(object):
             package = package()
         return self.url.replace('@PACKAGE@', package)
 
-    def discover(self, package):
+    def discover(self, package) -> Iterator[Release]:
         from urllib.request import urlopen, Request
         url = self.format_url(package)
         try:

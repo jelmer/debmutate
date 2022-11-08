@@ -19,7 +19,7 @@
 
 import os
 import re
-from typing import Iterator, Optional, List
+from typing import Iterator, Optional, List, Union
 
 from .reformatting import Editor
 
@@ -163,9 +163,10 @@ def _is_rule(line):
 
 
 class Makefile(object):
+    contents: List[Union[bytes, Rule]]
 
     def __init__(self, contents: Optional[bytes] = None):
-        self.contents = list(contents or [])
+        self.contents = list(contents or [])  # type: ignore
 
     @classmethod
     def from_path(cls, path: str) -> 'Makefile':
@@ -265,7 +266,7 @@ class Makefile(object):
     def dump(self):
         return b''.join(self.dump_lines())
 
-    def add_rule(self, target, components=None, precomment=None):
+    def add_rule(self, target, components=None, precomment=None) -> Rule:
         if self.contents:
             if isinstance(self.contents[-1], Rule):
                 self.contents.append(b'')
