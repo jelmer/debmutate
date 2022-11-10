@@ -49,6 +49,7 @@ class ParseWatchFileTests(TestCase):
 version = 3
 https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual(
             [Watch('https://samba.org/~jelmer/', 'blah-(\\d+).tar.gz')],
@@ -59,6 +60,7 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 version=4
 https://samba.org/~jelmer/ blah-(\\d+).tar.gz debian sh blah.sh
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             [Watch('https://samba.org/~jelmer/', 'blah-(\\d+).tar.gz',
@@ -70,6 +72,7 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz debian sh blah.sh
 version=4
 https://samba.org/~jelmer/blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             [Watch('https://samba.org/~jelmer', 'blah-(\\d+).tar.gz')],
@@ -80,6 +83,7 @@ https://samba.org/~jelmer/blah-(\\d+).tar.gz
 version=4
 https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             [Watch('https://samba.org/~jelmer/', 'blah-(\\d+).tar.gz')],
@@ -90,6 +94,7 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 version=4
 opts=pgpmode=mangle https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual([], wf.options)
         self.assertEqual(
@@ -103,6 +108,7 @@ version=4
 opts=pgpmode=mangle
 https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(['pgpmode=mangle'], wf.options)
         self.assertEqual([
@@ -116,6 +122,7 @@ https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 version=4
 opts="pgpmode=mangle" https://samba.org/~jelmer blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             wf.entries,
@@ -128,6 +135,7 @@ version=4
 opts=pgpmode=mangle,\\
     foo=bar https://samba.org/~jelmer blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             wf.entries,
@@ -142,6 +150,7 @@ version=3
 opts=pgpmode=mangle,\\
     foo=bar blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual(
             wf.entries,
@@ -153,6 +162,7 @@ opts=pgpmode=mangle,\\
 version=4
 https://pypi.debian.net/case/case-(.+).tar.gz debian
 """))
+        assert wf is not None
         self.assertEqual(4, wf.version)
         self.assertEqual(
             [Watch('https://pypi.debian.net/case', 'case-(.+).tar.gz',
@@ -166,6 +176,7 @@ opts=repacksuffix=+dfsg",pgpsigurlmangle=s/$/.asc/ \\
 https://pypi.debian.net/case/case-(.+)\\.(?:zip|(?:tar\\.(?:gz|bz2|xz))) \\
 debian sh debian/repack.stub
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual([Watch(
             'https://pypi.debian.net/case',
@@ -179,6 +190,7 @@ debian sh debian/repack.stub
 version = 3
 https://samba.org/~jelmer/@PACKAGE@ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual(
             [Watch('https://samba.org/~jelmer/@PACKAGE@',
@@ -194,6 +206,7 @@ version = 3
 opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$/$1~$2/ \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
         self.assertEqual(
@@ -205,6 +218,7 @@ version = 3
 opts=uversionmangle=tr/+/~/ \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         try:
             import tr  # noqa: F401
@@ -220,6 +234,7 @@ version = 3
 opts=uversionmangle=y/+/~/ \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         try:
             import tr  # noqa: F401
@@ -235,6 +250,7 @@ version = 3
 opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha|\\/)\\d*)$/$1~$2/ \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
         self.assertEqual(
@@ -246,6 +262,7 @@ version = 3
 opts=uversionmangle=s%(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$%$1~$2% \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertEqual(3, wf.version)
         self.assertEqual('1.0', wf.entries[0].uversionmangle('1.0'))
         self.assertEqual(
@@ -257,6 +274,7 @@ version = 3
 opts=uversionmangle=s/(\\d)[_\\.\\-\\+]?((RC|rc|pre|alpha)\\d*)$$1~$2 \\
    https://samba.org/~jelmer/ blah-(\\d+).tar.gz
 """))
+        assert wf is not None
         self.assertRaises(
             InvalidUVersionMangle, wf.entries[0].uversionmangle, '1.0alpha1')
 

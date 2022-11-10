@@ -313,7 +313,7 @@ class ChangesSectionsTests(TestCase):
 class StripChangelogMessageTests(TestCase):
 
     def test_None(self):
-        self.assertEqual(strip_changelog_message(None), None)
+        self.assertEqual(strip_changelog_message(None), None)  # type: ignore
 
     def test_no_changes(self):
         self.assertEqual(strip_changelog_message([]), [])

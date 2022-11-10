@@ -42,6 +42,11 @@ def matches_wildcard(text: str, wildcard: str) -> bool:
 class Rule(object):
     """A make rule."""
 
+    target: Optional[bytes]
+    comands: List[bytes]
+    prereq_targets: List[bytes]
+    precomment: List[bytes]
+
     def __init__(self, target: Optional[bytes] = None,
                  commands: Optional[List[bytes]] = None,
                  prereq_targets: Optional[List[bytes]] = None,
@@ -75,7 +80,9 @@ class Rule(object):
         return "<%s(%r)>" % (type(self).__name__, self.target)
 
     @property
-    def targets(self):
+    def targets(self) -> List[bytes]:
+        if self.target is None:
+            raise AssertionError('no target set')
         return self.target.split(b' ')
 
     def has_target(self, target: bytes, exact: bool = True) -> bool:
@@ -133,7 +140,7 @@ class Rule(object):
         self.lines = []
 
     def _finish(self):
-        rest = [self]
+        rest: List[Union[bytes, Rule]] = [self]
         while self.lines and (
                 not self.lines[-1] or self.lines[-1].startswith(b'#')):
             rest.insert(1, self.lines.pop(-1))
@@ -225,11 +232,11 @@ class Makefile(object):
             elif _is_rule(line):
                 if rule:
                     mf.contents.extend(rule._finish())
-                precomment = []
+                precomment: List[bytes] = []
                 while (len(mf.contents) > 1
                         and isinstance(mf.contents[-1], bytes)
                         and mf.contents[-1].startswith(b'#')):
-                    precomment.insert(0, mf.contents.pop(-1))
+                    precomment.insert(0, mf.contents.pop(-1))  # type: ignore
                 rule = Rule._from_first_line(line, precomment=precomment)
             elif not line.strip():
                 if rule:
@@ -248,7 +255,7 @@ class Makefile(object):
         return mf
 
     def dump_lines(self):
-        lines = []
+        lines: List[bytes] = []
         contents = self.contents[:]
         while contents and contents[-1] == b'':
             del contents[-1]
@@ -339,7 +346,7 @@ class RulesEditor(MakefileEditor):
         Returns:
           boolean indicating whether any changes were made
         """
-        newcontents = []
+        newcontents: List[Union[bytes, Rule]] = []
         for entry in self.makefile.contents:
             if isinstance(entry, Rule):
                 rule = entry
@@ -463,8 +470,8 @@ def dh_invoke_add_with(line, with_argument):
         line)
 
 
-def dh_invoke_get_with(line):
-    ret = []
+def dh_invoke_get_with(line: bytes) -> List[str]:
+    ret: List[str] = []
     for m in re.finditer(b'[ \t]--with[ =]([^ \t]+)', line):
         ret.extend(m.group(1).decode('utf-8').split(','))
     return ret

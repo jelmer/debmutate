@@ -587,7 +587,7 @@ def find_extra_authors(changes):
 
     :return: List of fullnames of additional authors, without e-mail address.
     """
-    authors = []
+    authors: List[str] = []
     for new_author, linenos, lines in changes_by_author(changes):
         if new_author is None:
             continue
@@ -612,7 +612,7 @@ def find_thanks(changes):
         "((?:\\s+(?:(?:\\w\\.)|(?:\\w+(?:-\\w+)*)))+"
         "(?:\\s+<[^@>]+@[^@>]+>)?)",
         re.UNICODE)
-    thanks = []
+    thanks: List[str] = []
     for new_author, linenos, lines in changes_by_author(changes):
         for match in thanks_re.finditer(''.join(lines)):
             if thanks is None:

@@ -233,7 +233,7 @@ def guess_template_type(
 
 
 def _cdbs_resolve_conflict(
-        para_key: str,
+        para_key: Tuple[str, str],
         field: str,
         actual_old_value: Optional[str],
         template_old_value: Optional[str],
@@ -297,7 +297,7 @@ def _update_control_template(
     with Deb822Editor(
             template_path, accept_files_with_error_tokens=True) as updater:
         resolve_conflict: Optional[Callable[[
-            str, str, Optional[str], Optional[str], Optional[str]],
+            Tuple[str, str], str, Optional[str], Optional[str], Optional[str]],
             Optional[str]]]
         if template_type == 'cdbs':
             resolve_conflict = _cdbs_resolve_conflict
@@ -361,6 +361,10 @@ def _find_template_path(path):
         return None
 
 
+ChangesDict = Dict[
+    Tuple[str, str], List[Tuple[str, Optional[str], Optional[str]]]]
+
+
 class ControlEditor(object):
     """Edit a control file.
     """
@@ -420,7 +424,7 @@ class ControlEditor(object):
             list of (field_name, old_value, new_value)
         """
         orig = self._primary._parse(self._primary._orig_content)
-        changes = {}
+        changes: ChangesDict = {}
 
         def by_key(ps):
             ret = {}
@@ -536,7 +540,7 @@ class ControlEditor(object):
         self._primary.paragraphs.remove(para)
 
 
-def parse_relations(text: str):
+def parse_relations(text: str) -> List[Tuple[str, List[PkgRelation], str]]:
     """Parse a package relations string.
 
     (e.g. a Depends, Provides, Build-Depends, etc field)
@@ -1063,6 +1067,8 @@ def suppress_substvar_warnings():
 class PkgRelationFieldEditor(object):
     """Convenience wrapper for editing pkg relation fields."""
 
+    _parsed: Optional[List[Tuple[str, List[PkgRelation], str]]]
+
     def __init__(self, paragraph, name):
         self.paragraph = paragraph
         self.name = name
@@ -1106,6 +1112,8 @@ class PkgRelationFieldEditor(object):
         """
         if isinstance(relation, str):
             relation = parse_relation(relation)
+        if not self._parsed:
+            self._parsed = []
         return _add_relation(self._parsed, relation, position=position)
 
     def iter_relations(self, package):

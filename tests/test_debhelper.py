@@ -17,6 +17,10 @@
 
 """Tests for debmutate.debhelper."""
 
+from typing import Dict
+
+from debian.changelog import Version
+
 from . import (
     TestCase,
     TestCaseInTempDir,
@@ -68,7 +72,7 @@ class EnsureMinumumDebhelperVersionTests(TestCase):
             'Build-Depends': 'debhelper-compat (= 10), debhelper (>= 11.1)'})
 
     def test_not_set(self):
-        d = {}
+        d: Dict[str, str] = {}
         self.assertTrue(ensure_minimum_debhelper_version(d, '10'))
         self.assertEqual(d, {'Build-Depends': 'debhelper (>= 10)'})
 
@@ -88,7 +92,7 @@ mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
             self.assertEqual([MaintscriptMoveConffile(
                 '/etc/iptotal/apache.conf',
                 '/etc/apache2/conf-available/iptotal.conf',
-                '0.3.3-13.1~')], e.entries)
+                Version('0.3.3-13.1~'))], e.entries)
 
     def test_simple_missing(self):
         with MaintscriptEditor() as e:

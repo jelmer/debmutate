@@ -28,8 +28,9 @@ __all__ = [
 ]
 
 from io import BytesIO
-from typing import List, Optional
+from typing import List, Optional, Union
 
+from debian.deb822 import Deb822
 from debian._deb822_repro.parsing import (
     parse_deb822_file,
     Deb822ParagraphElement as Deb822Paragraph,
@@ -46,7 +47,7 @@ from .reformatting import (
 Deb822Paragraph._discard_comments_on_read = False  # type: ignore
 
 
-def dump_paragraphs(paragraphs: Deb822File) -> bytes:
+def dump_paragraphs(paragraphs: Union[Deb822File, List[Deb822]]) -> bytes:
     """Dump a set of deb822 paragraphs to a file.
 
     Args:

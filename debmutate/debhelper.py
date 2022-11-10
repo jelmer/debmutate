@@ -26,7 +26,7 @@ __all__ = [
 
 from dataclasses import dataclass
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 from debian.deb822 import Deb822
 
@@ -42,7 +42,8 @@ from .reformatting import Editor
 
 
 def ensure_minimum_debhelper_version(
-        source: Deb822, minimum_version: Union[str, Version]) -> bool:
+        source: Union[Deb822, Dict[str, str]],
+        minimum_version: Union[str, Version]) -> bool:
     """Ensure that the pakcage is at least using version x of debhelper.
 
     This is a dedicated helper, since debhelper can now also be pulled in
