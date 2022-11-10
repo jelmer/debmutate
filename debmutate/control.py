@@ -934,7 +934,8 @@ def drop_dependency(relationstr: str, package: str) -> str:
     return relationstr
 
 
-def delete_from_list(liststr: str, item_to_delete: str) -> str:
+def delete_from_list(
+        liststr: str, item_to_delete: Union[str, List[str]]) -> str:
     if not item_to_delete:
         raise ValueError(item_to_delete)
     if isinstance(item_to_delete, str):
