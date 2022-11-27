@@ -1,6 +1,7 @@
 debmutate (0.63) UNRELEASED; urgency=medium
 
   * Add stricter typing.
+  * Make debmutate.change.increment_version public.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 10 Nov 2022 15:18:40 +0000
 
