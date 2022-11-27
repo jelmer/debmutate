@@ -34,7 +34,7 @@ from debmutate.changelog import (
     rewrap_change,
     find_extra_authors,
     find_thanks,
-    _inc_version,
+    increment_version,
     changes_sections,
     release,
     strip_changelog_message,
@@ -266,16 +266,16 @@ the exclamation mark and this comment between brackets]
 class IncVersionTests(TestCase):
 
     def test_native(self):
-        self.assertEqual(Version('1.1'), _inc_version(Version('1.0')))
-        self.assertEqual(Version('1a1.1'), _inc_version(Version('1a1.0')))
-        self.assertEqual(Version('9.11~2'), _inc_version(Version('9.11~1')))
-        self.assertEqual(Version('9.11~1'), _inc_version(Version('9.11~')))
+        self.assertEqual(Version('1.1'), increment_version(Version('1.0')))
+        self.assertEqual(Version('1a1.1'), increment_version(Version('1a1.0')))
+        self.assertEqual(Version('9.11~2'), increment_version(Version('9.11~1')))
+        self.assertEqual(Version('9.11~1'), increment_version(Version('9.11~')))
 
     def test_non_native(self):
-        self.assertEqual(Version('1.1-2'), _inc_version(Version('1.1-1')))
-        self.assertEqual(Version('9.11-1~1'), _inc_version(Version('9.11-1~')))
+        self.assertEqual(Version('1.1-2'), increment_version(Version('1.1-1')))
+        self.assertEqual(Version('9.11-1~1'), increment_version(Version('9.11-1~')))
         self.assertEqual(
-            Version('9.11-1~2'), _inc_version(Version('9.11-1~1')))
+            Version('9.11-1~2'), increment_version(Version('9.11-1~1')))
 
 
 class ChangesSectionsTests(TestCase):

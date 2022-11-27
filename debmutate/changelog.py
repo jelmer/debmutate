@@ -307,7 +307,7 @@ def rewrap_changes(changes: Iterator[str]) -> Iterator[str]:
             yield line
 
 
-def _inc_version(version: Version) -> Version:
+def increment_version(version: Version) -> Version:
     """Increment a Debian version string."""
     ret = Version(str(version))
     # TODO(jelmer): Add ubuntuX suffix on Ubuntu
@@ -381,7 +381,7 @@ def changelog_add_entry(
     else:
         cl.new_block(
             package=cl[0].package,
-            version=_inc_version(cl[0].version),
+            version=increment_version(cl[0].version),
             urgency=urgency,
             author="%s <%s>" % (maintainer_name, maintainer_email),
             date=format_datetime(timestamp),
