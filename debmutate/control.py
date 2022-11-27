@@ -94,6 +94,15 @@ CONTROL_LIST_FIELDS = (
 )
 
 
+class TemplateExpansionFailed(Exception):
+
+    def __init__(self, command, stderr):
+        self.command = command
+        self.stderr = stderr
+        super(TemplateExpansionFailed, self).__init__(
+            "Template expansion (%r) failed: %s" % (command, stderr))
+
+
 class TemplateExpandCommandMissing(Exception):
 
     def __init__(self, command):
@@ -272,9 +281,14 @@ def _expand_control_template(
         if template_mtime == path_mtime:
             # Delete path to force it to be regenerated
             os.unlink(path)
-        subprocess.check_call(
-            ['./debian/rules', 'debian/control'],
-            cwd=package_root)
+        try:
+            subprocess.check_call(
+                ['./debian/rules', 'debian/control'],
+                stderr=subprocess.PIPE,
+                cwd=package_root)
+        except subprocess.CalledProcessError as e:
+            raise TemplateExpansionFailed(
+                ["./debian/rules"], e.stderr.decode())
     elif template_type == 'gnome':
         dh_gnome_clean(package_root)
     elif template_type == 'postgresql':
