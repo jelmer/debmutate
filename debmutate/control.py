@@ -1173,3 +1173,10 @@ class PkgRelationFieldEditor(object):
             else:
                 self.paragraph[self.name] = format_relations(self._parsed)
         return False
+
+
+def format_description(summary, long_description):
+    """Format a description based on summary and long description lines.
+    """
+    return summary + "\n" + ''.join(
+        [" %s\n" % line for line in long_description])
