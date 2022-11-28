@@ -26,7 +26,7 @@ __all__ = [
 
 import logging
 import os
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 
 class GeneratedFile(Exception):
@@ -160,6 +160,8 @@ def edit_formatted_file(
 class Editor(object):
     """Context object for editing a file, preserving formatting."""
 
+    changed_files: List[str]
+
     def __init__(
             self, path: str, mode: str = '',
             allow_generated: bool = False,
@@ -216,8 +218,13 @@ class Editor(object):
         if updated_content is None:
             if os.path.exists(self.path):
                 os.unlink(self.path)
+                self.changed_files = [self.path]
         else:
             self.changed = edit_formatted_file(
                 self.path, self._orig_content, self._rewritten_content,
                 updated_content, self.allow_generated, self.allow_reformatting)
+            if self.changed:
+                self.changed_files = [self.path]
+            else:
+                self.changed_files = []
         return False

@@ -84,6 +84,8 @@ Description: Some description
                 {'Package': 'foo', 'Description': 'A new package foo'})
             self.assertEqual(
                 [b['Package'] for b in editor.binaries], ['blah', 'foo'])
+        self.assertTrue(editor.changed)
+        self.assertEqual(editor.changed_files, ['debian/control'])
 
     def test_list_binaries(self):
         self.build_tree_contents([('debian/', ), ('debian/control', """\
@@ -97,6 +99,8 @@ Description: Some description
 """)])
         with ControlEditor('debian/control') as editor:
             self.assertEqual(list(editor.binaries)[0]['Package'], 'blah')
+        self.assertFalse(editor.changed)
+        self.assertEqual(editor.changed_files, [])
 
     def test_create(self):
         self.build_tree_contents([('debian/', )])
@@ -305,6 +309,9 @@ Source: blah
 Testsuite: autopkgtest8
 Uploaders: testvalue
 """, "debian/control", strip_trailing_whitespace=True)
+        self.assertTrue(updater.changed)
+        self.assertEqual(['debian/control.in', 'debian/control'],
+                         updater.changed_files)
 
     def test_update_template_only(self):
         self.build_tree_contents([('debian/', ), ('debian/control.in', """\

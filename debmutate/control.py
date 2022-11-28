@@ -386,6 +386,7 @@ class ControlEditor(object):
     """
 
     changed: bool
+    changed_files: List[str]
     _field_order_preserver: ContextManager
 
     def __init__(self, path: str = 'debian/control',
@@ -494,6 +495,7 @@ class ControlEditor(object):
         try:
             if self._template_only:
                 os.unlink(self.path)
+                self.changed_files = [self.path]
                 raise FileNotFoundError
             self._primary.__exit__(exc_type, exc_val, exc_tb)
         except GeneratedFile as e:
@@ -501,16 +503,28 @@ class ControlEditor(object):
                 raise
             self.changed = _update_control_template(
                 e.template_path, self.path, self.changes())
+            if self.changed:
+                self.changed_files = [e.template_path, self.path]
+            else:
+                self.changed_files = []
         except FileNotFoundError:
             template_path = _find_template_path(self.path)
             if template_path:
                 self.changed = _update_control_template(
                     template_path, self.path, self.changes(),
                     expand_template=not self._template_only)
+                if self.changed:
+                    self.changed_files = [template_path, self.path]
+                else:
+                    self.changed_files = []
             else:
                 raise
         else:
             self.changed = self._primary.changed
+            if self.changed:
+                self.changed_files = [self.path]
+            else:
+                self.changed_files = []
         return False
 
     def sort_binary_packages(self, keep_first: bool = False) -> None:
