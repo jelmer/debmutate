@@ -77,7 +77,7 @@ def check_generated_file(path: str) -> None:
     Raises:
       GeneratedFile: when a generated file is found
     """
-    for ext in ['.in', '.m4']:
+    for ext in ['.in', '.m4', '.stub']:
         if os.path.exists(path + ext):
             raise GeneratedFile(path, path + ext)
     DO_NOT_EDIT_SCAN_LINES = 20

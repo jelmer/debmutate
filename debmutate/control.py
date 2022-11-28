@@ -207,6 +207,8 @@ def guess_template_type(
                         return 'rules'
                     if line.startswith(b'debian/%: debian/%.in'):
                         return 'rules'
+                    if line.startswith(b'include /usr/share/blends-dev/rules'):
+                        return 'rules'
         except FileNotFoundError:
             pass
     try:
