@@ -934,6 +934,17 @@ debian/%: debian/%.in
         self.assertEqual(
             'rules', guess_template_type('debian/control.in', 'debian'))
 
+    def test_blends(self):
+        with open('debian/rules', 'w') as f:
+            f.write("""\
+%:
+    dh $@
+
+include /usr/share/blends-dev/rules
+""")
+        self.assertEqual(
+            'rules', guess_template_type('debian/control.stub', 'debian'))
+
     def test_gnome(self):
         with open('debian/control.in', 'w') as f:
             f.write("""\
