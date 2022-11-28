@@ -6,7 +6,7 @@ style::
 	flake8
 
 typing::
-	mypy --check-untyped-defs debmutate tests
+	mypy debmutate tests
 
 testsuite::
 	python3 -m unittest tests.test_suite
