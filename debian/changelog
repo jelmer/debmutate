@@ -13,6 +13,9 @@ debmutate (0.62) unstable; urgency=medium
   * drop-mia-uploaders: Add support for debcargo.toml.
   * debmutate._rules: Support dropping related comments.
   * Support blends-dev style debian/control generation.
+  * Add more possible 'DO NOT EDIT' strings.
+  * Don't delete generated files to get make to update them, but update
+    timestamp.-
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 10 Nov 2022 14:54:33 +0000
 

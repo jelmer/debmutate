@@ -46,6 +46,7 @@ from itertools import takewhile
 import operator
 import os
 import re
+import time
 from typing import (
     ContextManager,
     Optional,
@@ -274,15 +275,14 @@ def _cdbs_resolve_conflict(
 def _expand_control_template(
         template_path: str, path: str, template_type: str):
     package_root = os.path.dirname(os.path.dirname(path)) or '.'
-    if template_type == 'rules':
-        template_mtime = os.stat(template_path).st_mtime
+    if template_type in 'rules':
         try:
             path_mtime = os.stat(path).st_mtime
         except FileNotFoundError:
             path_mtime = None
-        if template_mtime == path_mtime:
-            # Delete path to force it to be regenerated
-            os.unlink(path)
+        while os.stat(template_path).st_mtime == path_mtime:
+            # Wait until mtime has changed, so that make knows to regenerate.
+            os.utime(template_path, (time.time(), time.time()))
         try:
             subprocess.check_call(
                 ['./debian/rules', 'debian/control'],
