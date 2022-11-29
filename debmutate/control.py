@@ -95,6 +95,10 @@ CONTROL_LIST_FIELDS = (
 )
 
 
+class MissingSourceParagraph(Exception):
+    """The first paragraph is not a Source paragraph."""
+
+
 class TemplateExpansionFailed(Exception):
 
     def __init__(self, command, stderr):
@@ -418,7 +422,7 @@ class ControlEditor(object):
         """Source package."""
         for entry in self.paragraphs:
             if not entry.get('Source'):
-                raise ValueError('first paragraph is not Source')
+                raise MissingSourceParagraph()
             return entry
         else:
             p = Deb822Paragraph.new_empty_paragraph()

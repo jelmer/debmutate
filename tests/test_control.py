@@ -45,6 +45,7 @@ from debmutate.control import (
     delete_from_list,
     ControlEditor,
     parse_standards_version,
+    MissingSourceParagraph,
     )
 from debmutate.reformatting import (
     GeneratedFile,
@@ -101,6 +102,17 @@ Description: Some description
             self.assertEqual(list(editor.binaries)[0]['Package'], 'blah')
         self.assertFalse(editor.changed)
         self.assertEqual(editor.changed_files, [])
+
+    def test_no_source(self):
+        self.build_tree_contents([('debian/', ), ('debian/control', """\
+Package: blah
+Testsuite: autopkgtest
+
+Package: bar
+""")])
+        with ControlEditor('debian/control') as editor:
+            with self.assertRaises(MissingSourceParagraph):
+                editor.source
 
     def test_create(self):
         self.build_tree_contents([('debian/', )])

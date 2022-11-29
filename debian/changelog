@@ -11,6 +11,7 @@ debmutate (0.63) UNRELEASED; urgency=medium
   * Support blends-dev style debian/control generation.
   * Cope with missing Build-Depends field when detecting control
     template type.
+  * ControlEditor: Raise MissingSourceParagraph.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 10 Nov 2022 15:18:40 +0000
 
