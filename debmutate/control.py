@@ -228,10 +228,9 @@ def guess_template_type(
                             template.splitlines(),
                             accept_files_with_error_tokens=True)))
                 except StopIteration:
-                    pass
-                else:
                     build_depends = ''
-                build_depends = deb822.get('Build-Depends', '')
+                else:
+                    build_depends = deb822.get('Build-Depends', '')
                 if any(iter_relations(build_depends, 'gnome-pkg-tools')):
                     return 'gnome'
                 if any(iter_relations(build_depends, 'cdbs')):

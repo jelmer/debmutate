@@ -945,6 +945,34 @@ include /usr/share/blends-dev/rules
         self.assertEqual(
             'rules', guess_template_type('debian/control.stub', 'debian'))
 
+    def test_no_build_depends(self):
+        with open('debian/control.in', 'w') as f:
+            # No paragraph
+            f.write("")
+
+        self.assertIs(None, guess_template_type('debian/control.in', 'debian'))
+
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Build-Depends: cdbs
+Vcs-Git: file://
+
+Package: bar
+""")
+        self.assertEqual(
+            "cdbs",
+            guess_template_type('debian/control.in', 'debian'))
+
+        with open('debian/control.in', 'w') as f:
+            f.write("""\
+Source: blah
+Vcs-Git: file://
+
+Package: bar
+""")
+        self.assertIs(None, guess_template_type('debian/control.in', 'debian'))
+
     def test_gnome(self):
         with open('debian/control.in', 'w') as f:
             f.write("""\
