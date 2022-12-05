@@ -470,9 +470,11 @@ class WatchEditor(Editor):
 
     def __init__(
             self, path: str = 'debian/watch',
-            allow_reformatting: Optional[bool] = None) -> None:
+            allow_reformatting: Optional[bool] = None,
+            allow_missing: bool = False) -> None:
         super(WatchEditor, self).__init__(
-            path, allow_reformatting=allow_reformatting)
+            path, allow_reformatting=allow_reformatting,
+            allow_missing=allow_missing)
 
     @property
     def watch_file(self) -> WatchFile:
