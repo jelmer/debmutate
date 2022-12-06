@@ -26,7 +26,7 @@ __all__ = [
 
 import logging
 import os
-from typing import Union, Optional, List
+from typing import Union, Optional, List, TypeVar, Generic
 
 
 class GeneratedFile(Exception):
@@ -98,7 +98,7 @@ def check_generated_file(path: str) -> None:
 
 def edit_formatted_file(
         path: str, original_contents: Union[str, bytes],
-        rewritten_contents: Union[str, bytes],
+        rewritten_contents: Optional[Union[str, bytes]],
         updated_contents: Union[str, bytes],
         allow_generated: bool = False,
         allow_reformatting: bool = False) -> bool:
@@ -124,7 +124,7 @@ def edit_formatted_file(
         check_generated_file(path)
     try:
         check_preserve_formatting(
-            rewritten_contents.strip()
+                rewritten_contents.strip()  # type: ignore
             if rewritten_contents is not None else None,
             original_contents.strip()
             if original_contents is not None else None, path,
@@ -161,10 +161,15 @@ def edit_formatted_file(
     return True
 
 
-class Editor(object):
+T = TypeVar('T')
+P = TypeVar('P', str, bytes)
+
+
+class Editor(Generic[T, P]):
     """Context object for editing a file, preserving formatting."""
 
     changed_files: List[str]
+    _rewritten_content: Optional[P]
 
     def __init__(
             self, path: str, mode: str = '',
@@ -179,14 +184,14 @@ class Editor(object):
                 os.environ.get('REFORMATTING', 'disallow') == 'allow')
         self.allow_reformatting = allow_reformatting
 
-    def _nonexistant(self):
+    def _nonexistant(self) -> T:
         raise
 
-    def _parse(self, content):
+    def _parse(self, content: P) -> T:
         """Parse the specified bytestring and returned parsed object."""
         raise NotImplementedError(self._parse)
 
-    def _format(self, parsed):
+    def _format(self, parsed: T) -> Optional[P]:
         """Serialize the parsed object."""
         raise NotImplementedError(self._format)
 
@@ -205,7 +210,7 @@ class Editor(object):
             self._rewritten_content = None
         return self
 
-    def _updated_content(self):
+    def _updated_content(self) -> Optional[P]:
         if self._parsed is not None:
             return self._format(self._parsed)
         else:

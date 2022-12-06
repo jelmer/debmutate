@@ -464,7 +464,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
         entries=entries, options=persistent_options, version=version)
 
 
-class WatchEditor(Editor):
+class WatchEditor(Editor[WatchFile, str]):
 
     _parsed: WatchFile
 
@@ -473,15 +473,17 @@ class WatchEditor(Editor):
             allow_reformatting: Optional[bool] = None,
             allow_missing: bool = False) -> None:
         super(WatchEditor, self).__init__(
-            path, allow_reformatting=allow_reformatting,
-            allow_missing=allow_missing)
+            path, allow_reformatting=allow_reformatting)
+        self.allow_missing = allow_missing
 
     @property
     def watch_file(self) -> WatchFile:
         return self._parsed
 
-    def _nonexistant(self) -> None:
-        return None
+    def _nonexistant(self):
+        if self.allow_missing:
+            return WatchFile([])
+        raise
 
     def _parse(self, content: str) -> WatchFile:
         wf = parse_watch_file(content.splitlines())

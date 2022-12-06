@@ -62,7 +62,7 @@ INITIAL_INDENT = '  * '
 DEFAULT_DISTRIBUTION = 'unstable'
 
 
-class ChangelogEditor(Editor):
+class ChangelogEditor(Editor[Changelog, str]):
     """Update a changelog file.
 
     This will only write out the changelog file if it has been changed.

@@ -101,7 +101,7 @@ class ChangeConflict(Exception):
                     self.actual_old_value, self.new_value))
 
 
-class Deb822Editor(Editor):
+class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
     """Update the contents of a Deb822-style file.
 
     """

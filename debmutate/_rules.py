@@ -313,7 +313,7 @@ class Makefile(object):
                 r.clear()
 
 
-class MakefileEditor(Editor):
+class MakefileEditor(Editor[Makefile, bytes]):
 
     def __init__(self, path):
         super(MakefileEditor, self).__init__(path, mode='b')

@@ -36,7 +36,7 @@ from debian.deb822 import RestrictedField
 from .reformatting import Editor
 
 
-class CopyrightEditor(Editor):
+class CopyrightEditor(Editor[Copyright, str]):
     """Update a machine-readable copyright file.
     """
 
@@ -62,22 +62,22 @@ class CopyrightEditor(Editor):
 
     @property
     def _deb822(self):
-        return self._parsed._Copyright__file
+        return self._parsed._Copyright__file  # type: ignore
 
     def remove(self, paragraph):
-        self._parsed._Copyright__paragraphs.remove(paragraph)
-        self._deb822.remove(paragraph._underlying_paragraph)
+        self._parsed._Copyright__paragraphs.remove(paragraph)  # type: ignore
+        self._deb822.remove(paragraph._underlying_paragraph)  # type: ignore
 
     def append(self, paragraph):
-        self._parsed._Copyright__paragraphs.append(paragraph)
-        self._deb822.append(paragraph._underlying_paragraph)
+        self._parsed._Copyright__paragraphs.append(paragraph)  # type: ignore
+        self._deb822.append(paragraph._underlying_paragraph)  # type: ignore
 
     def insert(self, idx, paragraph):
-        self._parsed._Copyright__paragraphs.insert(idx, paragraph)
+        self._parsed._Copyright__paragraphs.insert(idx, paragraph)  # type: ignore
         self._deb822.insert(idx + 1, paragraph._underlying_paragraph)
 
     def pop(self, idx):
-        p = self._parsed._Copyright__paragraphs[idx]
+        p = self._parsed._Copyright__paragraphs[idx]  # type: ignore
         self.remove(p)
         return p
 

@@ -26,7 +26,7 @@ __all__ = [
 
 from dataclasses import dataclass
 import os
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, List
 
 from debian.deb822 import Deb822
 
@@ -212,11 +212,16 @@ def parse_maintscript_line(line):
     }.get(args[0], list)(*args[1:])
 
 
+MaintscriptEntry = Union[
+    MaintscriptSupports, MaintscriptRemoveConffile, MaintscriptMoveConffile,
+    MaintscriptSymlinkToDir, MaintscriptDirToSymlink]
+
+
 def serialize_maintscript_line(args):
     return ' '.join(args)
 
 
-class MaintscriptEditor(Editor):
+class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
 
     def __init__(
             self, path: str = 'debian/maintscript',

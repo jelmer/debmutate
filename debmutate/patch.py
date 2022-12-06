@@ -93,7 +93,7 @@ def write_quilt_series(entries):
         yield line
 
 
-class QuiltSeriesEditor(Editor):
+class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
     """Edit a debian/patches/series file."""
 
     def __init__(

@@ -19,7 +19,7 @@
 
 import fnmatch
 import re
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from .reformatting import Editor
 
@@ -88,7 +88,7 @@ class LintianOverride(object):
                 and self.info == other.info)
 
 
-class LintianOverridesEditor(Editor):
+class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
 
     def _parse(self, content):
         """Parse the specified bytestring and returned parsed object."""
