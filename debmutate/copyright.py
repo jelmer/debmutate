@@ -73,7 +73,8 @@ class CopyrightEditor(Editor[Copyright, str]):
         self._deb822.append(paragraph._underlying_paragraph)  # type: ignore
 
     def insert(self, idx, paragraph):
-        self._parsed._Copyright__paragraphs.insert(idx, paragraph)  # type: ignore
+        self._parsed._Copyright__paragraphs.insert(  # type: ignore
+            idx, paragraph)
         self._deb822.insert(idx + 1, paragraph._underlying_paragraph)
 
     def pop(self, idx):

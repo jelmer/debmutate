@@ -114,7 +114,9 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
         # TODO(jelmer): Support formatting comments and options
         return b''.join(write_quilt_series(parsed))
 
-    def append(self, name, options=[]):
+    def append(self, name, options=None):
+        if options is None:
+            options = []
         if self._parsed is None:
             self._parsed = []
         self._parsed.append(QuiltSeriesEntry(name, False, options))

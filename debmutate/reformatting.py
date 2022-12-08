@@ -124,7 +124,7 @@ def edit_formatted_file(
         check_generated_file(path)
     try:
         check_preserve_formatting(
-                rewritten_contents.strip()  # type: ignore
+            rewritten_contents.strip()  # type: ignore
             if rewritten_contents is not None else None,
             original_contents.strip()
             if original_contents is not None else None, path,

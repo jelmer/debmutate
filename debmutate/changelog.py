@@ -208,7 +208,7 @@ def changes_by_author(
     Returns:
       Iterator over items by author (maintainer, offsets, changes)
     """
-    for (author, linenos, contents) in changes_sections(changes):
+    for (author, _linenos, contents) in changes_sections(changes):
         for change_entries in contents:
             change_linenos, change_lines = zip(*change_entries)
             yield (author, change_linenos, change_lines)  # type: ignore
@@ -588,7 +588,7 @@ def find_extra_authors(changes):
     :return: List of fullnames of additional authors, without e-mail address.
     """
     authors: List[str] = []
-    for new_author, linenos, lines in changes_by_author(changes):
+    for new_author, _linenos, _lines in changes_by_author(changes):
         if new_author is None:
             continue
         already_included = False
@@ -613,7 +613,7 @@ def find_thanks(changes):
         "(?:\\s+<[^@>]+@[^@>]+>)?)",
         re.UNICODE)
     thanks: List[str] = []
-    for new_author, linenos, lines in changes_by_author(changes):
+    for _new_author, _linenos, lines in changes_by_author(changes):
         for match in thanks_re.finditer(''.join(lines)):
             if thanks is None:
                 thanks = []

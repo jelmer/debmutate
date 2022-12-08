@@ -668,7 +668,7 @@ def iter_relations(
 
 
 def _iter_relations(relations, package):
-    for i, (head_whitespace, relation, tail_whitespace) in enumerate(
+    for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(
             relations):
         if isinstance(relation, str):  # formatting
             continue
@@ -705,7 +705,7 @@ def ensure_minimum_version(
     changed = False
     relations = parse_relations(relationstr)
     obsolete_relations = []
-    for i, (head_whitespace, relation, tail_whitespace) in enumerate(
+    for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(
             relations):
         if isinstance(relation, str):  # formatting
             continue
@@ -749,7 +749,7 @@ def ensure_exact_version(
     found = False
     changed = False
     relations = parse_relations(relationstr)
-    for (head_whitespace, relation, tail_whitespace) in relations:
+    for (_head_whitespace, relation, _tail_whitespace) in relations:
         if isinstance(relation, str):  # formatting
             continue
         names = [r.name for r in relation]
@@ -791,7 +791,7 @@ def ensure_relation(
     relations = parse_relations(relationstr)
     added = False
     to_remove = []
-    for i, (head_whitespace, relation, tail_whitespace) in enumerate(
+    for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(
             relations):
         if isinstance(relation, str):  # formatting
             continue
@@ -905,7 +905,7 @@ def ensure_some_version(relationstr: str, package: str) -> str:
     if not isinstance(package, str):
         raise TypeError(package)
     relations = parse_relations(relationstr)
-    for (head_whitespace, relation, tail_whitespace) in relations:
+    for (_head_whitespace, relation, _tail_whitespace) in relations:
         if isinstance(relation, str):  # formatting
             continue
         names = [r.name for r in relation]

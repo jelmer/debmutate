@@ -295,7 +295,7 @@ def get_sequences(debian_path='debian', control_editor=None):
     if control_editor is None:
         control_editor = ControlEditor(os.path.join(debian_path, 'control'))
     with control_editor:
-        for ws1, entry, ws2 in parse_relations(
+        for _ws1, entry, _ws2 in parse_relations(
                 control_editor.source.get('Build-Depends', '')):
             for option in entry:
                 if option.name.startswith('dh-sequence-'):
