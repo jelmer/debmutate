@@ -38,12 +38,10 @@ DEFAULT_USER_AGENT = 'debmutate/%s' % '.'.join([str(x) for x in __version__])
 
 DEFAULT_VERSION: int = 4
 
-# TODO(jelmer): Add support for substitution variables:
-
 SUBSTITUTIONS = {
     # This is substituted with the source package name found in the first line
     # of the debian/changelog file.
-    '@PACKAGE': None,
+    # '@PACKAGE@': None,
     # This is substituted by the legal upstream version regex (capturing).
     '@ANY_VERSION@': r'[-_]?(\d[\-+\.:\~\da-zA-Z]*)',
     # This is substituted by the typical archive file extension regex
@@ -245,7 +243,10 @@ def html_search(body, matching_pattern, base_url):
         href = urljoin(base_url.rstrip('/') + '/', href)
         m = pcre.match(matching_pattern, href)
         if m:
+            logging.debug('Matched pattern %r to %r', matching_pattern, href)
             yield m
+        else:
+            logging.debug('Did not match pattern %r to %r', matching_pattern, href)
 
 
 def plain_search(body, matching_pattern, base_url):
@@ -256,6 +257,17 @@ searchers = {
     'plain': plain_search,
     'html': html_search,
     }
+
+
+def _subst(text: str, package: Union[str, Callable[[], str]]):
+    substs = dict(SUBSTITUTIONS)
+    if '@PACKAGE@' in text:
+        if callable(package):
+            package = package()
+        substs['@PACKAGE@'] = package
+    for k, v in substs.items():
+        text = text.replace(k, v)
+    return text
 
 
 class Watch(object):
@@ -343,11 +355,7 @@ class Watch(object):
                 other.options == self.options)
 
     def format_url(self, package: Union[str, Callable[[], str]]) -> str:
-        if '@PACKAGE@' not in self.url:
-            return self.url
-        if callable(package):
-            package = package()
-        return self.url.replace('@PACKAGE@', package)
+        return _subst(self.url, package)
 
     def discover(self, package) -> Iterator[Release]:
         from urllib.request import urlopen, Request
@@ -364,7 +372,7 @@ class Watch(object):
         req = Request(url, headers={'User-Agent': user_agent})
         resp = urlopen(req)
         for m in searchers[searchmode](
-                resp.read(), self.matching_pattern, url):
+                resp.read(), _subst(self.matching_pattern, package), url):
             # TODO(jelmer): Apply uversionmangle
             full_url = urljoin(url, m.group(0))
             try:
