@@ -1,4 +1,4 @@
-debmutate (0.63) UNRELEASED; urgency=medium
+debmutate (0.63) unstable; urgency=medium
 
   * Add stricter typing.
   * Make debmutate.change.increment_version public.
