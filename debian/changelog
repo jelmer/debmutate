@@ -1,3 +1,10 @@
+debmutate (0.64) UNRELEASED; urgency=medium
+
+  * watch: Support substitutes.
+  * Add FormattingUnpreservable.diff().
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 27 Jan 2023 17:24:34 +0000
+
 debmutate (0.63) unstable; urgency=medium
 
   * Add stricter typing.
@@ -12,8 +19,6 @@ debmutate (0.63) unstable; urgency=medium
   * Cope with missing Build-Depends field when detecting control
     template type.
   * ControlEditor: Raise MissingSourceParagraph.
-  * watch: Support substitutes.
-  * Add FormattingUnpreservable.diff().
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 10 Nov 2022 15:18:40 +0000
 
