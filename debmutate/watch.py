@@ -235,7 +235,8 @@ class Release(object):
 def html_search(body, matching_pattern, base_url):
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(body, 'html.parser')
-    matching_pattern = urljoin(base_url.rstrip('/') + '/', matching_pattern)
+    if '/' not in matching_pattern:
+        matching_pattern = urljoin(base_url.rstrip('/') + '/', matching_pattern)
     for a in soup.find_all('a'):
         href = a.attrs.get('href')
         if not href:
