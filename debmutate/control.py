@@ -278,7 +278,7 @@ def _cdbs_resolve_conflict(
 def _expand_control_template(
         template_path: str, path: str, template_type: str):
     package_root = os.path.dirname(os.path.dirname(path)) or '.'
-    if template_type in 'rules':
+    if template_type == 'rules':
         try:
             path_mtime = os.stat(path).st_mtime
         except FileNotFoundError:
