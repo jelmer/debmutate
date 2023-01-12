@@ -40,7 +40,7 @@ def _create_matcher(value):
         return lambda x: True
 
 
-class LintianOverride(object):
+class LintianOverride:
 
     def __init__(self, package: Optional[str] = None,
                  archlist: Optional[List[str]] = None,
@@ -56,9 +56,11 @@ class LintianOverride(object):
         self._info_match = _create_matcher(self.info)
 
     def __repr__(self):
-        return "%s(package=%r, archlist=%r, type=%r, tag=%r, info=%r)" % (
-            type(self).__name__, self.package, self.archlist, self.type,
-            self.tag, self.info)
+        return (
+            "{}(package={!r}, archlist={!r}, type={!r}, tag={!r}, info={!r})"
+            .format(
+                type(self).__name__, self.package, self.archlist, self.type,
+                self.tag, self.info))
 
     def matches(self, package: Optional[str] = None, tag: Optional[str] = None,
                 info: Optional[str] = None, arch: Optional[str] = None,

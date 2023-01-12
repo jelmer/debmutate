@@ -93,7 +93,7 @@ class FindCommonPatchSuffixTests(TestCase):
 class SeriesTests(TestCaseInTempDir):
 
     def setUp(self):
-        super(SeriesTests, self).setUp()
+        super().setUp()
         self.build_tree_contents([
             ('debian/', ),
             ('debian/patches/', )])

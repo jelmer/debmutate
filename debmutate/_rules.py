@@ -39,7 +39,7 @@ def matches_wildcard(text: str, wildcard: str) -> bool:
     return bool(wc.fullmatch(text))
 
 
-class Rule(object):
+class Rule:
     """A make rule."""
 
     target: Optional[bytes]
@@ -77,7 +77,7 @@ class Rule(object):
         return self
 
     def __repr__(self):
-        return "<%s(%r)>" % (type(self).__name__, self.target)
+        return "<{}({!r})>".format(type(self).__name__, self.target)
 
     @property
     def targets(self) -> List[bytes]:
@@ -169,7 +169,7 @@ def _is_rule(line):
     return True
 
 
-class Makefile(object):
+class Makefile:
     contents: List[Union[bytes, Rule]]
 
     def __init__(self, contents: Optional[bytes] = None):
@@ -316,7 +316,7 @@ class Makefile(object):
 class MakefileEditor(Editor[Makefile, bytes]):
 
     def __init__(self, path):
-        super(MakefileEditor, self).__init__(path, mode='b')
+        super().__init__(path, mode='b')
 
     def _parse(self, content):
         return Makefile.from_bytes(content)
@@ -332,7 +332,7 @@ class MakefileEditor(Editor[Makefile, bytes]):
 class RulesEditor(MakefileEditor):
 
     def __init__(self, path='debian/rules'):
-        super(RulesEditor, self).__init__(path)
+        super().__init__(path)
 
     def legacy_update(self, command_line_cb=None, global_line_cb=None,
                       rule_cb=None, makefile_cb=None,

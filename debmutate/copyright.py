@@ -43,7 +43,7 @@ class CopyrightEditor(Editor[Copyright, str]):
     def __init__(
             self, path: str = 'debian/copyright',
             allow_reformatting: Optional[bool] = None) -> None:
-        super(CopyrightEditor, self).__init__(
+        super().__init__(
             path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
@@ -94,7 +94,7 @@ def upstream_fields_in_copyright(
     """
     ret = {}
     try:
-        with open(path, 'r') as f:
+        with open(path) as f:
             c = Copyright(f, strict=False)
     except (ValueError, FileNotFoundError, NotMachineReadableError,
             MachineReadableFormatError):

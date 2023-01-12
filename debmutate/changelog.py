@@ -72,7 +72,7 @@ class ChangelogEditor(Editor[Changelog, str]):
             self, path: str = 'debian/changelog',
             allow_reformatting: Optional[bool] = False,
             allow_missing: bool = False):
-        super(ChangelogEditor, self).__init__(
+        super().__init__(
             path, allow_reformatting=allow_reformatting)
         self.allow_missing = allow_missing
 
@@ -147,7 +147,7 @@ def changelog_auto_version(
         cl.new_block(
             version=version, package=package,
             distributions='UNRELEASED', urgency=urgency,
-            author="%s <%s>" % (maintainer_name, maintainer_email),
+            author="{} <{}>".format(maintainer_name, maintainer_email),
             date=format_datetime(timestamp))
 
 
@@ -220,7 +220,7 @@ class TextWrapper(textwrap.TextWrapper):
     wordsep_simple_re = re.compile(r'(%s+)' % whitespace)
 
     def __init__(self, initial_indent=INITIAL_INDENT):
-        super(TextWrapper, self).__init__(
+        super().__init__(
             width=WIDTH, initial_indent=initial_indent,
             subsequent_indent=' ' * len(initial_indent),
             break_long_words=False, break_on_hyphens=False)
@@ -232,7 +232,7 @@ class TextWrapper(textwrap.TextWrapper):
         while i < len(chunks):
             if (any(chunks[i].endswith(x) for x in ['Closes:', 'LP:']) and
                     i+2 < len(chunks) and chunks[i+2].startswith('#')):
-                ret.append('%s %s' % (chunks[i], chunks[i+2]))
+                ret.append('{} {}'.format(chunks[i], chunks[i+2]))
                 i += 3
             else:
                 ret.append(chunks[i])
@@ -383,7 +383,7 @@ def changelog_add_entry(
             package=cl[0].package,
             version=increment_version(cl[0].version),
             urgency=urgency,
-            author="%s <%s>" % (maintainer_name, maintainer_email),
+            author="{} <{}>".format(maintainer_name, maintainer_email),
             date=format_datetime(timestamp),
             distributions='UNRELEASED',
             changes=[''])
@@ -521,7 +521,7 @@ def changeblock_ensure_first_line(
     elif parseaddr(block.author)[0] != maintainer_name:
         block._changes.insert(2, '  [ %s ]' % parseaddr(block.author)[0])
         block._changes.insert(2, '')
-        block.author = "%s <%s>" % (maintainer_name, maintainer_email)
+        block.author = "{} <{}>".format(maintainer_name, maintainer_email)
 
 
 def take_uploadership(
@@ -547,7 +547,7 @@ def take_uploadership(
             block._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
             if block._changes[-1]:
                 block._changes.append('')
-    block.author = '%s <%s>' % (maintainer_name, maintainer_email)
+    block.author = '{} <{}>'.format(maintainer_name, maintainer_email)
 
 
 def release(

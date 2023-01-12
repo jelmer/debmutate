@@ -47,12 +47,6 @@ from .reformatting import (
 Deb822Paragraph._discard_comments_on_read = False  # type: ignore
 
 
-def parse_deb822_paragraph(p):
-    f = parse_deb822_file(p)
-    [p] = f.iter_parts_of_type(Deb822Paragraph)
-    return p
-
-
 def dump_paragraphs(paragraphs: Union[Deb822File, List[Deb822]]) -> bytes:
     """Dump a set of deb822 paragraphs to a file.
 
@@ -116,7 +110,7 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
                  allow_reformatting: Optional[bool] = None,
                  allow_missing: bool = False,
                  accept_files_with_error_tokens: bool = False) -> None:
-        super(Deb822Editor, self).__init__(
+        super().__init__(
             path, allow_generated=allow_generated,
             allow_reformatting=allow_reformatting,
             mode='b')

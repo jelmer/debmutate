@@ -61,7 +61,7 @@ class InvalidUVersionMangle(ValueError):
     """uversionmangle is invalid"""
 
 
-class WatchFile(object):
+class WatchFile:
 
     def __init__(self, entries: Optional[List['Watch']] = None,
                  options: Optional[List[str]] = None,
@@ -89,7 +89,7 @@ class WatchFile(object):
         if newvalue is None:
             nv = name
         else:
-            nv = '%s=%s' % (name, newvalue)
+            nv = '{}={}'.format(name, newvalue)
         for i, option in enumerate(self.options):
             try:
                 key, value = option.split('=', 1)
@@ -213,7 +213,7 @@ def apply_url_mangle(expr: str, orig: str) -> str:
     return apply_sed_expr(expr, orig)
 
 
-class Release(object):
+class Release:
     """A discovered release."""
 
     def __init__(self, version, url, pgpsigurl=None):
@@ -227,7 +227,7 @@ class Release(object):
         return Version(self.version) < Version(other.version)
 
     def __repr__(self):
-        return "%s(%r, %r, pgpsigurl=%r)" % (
+        return "{}({!r}, {!r}, pgpsigurl={!r})".format(
             type(self).__name__, self.version, self.url,
             self.pgpsigurl)
 
@@ -236,7 +236,8 @@ def html_search(body, matching_pattern, base_url):
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(body, 'html.parser')
     if '/' not in matching_pattern:
-        matching_pattern = urljoin(base_url.rstrip('/') + '/', matching_pattern)
+        matching_pattern = urljoin(
+            base_url.rstrip('/') + '/', matching_pattern)
     for a in soup.find_all('a'):
         href = a.attrs.get('href')
         if not href:
@@ -247,7 +248,8 @@ def html_search(body, matching_pattern, base_url):
             logging.debug('Matched pattern %r to %r', matching_pattern, href)
             yield m
         else:
-            logging.debug('Did not match pattern %r to %r', matching_pattern, href)
+            logging.debug(
+                'Did not match pattern %r to %r', matching_pattern, href)
 
 
 def plain_search(body, matching_pattern, base_url):
@@ -271,7 +273,7 @@ def _subst(text: str, package: Union[str, Callable[[], str]]):
     return text
 
 
-class Watch(object):
+class Watch:
 
     def __init__(self, url: str, matching_pattern: Optional[str] = None,
                  version: Optional[str] = None, script: Optional[str] = None,
@@ -293,7 +295,7 @@ class Watch(object):
             return apply_sed_expr(vm, version)
         except pcre.error as e:
             raise WatchSyntaxError(
-                'invalid uversionmangle %r: %s' % (vm, e)) from e
+                'invalid uversionmangle {!r}: {}'.format(vm, e)) from e
 
     def get_option(self, name):
         for option in self.options:
@@ -317,7 +319,7 @@ class Watch(object):
         if newvalue is None:
             nv = name
         else:
-            nv = '%s=%s' % (name, newvalue)
+            nv = '{}={}'.format(name, newvalue)
         for i, option in enumerate(self.options):
             try:
                 key, value = option.split('=', 1)
@@ -342,7 +344,9 @@ class Watch(object):
 
     def __repr__(self) -> str:
         return (
-            "%s(%r, matching_pattern=%r, version=%r, script=%r, opts=%r)" % (
+            ("{}({!r}, matching_pattern={!r}, "
+             "version={!r}, script={!r}, opts={!r})")
+            .format(
                 self.__class__.__name__, self.url, self.matching_pattern,
                 self.version, self.script, self.options))
 
@@ -372,6 +376,7 @@ class Watch(object):
         logging.debug('Fetching url %s; searchmode=%s', url, searchmode)
         req = Request(url, headers={'User-Agent': user_agent})
         resp = urlopen(req)
+        assert self.matching_pattern
         for m in searchers[searchmode](
                 resp.read(), _subst(self.matching_pattern, package), url):
             # TODO(jelmer): Apply uversionmangle
@@ -478,10 +483,10 @@ class WatchEditor(Editor[WatchFile, str]):
     _parsed: WatchFile
 
     def __init__(
-            self, path: str = 'debian/watch',
+            self, path: str = 'debian/watch', *,
             allow_reformatting: Optional[bool] = None,
             allow_missing: bool = False) -> None:
-        super(WatchEditor, self).__init__(
+        super().__init__(
             path, allow_reformatting=allow_reformatting)
         self.allow_missing = allow_missing
 
@@ -524,10 +529,10 @@ def main(argv):
         logging.basicConfig(level=logging.DEBUG, format='%(message)s')
     else:
         logging.basicConfig(level=logging.INFO, format='%(message)s')
-    with open('debian/watch', 'r') as f:
+    with open('debian/watch') as f:
         wf = parse_watch_file(f)
     from debian.deb822 import Deb822
-    with open('debian/control', 'r') as f:
+    with open('debian/control') as f:
         source = Deb822(f)
     uscan(wf, source['Source'])
 

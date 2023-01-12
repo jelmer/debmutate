@@ -79,12 +79,12 @@ class DebcargoEditor(TomlEditor):
             self, path: str = 'debian/debcargo.toml',
             allow_reformatting: Optional[bool] = None,
             allow_missing: bool = False):
-        super(DebcargoEditor, self).__init__(
+        super().__init__(
             path=path, allow_reformatting=allow_reformatting)
         self.allow_missing = allow_missing
 
     def __repr__(self):
-        return "%s(%r, allow_reformatting=%r, allow_missing=%r)" % (
+        return "{}({!r}, allow_reformatting={!r}, allow_missing={!r})".format(
             type(self).__name__, self.path, self.allow_reformatting,
             self.allow_missing)
 
@@ -148,7 +148,7 @@ class DebcargoSourceShimEditor(ShimParagraph):
                 return value
         elif name == 'Source':
             if self._debcargo.get("semver_suffix", False):
-                return 'rust-%s-%s' % (
+                return 'rust-{}-{}'.format(
                     self.crate_name.replace('_', '-'),
                     semver_pair(self.crate_version))
             return 'rust-%s' % self.crate_name.replace('_', '-')
@@ -368,11 +368,11 @@ class DebcargoBinaryShimEditor(ShimParagraph):
 def debcargo_version_to_semver(version):
     m = re.fullmatch('(.*)~([a-z]+)(.*)', version)
     if m:
-        return '%s-%s%s' % (m.group(1), m.group(2), m.group(3))
+        return '{}-{}{}'.format(m.group(1), m.group(2), m.group(3))
     return version
 
 
-class DebcargoControlShimEditor(object):
+class DebcargoControlShimEditor:
     """Shim for debian/control that edits debian/debcargo.toml."""
 
     def __init__(self, debcargo_editor, crate_name, crate_version, cargo=None,
@@ -384,7 +384,7 @@ class DebcargoControlShimEditor(object):
         self.features = features
 
     def __repr__(self):
-        return "%s(%r, %r, %r)" % (
+        return "{}({!r}, {!r}, {!r})".format(
             type(self).__name__, self.debcargo_editor,
             self.crate_name, self.crate_version)
 
@@ -411,7 +411,7 @@ class DebcargoControlShimEditor(object):
         cargo_path = os.path.join(path, '..', 'Cargo.toml')
         if cargo is None:
             try:
-                with open(cargo_path, 'r') as f:
+                with open(cargo_path) as f:
                     cargo = loads(f.read())
                     crate_name = cargo["package"]["name"]
                     crate_version = cargo["package"]["version"]
@@ -419,7 +419,7 @@ class DebcargoControlShimEditor(object):
             except FileNotFoundError:
                 pass
         try:
-            with open(os.path.join(path, 'changelog'), 'r') as f:
+            with open(os.path.join(path, 'changelog')) as f:
                 cl = Changelog(f)
                 package = cl.package
                 if crate_name is None or crate_version is None:
@@ -509,7 +509,7 @@ def unmangle_debcargo_version(version):
 
 
 def debcargo_binary_name(crate_name, suffix=''):
-    return 'librust-%s%s-dev' % (crate_name.replace('_', '-'), suffix)
+    return 'librust-{}{}-dev'.format(crate_name.replace('_', '-'), suffix)
 
 
 if __name__ == '__main__':

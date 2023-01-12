@@ -29,7 +29,7 @@ import logging
 import re
 
 
-class PkgRelation(object):
+class PkgRelation:
     """A package requirement."""
 
     __dep_RE = re.compile(
@@ -127,7 +127,7 @@ class PkgRelation(object):
         return [parse_rel(or_dep) for or_dep in or_deps]
 
     def __repr__(self):
-        return "%s(%r, %r, %r, %r, %r)" % (
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__, self.name, self.version, self.arch,
             self.archqual, self.restrictions)
 
@@ -153,7 +153,7 @@ class PkgRelation(object):
         """
         def pp_arch(arch_spec):
             # type: (PkgRelation.ArchRestriction) -> str
-            return '%s%s' % (
+            return '{}{}'.format(
                 '' if arch_spec.enabled else '!',
                 arch_spec.arch,
             )
@@ -163,7 +163,7 @@ class PkgRelation(object):
             s = []
             for term in restrictions:
                 s.append(
-                    '%s%s' % (
+                    '{}{}'.format(
                         '' if term.enabled else '!',
                         term.profile
                     )

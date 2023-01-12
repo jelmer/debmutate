@@ -51,7 +51,7 @@ class SemverPairTests(TestCase):
 class DebcargoControlShimEditorTests(TestCase):
 
     def setUp(self):
-        super(DebcargoControlShimEditorTests, self).setUp()
+        super().setUp()
         self.td = tempfile.mkdtemp()
         os.mkdir(os.path.join(self.td, 'debian'))
         self.addCleanup(os.chdir, os.getcwd())

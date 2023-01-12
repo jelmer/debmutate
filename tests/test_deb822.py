@@ -173,7 +173,7 @@ Testsuite: autopkgtest
 class ApplyChangesTests(TestCaseInTempDir):
 
     def setUp(self):
-        super(ApplyChangesTests, self).setUp()
+        super().setUp()
         self.build_tree_contents([('controlfile', """\
 Source: blah
 Testsuite: autopkgtest

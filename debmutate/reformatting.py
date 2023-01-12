@@ -42,7 +42,7 @@ class FormattingUnpreservable(Exception):
     """The file is unpreservable."""
 
     def __init__(self, path, original_contents, rewritten_contents):
-        super(FormattingUnpreservable, self).__init__(path)
+        super().__init__(path)
         self.path = path
         self.original_contents = original_contents
         self.rewritten_contents = rewritten_contents
@@ -116,7 +116,7 @@ def edit_formatted_file(
     """
     if (updated_contents is not None and rewritten_contents is not None
             and type(updated_contents) != type(rewritten_contents)):
-        raise TypeError('inconsistent types: %r, %r' % (
+        raise TypeError('inconsistent types: {!r}, {!r}'.format(
             type(updated_contents), type(rewritten_contents)))
     if updated_contents in (rewritten_contents, original_contents):
         return False
@@ -128,8 +128,7 @@ def edit_formatted_file(
             if rewritten_contents is not None else None,
             original_contents.strip()
             if original_contents is not None else None, path,
-            allow_reformatting=allow_reformatting
-        )
+            allow_reformatting=allow_reformatting)
     except FormattingUnpreservable as e:
         if (rewritten_contents is None
                 or original_contents is None

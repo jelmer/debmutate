@@ -100,7 +100,7 @@ def read_debhelper_compat_file(path: str) -> int:
     Args:
       path: Path to read from
     """
-    with open(path, 'r') as f:
+    with open(path) as f:
         line = f.readline().split('#', 1)[0]
         return int(line.strip())
 
@@ -122,7 +122,7 @@ def get_debhelper_compat_level(path: str = '.') -> Optional[int]:
         pass
 
     try:
-        with open(os.path.join(path, 'debian/control'), 'r') as f:
+        with open(os.path.join(path, 'debian/control')) as f:
             control = Deb822(f)
     except FileNotFoundError:
         return None
@@ -226,7 +226,7 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
     def __init__(
             self, path: str = 'debian/maintscript',
             allow_reformatting: Optional[bool] = None):
-        super(MaintscriptEditor, self).__init__(
+        super().__init__(
             path=path, allow_reformatting=allow_reformatting)
 
     def _nonexistant(self):

@@ -99,7 +99,7 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
     def __init__(
             self, path: str = 'debian/patches/series',
             allow_reformatting: Optional[bool] = None):
-        super(QuiltSeriesEditor, self).__init__(
+        super().__init__(
             path, mode='b', allow_reformatting=allow_reformatting)
 
     def _parse(self, content):

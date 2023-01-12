@@ -107,5 +107,5 @@ mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
         with MaintscriptEditor() as e:
             del e[0]
             self.assertRaises(IndexError, e.__delitem__, 0)
-        with open('debian/maintscript', 'r') as f:
+        with open('debian/maintscript') as f:
             self.assertEqual("# I am a comment\n", f.read())

@@ -292,7 +292,7 @@ class WatchEditorTests(TestCase):
             f.write('# tests\n')
         with WatchEditor('watch') as updater:
             self.assertEqual(WatchFile([]), updater.watch_file)
-        with open('watch', 'r') as f:
+        with open('watch') as f:
             self.assertEqual('# tests\n', f.read())
 
     def test_version_change(self):
@@ -303,7 +303,7 @@ https://pypi.debian.net/case case-(.+)\\.tar.gz
 """)
         with WatchEditor('watch') as updater:
             updater.watch_file.version = 4
-        with open('watch', 'r') as f:
+        with open('watch') as f:
             self.assertEqual("""\
 version=4
 https://pypi.debian.net/case case-(.+)\\.tar.gz

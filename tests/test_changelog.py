@@ -68,7 +68,7 @@ class CreateChangelogTests(TestCase):
                 distributions='UNRELEASED',
                 changes=['', '  * New entry.', ''])
 
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 blah (1.0-1) UNRELEASED; urgency=unknown
 
@@ -86,7 +86,7 @@ blah (1.0-1) UNRELEASED; urgency=unknown
                 maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
                 timestamp=datetime.utcfromtimestamp(1604934305))
 
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 blah (1.0-1) UNRELEASED; urgency=low
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
@@ -113,7 +113,7 @@ lintian-brush (0.28) UNRELEASED; urgency=medium
     def test_edit_simple(self):
         with ChangelogEditor() as updater:
             updater.changelog.version = '0.29'
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 lintian-brush (0.29) UNRELEASED; urgency=medium
 
@@ -127,7 +127,7 @@ lintian-brush (0.29) UNRELEASED; urgency=medium
             updater.auto_version(
                 Version('0.29'),
                 timestamp=datetime.utcfromtimestamp(1604934305))
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 lintian-brush (0.29) UNRELEASED; urgency=medium
 
@@ -151,7 +151,7 @@ lintian-brush (0.28) unstable; urgency=medium
                 Version('0.29'),
                 maintainer=('Jelmer Vernooij', 'jelmer@debian.org'),
                 timestamp=datetime.utcfromtimestamp(1604934305))
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 lintian-brush (0.29) UNRELEASED; urgency=low
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 09 Nov 2020 15:05:05 -0000
@@ -183,7 +183,7 @@ lalalalala
                 ['New release'],
                 maintainer=('Jelmer Vernooij', 'jelmer@debian.org'))
 
-        with open('debian/changelog', 'r') as f:
+        with open('debian/changelog') as f:
             self.assertEqual("""\
 blah (2.0-1) UNRELEASED; urgency=low
 
@@ -202,7 +202,7 @@ lintian-brush (0.28) unstable; urgency=medium
 class TextWrapperTests(TestCase):
 
     def setUp(self):
-        super(TextWrapperTests, self).setUp()
+        super().setUp()
         self.wrapper = TextWrapper()
 
     def test_wrap_closes(self):
@@ -593,14 +593,14 @@ class ChangelogInfoTests(TestCase):
         changes = ["  * Do foo", "", "  [ A. Hacker ]", "  * Do bar", "",
                    "  [ B. Hacker ]", "  [ A. Hacker}"]
         authors = find_extra_authors(changes)
-        self.assertEqual([u"A. Hacker", u"B. Hacker"], authors)
+        self.assertEqual(["A. Hacker", "B. Hacker"], authors)
         self.assertEqual([str]*len(authors), list(map(type, authors)))
 
     def test_find_extra_authors_utf8(self):
-        changes = [u"  * Do foo", u"", "  [ \xe1. Hacker ]", "  * Do bar", "",
-                   u"  [ \xe7. Hacker ]", "  [ A. Hacker}"]
+        changes = ["  * Do foo", "", "  [ \xe1. Hacker ]", "  * Do bar", "",
+                   "  [ \xe7. Hacker ]", "  [ A. Hacker}"]
         authors = find_extra_authors(changes)
-        self.assertEqual([u"\xe1. Hacker", u"\xe7. Hacker"], authors)
+        self.assertEqual(["\xe1. Hacker", "\xe7. Hacker"], authors)
         self.assertEqual([str]*len(authors), list(map(type, authors)))
 
     def test_find_extra_authors_iso_8859_1(self):
@@ -609,7 +609,7 @@ class ChangelogInfoTests(TestCase):
         changes = ["  * Do foo", "", "  [ \xe1. Hacker ]", "  * Do bar", "",
                    "  [ \xe7. Hacker ]", "  [ A. Hacker}"]
         authors = find_extra_authors(changes)
-        self.assertEqual([u"\xe1. Hacker", u"\xe7. Hacker"], authors)
+        self.assertEqual(["\xe1. Hacker", "\xe7. Hacker"], authors)
         self.assertEqual([str]*len(authors), list(map(type, authors)))
 
     def test_find_extra_authors_no_changes(self):
@@ -630,27 +630,27 @@ class ChangelogInfoTests(TestCase):
 
     def test_find_thanks(self):
         changes = ["  * Thanks to A. Hacker"]
-        self.assert_thanks_is(changes, [u"A. Hacker"])
+        self.assert_thanks_is(changes, ["A. Hacker"])
         changes = ["  * Thanks to James A. Hacker"]
-        self.assert_thanks_is(changes, [u"James A. Hacker"])
+        self.assert_thanks_is(changes, ["James A. Hacker"])
         changes = ["  * Thankyou to B. Hacker"]
-        self.assert_thanks_is(changes, [u"B. Hacker"])
+        self.assert_thanks_is(changes, ["B. Hacker"])
         changes = ["  * thanks to A. Hacker"]
-        self.assert_thanks_is(changes, [u"A. Hacker"])
+        self.assert_thanks_is(changes, ["A. Hacker"])
         changes = ["  * thankyou to B. Hacker"]
-        self.assert_thanks_is(changes, [u"B. Hacker"])
+        self.assert_thanks_is(changes, ["B. Hacker"])
         changes = ["  * Thanks A. Hacker"]
-        self.assert_thanks_is(changes, [u"A. Hacker"])
+        self.assert_thanks_is(changes, ["A. Hacker"])
         changes = ["  * Thankyou B.  Hacker"]
-        self.assert_thanks_is(changes, [u"B. Hacker"])
+        self.assert_thanks_is(changes, ["B. Hacker"])
         changes = ["  * Thanks to Mark A. Super-Hacker"]
-        self.assert_thanks_is(changes, [u"Mark A. Super-Hacker"])
+        self.assert_thanks_is(changes, ["Mark A. Super-Hacker"])
         changes = ["  * Thanks to A. Hacker <ahacker@example.com>"]
-        self.assert_thanks_is(changes, [u"A. Hacker <ahacker@example.com>"])
-        changes = [u"  * Thanks to Adeodato Sim\xc3\xb3"]
-        self.assert_thanks_is(changes, [u"Adeodato Sim\xc3\xb3"])
-        changes = [u"  * Thanks to \xc1deodato Sim\xc3\xb3"]
-        self.assert_thanks_is(changes, [u"\xc1deodato Sim\xc3\xb3"])
+        self.assert_thanks_is(changes, ["A. Hacker <ahacker@example.com>"])
+        changes = ["  * Thanks to Adeodato Sim\xc3\xb3"]
+        self.assert_thanks_is(changes, ["Adeodato Sim\xc3\xb3"])
+        changes = ["  * Thanks to \xc1deodato Sim\xc3\xb3"]
+        self.assert_thanks_is(changes, ["\xc1deodato Sim\xc3\xb3"])
 
 
 class UpstreamMergeChangelogLineTests(TestCase):

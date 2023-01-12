@@ -61,7 +61,7 @@ class TestCaseInTempDir(TestCase):
 
     def assertFileEqual(
             self, expected_content, path, strip_trailing_whitespace=False):
-        with open(path, 'r') as f:
+        with open(path) as f:
             content = f.read()
         if strip_trailing_whitespace:
             content = content.rstrip()

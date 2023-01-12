@@ -130,7 +130,7 @@ class TestUpstreamVersionAddRevision(TestCase):
     """Test that updating the version string works."""
 
     def setUp(self):
-        super(TestUpstreamVersionAddRevision, self).setUp()
+        super().setUp()
         self.revnos = {}
         self.svn_revnos = {b"somesvnrev": 45}
         self.git_shas = {

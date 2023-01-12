@@ -91,7 +91,7 @@ Copyright: 2012...
                 ['foo.c'], "2012 Joe Example", License("Apache"))
             updater.copyright.add_files_paragraph(p)
         self.assertTrue(updater.changed)
-        with open('debian/copyright', 'r') as f:
+        with open('debian/copyright') as f:
             self.assertEqual("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
@@ -118,7 +118,7 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
             updater.copyright.add_license_paragraph(LicenseParagraph.create(
                 License("Blah", 'Blah\nblah blah\nblah\n\n')))
         self.assertTrue(updater.changed)
-        with open('debian/copyright', 'r') as f:
+        with open('debian/copyright') as f:
             self.assertEqual("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
@@ -165,7 +165,7 @@ License: Blah
         with CopyrightEditor() as updater:
             license_para = list(updater.copyright.all_license_paragraphs())[0]
             updater.remove(license_para)
-        with open('debian/copyright', 'r') as f:
+        with open('debian/copyright') as f:
             self.assertEqual("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
@@ -188,7 +188,7 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
             p = FilesParagraph.create(
                 ['bar.c'], "2013 Joe Example", License("Apache"))
             updater.append(p)
-        with open('debian/copyright', 'r') as f:
+        with open('debian/copyright') as f:
             self.assertEqual("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
@@ -219,7 +219,7 @@ License: Apache
             p = FilesParagraph.create(
                 ['foo.c'], "2012 Joe Example", License("Apache"))
             updater.insert(0, p)
-        with open('debian/copyright', 'r') as f:
+        with open('debian/copyright') as f:
             self.assertEqual("""\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush

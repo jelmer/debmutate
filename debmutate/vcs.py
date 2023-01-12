@@ -77,9 +77,9 @@ def unsplit_vcs_url(repo_url: str,
     """
     url = repo_url
     if branch:
-        url = '%s -b %s' % (url, branch)
+        url = '{} -b {}'.format(url, branch)
     if subpath:
-        url = '%s [%s]' % (url, subpath)
+        url = '{} [{}]'.format(url, subpath)
     return url
 
 
@@ -143,7 +143,7 @@ class GbpTagFormatError(Exception):
     """Unknown variable in gbp tag name."""
 
     def __init__(self, tag_name, variable):
-        super(GbpTagFormatError, self).__init__(tag_name, variable)
+        super().__init__(tag_name, variable)
         self.variable = variable
         self.tag_name = tag_name
 

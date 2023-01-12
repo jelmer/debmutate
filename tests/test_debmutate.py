@@ -33,7 +33,7 @@ class DebmutateVersion(TestCase):
                 "no debian/changelog available. "
                 "Running outside of source tree?"
             )
-        with open("debian/changelog", "r") as f:
+        with open("debian/changelog") as f:
             cl = Changelog(f, max_blocks=1)
         cl_version = str(cl.version)
         cl_version = cl_version.split("+")[0]

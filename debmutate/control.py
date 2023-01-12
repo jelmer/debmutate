@@ -104,15 +104,15 @@ class TemplateExpansionFailed(Exception):
     def __init__(self, command, stderr):
         self.command = command
         self.stderr = stderr
-        super(TemplateExpansionFailed, self).__init__(
-            "Template expansion (%r) failed: %s" % (command, stderr))
+        super().__init__(
+            "Template expansion ({!r}) failed: {}".format(command, stderr))
 
 
 class TemplateExpandCommandMissing(Exception):
 
     def __init__(self, command):
         self.command = command
-        super(TemplateExpandCommandMissing, self).__init__(
+        super().__init__(
             "Command for expanding template file missing: %s" %
             command)
 
@@ -384,7 +384,7 @@ ChangesDict = Dict[
     Tuple[str, str], List[Tuple[str, Optional[str], Optional[str]]]]
 
 
-class ControlEditor(object):
+class ControlEditor:
     """Edit a control file.
     """
 
@@ -959,7 +959,7 @@ def drop_dependency(relationstr: str, package: str) -> str:
 
     def keep(relation):
         names = [r.name for r in relation]
-        return set(names) != set([package])
+        return set(names) != {package}
     ret = filter_dependencies(relations, keep)
     if relations != ret:
         return format_relations(ret)
@@ -1098,7 +1098,7 @@ def suppress_substvar_warnings():
                  r'it raw'))
 
 
-class PkgRelationFieldEditor(object):
+class PkgRelationFieldEditor:
     """Convenience wrapper for editing pkg relation fields."""
 
     _parsed: Optional[List[Tuple[str, List[PkgRelation], str]]]
@@ -1128,7 +1128,7 @@ class PkgRelationFieldEditor(object):
 
         def keep(relation):
             names = [r.name for r in relation]
-            return set(names) != set([package])
+            return set(names) != {package}
         new_parsed = filter_dependencies(self._parsed, keep)
         ret = self._parsed != new_parsed
         self._parsed = new_parsed

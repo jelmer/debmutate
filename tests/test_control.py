@@ -920,7 +920,7 @@ class ParseStandardsVersionTests(TestCase):
 class GuessTemplateTypeTests(TestCaseInTempDir):
 
     def setUp(self):
-        super(GuessTemplateTypeTests, self).setUp()
+        super().setUp()
         os.mkdir('debian')
 
     def test_rules_generates_control(self):
