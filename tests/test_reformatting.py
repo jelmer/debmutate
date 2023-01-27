@@ -39,8 +39,18 @@ class CheckPreserveFormattingTests(TestCase):
 
     def test_formatting_different(self):
         self.assertRaises(
-            FormattingUnpreservable,
-            check_preserve_formatting, "FOO ", "FOO  ", 'debian/blah')
+                FormattingUnpreservable,
+                check_preserve_formatting, "FOO ", "FOO  ", 'debian/blah')
+
+    def test_diff(self):
+        e = FormattingUnpreservable('debian/blah', "FOO X\n", "FOO  X\n")
+        self.assertEqual(''.join(e.diff()), """\
+--- original
++++ rewritten
+@@ -1 +1 @@
+-FOO X
++FOO  X
+""")
 
     def test_reformatting_allowed(self):
         check_preserve_formatting(

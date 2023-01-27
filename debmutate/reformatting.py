@@ -47,6 +47,13 @@ class FormattingUnpreservable(Exception):
         self.original_contents = original_contents
         self.rewritten_contents = rewritten_contents
 
+    def diff(self):
+        from difflib import unified_diff
+        return unified_diff(
+            self.original_contents.splitlines(True),
+            self.rewritten_contents.splitlines(True),
+            fromfile='original', tofile='rewritten')
+
 
 def check_preserve_formatting(
         rewritten_text: Union[str, bytes], text: Union[str, bytes],

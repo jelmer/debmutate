@@ -13,6 +13,7 @@ debmutate (0.63) unstable; urgency=medium
     template type.
   * ControlEditor: Raise MissingSourceParagraph.
   * watch: Support substitutes.
+  * Add FormattingUnpreservable.diff().
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 10 Nov 2022 15:18:40 +0000
 
