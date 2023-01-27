@@ -1,4 +1,4 @@
-debmutate (0.65) UNRELEASED; urgency=medium
+debmutate (0.65) unstable; urgency=medium
 
   * Update version string. Fixes autopkgtest.
 
