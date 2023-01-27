@@ -1,4 +1,4 @@
-debmutate (0.64) UNRELEASED; urgency=medium
+debmutate (0.64) unstable; urgency=medium
 
   * watch: Support substitutes.
   * Add FormattingUnpreservable.diff().
