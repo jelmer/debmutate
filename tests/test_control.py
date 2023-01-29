@@ -587,6 +587,12 @@ class EnsureRelationTests(TestCase):
                 'blah, debhelper (>= 8), debhelper (>= 10) | dh-systemd',
                 'debhelper (>= 9)'))
 
+    def test_bug(self):
+        self.assertEqual(
+            'python3-setuptools (>= 46.4),,python3-pytest,',
+            ensure_relation(
+                'python3-setuptools (>= 46.4),,\n', 'python3-pytest'))
+
 
 class EnsureSomeVersionTests(TestCase):
 
@@ -872,6 +878,7 @@ class IsRelationImpliedTests(TestCase):
         self.assertFalse(is_relation_implied('bzr', 'bar'))
         self.assertFalse(is_relation_implied('bzr (= 3)', 'bar'))
         self.assertFalse(is_relation_implied('bzr (= 3) | foo', 'bar'))
+        self.assertFalse(is_relation_implied('bzr (= 3)', ''))
 
     def test_too_old(self):
         self.assertFalse(is_relation_implied('bzr (= 3)', 'bzr'))
