@@ -507,7 +507,8 @@ def unmangle_debcargo_version(version):
 
 
 def debcargo_binary_name(crate_name, suffix=''):
-    return 'librust-{}{}-dev'.format(crate_name.lower().replace('_', '-'), suffix)
+    return 'librust-{}{}-dev'.format(
+        crate_name.lower().replace('_', '-'), suffix)
 
 
 if __name__ == '__main__':
