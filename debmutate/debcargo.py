@@ -149,9 +149,9 @@ class DebcargoSourceShimEditor(ShimParagraph):
         elif name == 'Source':
             if self._debcargo.get("semver_suffix", False):
                 return 'rust-{}-{}'.format(
-                    self.crate_name.replace('_', '-'),
+                    self.crate_name.lower().replace('_', '-'),
                     semver_pair(self.crate_version))
-            return 'rust-%s' % self.crate_name.replace('_', '-')
+            return 'rust-%s' % self.crate_name.lower().replace('_', '-')
         elif name == 'Priority':
             return 'optional'
         elif name == 'Rules-Requires-Root':
@@ -161,11 +161,11 @@ class DebcargoSourceShimEditor(ShimParagraph):
 
     def _default_vcs_git(self):
         return ('https://salsa.debian.org/rust-team/debcargo-conf.git '
-                '[src/%s]' % self.crate_name)
+                '[src/%s]' % self.crate_name.lower())
 
     def _default_vcs_browser(self):
         return ('https://salsa.debian.org/rust-team/debcargo-conf/tree/'
-                'master/src/%s' % self.crate_name)
+                'master/src/%s' % self.crate_name.lower())
 
     def _build_depends(self):
         # TODO(jelmer): read Cargo.toml
@@ -509,7 +509,7 @@ def unmangle_debcargo_version(version):
 
 
 def debcargo_binary_name(crate_name, suffix=''):
-    return 'librust-{}{}-dev'.format(crate_name.replace('_', '-'), suffix)
+    return 'librust-{}{}-dev'.format(crate_name.lower().replace('_', '-'), suffix)
 
 
 if __name__ == '__main__':
