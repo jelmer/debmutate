@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 import re
-from typing import Optional, Tuple, NamedTuple
+from typing import NamedTuple, Optional, Tuple
 
 
 class VcsUrl(NamedTuple):

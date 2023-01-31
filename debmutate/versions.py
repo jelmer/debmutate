@@ -17,9 +17,10 @@
 
 """Utility functions for dealing with Debian versions."""
 
-from datetime import datetime
 import re
+from datetime import datetime
 from typing import Optional, Tuple, Union
+
 from debian.changelog import Version
 
 __all__ = [

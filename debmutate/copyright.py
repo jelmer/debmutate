@@ -26,11 +26,8 @@ __all__ = [
 
 from typing import Dict, Optional
 
-from debian.copyright import (
-    Copyright,
-    MachineReadableFormatError,
-    NotMachineReadableError,
-)
+from debian.copyright import (Copyright, MachineReadableFormatError,
+                              NotMachineReadableError)
 from debian.deb822 import RestrictedField
 
 from .reformatting import Editor

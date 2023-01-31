@@ -17,11 +17,9 @@
 
 """Tests for debmutate.orig."""
 
-from . import TestCase
+from debmutate.orig import component_from_orig_tarball
 
-from debmutate.orig import (
-    component_from_orig_tarball,
-    )
+from . import TestCase
 
 
 class ComponentFromOrigTarballTests(TestCase):

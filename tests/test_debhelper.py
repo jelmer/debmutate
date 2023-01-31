@@ -21,16 +21,10 @@ from typing import Dict
 
 from debian.changelog import Version
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
+from debmutate.debhelper import (MaintscriptEditor, MaintscriptMoveConffile,
+                                 ensure_minimum_debhelper_version)
 
-from debmutate.debhelper import (
-    ensure_minimum_debhelper_version,
-    MaintscriptEditor,
-    MaintscriptMoveConffile,
-    )
+from . import TestCase, TestCaseInTempDir
 
 
 class EnsureMinumumDebhelperVersionTests(TestCase):

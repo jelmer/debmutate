@@ -19,10 +19,9 @@
 
 import fnmatch
 import re
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from .reformatting import Editor
-
 
 # https://lintian.debian.org/manual/section-2.4.html
 # File format (as documented in policy 2.4.1):

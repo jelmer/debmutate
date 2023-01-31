@@ -42,36 +42,22 @@ __all__ = [
 
 import collections
 import contextlib
-from itertools import takewhile
 import operator
 import os
 import re
-import time
-from typing import (
-    ContextManager,
-    Optional,
-    Callable,
-    Tuple,
-    Union,
-    List,
-    Iterable,
-    Dict,
-)
-
 import subprocess
+import time
 import warnings
+from itertools import takewhile
+from typing import (Callable, ContextManager, Dict, Iterable, List, Optional,
+                    Tuple, Union)
 
 from debian.changelog import Version
 
 from ._deb822 import PkgRelation
-from .deb822 import (
-    Deb822Editor,
-    ChangeConflict,
-    Deb822Paragraph,
-    parse_deb822_file,
-    )
+from .deb822 import (ChangeConflict, Deb822Editor, Deb822Paragraph,
+                     parse_deb822_file)
 from .reformatting import GeneratedFile
-
 
 # TODO(jelmer): dedupe with scripts/wrap-and-sort in devscripts
 CONTROL_LIST_FIELDS = (

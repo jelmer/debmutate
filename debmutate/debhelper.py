@@ -24,20 +24,15 @@ __all__ = [
     'get_debhelper_compat_level',
 ]
 
-from dataclasses import dataclass
 import os
-from typing import Optional, Union, Dict, List
-
-from debian.deb822 import Deb822
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Union
 
 from debian.changelog import Version
+from debian.deb822 import Deb822
 
-from .control import (
-    ensure_minimum_version,
-    get_relation,
-    parse_relations,
-    ControlEditor,
-)
+from .control import (ControlEditor, ensure_minimum_version, get_relation,
+                      parse_relations)
 from .reformatting import Editor
 
 

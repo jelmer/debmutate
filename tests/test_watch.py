@@ -17,20 +17,14 @@
 
 """Tests for debmutate.watch."""
 
-from io import StringIO
 import os
 import shutil
 import tempfile
+from io import StringIO
 from unittest import TestCase
 
-from debmutate.watch import (
-    parse_watch_file,
-    MissingVersion,
-    Watch,
-    WatchFile,
-    WatchEditor,
-    InvalidUVersionMangle,
-    )
+from debmutate.watch import (InvalidUVersionMangle, MissingVersion, Watch,
+                             WatchEditor, WatchFile, parse_watch_file)
 
 
 class ParseWatchFileTests(TestCase):

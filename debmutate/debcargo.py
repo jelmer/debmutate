@@ -18,18 +18,16 @@
 
 """Utility functions for dealing with debcargo files."""
 
-from collections.abc import MutableMapping
-from itertools import chain
 import os
 import re
+from collections.abc import MutableMapping
+from itertools import chain
 from typing import Optional, Tuple
 
 from debian.changelog import Changelog
-
-from tomlkit import loads, dumps
+from tomlkit import dumps, loads
 
 from .reformatting import Editor
-
 
 DEFAULT_MAINTAINER = (
     "Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>")

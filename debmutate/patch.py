@@ -18,12 +18,11 @@
 """Utility functions for editing patches under debian/patches/.
 """
 
-from collections import namedtuple
 import os
+from collections import namedtuple
 from typing import Iterator, List, Optional
 
 from .reformatting import Editor
-
 
 DEFAULT_DEBIAN_PATCHES_DIR = 'debian/patches'
 

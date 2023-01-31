@@ -19,13 +19,8 @@
 
 from unittest import TestCase
 
-from debmutate.vcs import (
-    VcsUrl,
-    split_vcs_url,
-    unsplit_vcs_url,
-    mangle_version_for_git,
-    gbp_expand_tag_name,
-    )
+from debmutate.vcs import (VcsUrl, gbp_expand_tag_name, mangle_version_for_git,
+                           split_vcs_url, unsplit_vcs_url)
 
 
 class SplitVcsUrlTests(TestCase):

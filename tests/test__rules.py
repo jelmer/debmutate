@@ -17,18 +17,12 @@
 
 """Tests for debmutate.rules."""
 
-from . import TestCase, TestCaseInTempDir
+from debmutate._rules import (Makefile, Rule, dh_invoke_add_with,
+                              dh_invoke_drop_with, dh_invoke_get_with,
+                              discard_pointless_override, matches_wildcard,
+                              update_rules)
 
-from debmutate._rules import (
-    Makefile,
-    Rule,
-    dh_invoke_drop_with,
-    dh_invoke_add_with,
-    dh_invoke_get_with,
-    discard_pointless_override,
-    matches_wildcard,
-    update_rules,
-    )
+from . import TestCase, TestCaseInTempDir
 
 
 class MakefileParseTests(TestCase):

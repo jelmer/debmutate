@@ -20,7 +20,6 @@
 
 import re
 
-
 SUPPORTED_KEYS = [
     'title', 'notes', 'is_affected', 'is_good', 'is_bad', 'export']
 
