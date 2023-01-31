@@ -20,37 +20,19 @@
 
 import os
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
+from debmutate.control import (ControlEditor, MissingSourceParagraph,
+                               PkgRelation, _cdbs_resolve_conflict,
+                               add_dependency, delete_from_list,
+                               drop_dependency, ensure_exact_version,
+                               ensure_minimum_version, ensure_relation,
+                               ensure_some_version, format_relations,
+                               get_relation, guess_template_type,
+                               is_dep_implied, is_relation_implied,
+                               iter_relations, parse_relations,
+                               parse_standards_version, update_control)
+from debmutate.reformatting import FormattingUnpreservable, GeneratedFile
 
-from debmutate.control import (
-    _cdbs_resolve_conflict,
-    add_dependency,
-    drop_dependency,
-    ensure_exact_version,
-    ensure_minimum_version,
-    ensure_some_version,
-    ensure_relation,
-    get_relation,
-    guess_template_type,
-    iter_relations,
-    is_relation_implied,
-    is_dep_implied,
-    update_control,
-    PkgRelation,
-    format_relations,
-    parse_relations,
-    delete_from_list,
-    ControlEditor,
-    parse_standards_version,
-    MissingSourceParagraph,
-    )
-from debmutate.reformatting import (
-    GeneratedFile,
-    FormattingUnpreservable,
-    )
+from . import TestCase, TestCaseInTempDir
 
 
 class UpdateControlTests(TestCaseInTempDir):

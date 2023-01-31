@@ -17,20 +17,14 @@
 
 """Tests for lintian_brush.lintian_overrides."""
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
-
 from io import StringIO
 
-from debmutate.lintian_overrides import (
-    LintianOverride,
-    LintianOverridesEditor,
-    iter_overrides,
-    parse_override,
-    serialize_override,
-    )
+from debmutate.lintian_overrides import (LintianOverride,
+                                         LintianOverridesEditor,
+                                         iter_overrides, parse_override,
+                                         serialize_override)
+
+from . import TestCase, TestCaseInTempDir
 
 
 class UpdateOverridesEditorTests(TestCaseInTempDir):

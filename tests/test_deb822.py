@@ -18,22 +18,13 @@
 
 """Tests for debmutate.deb822."""
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
-
 from debian.deb822 import Deb822
 
-from debmutate.deb822 import (
-    ChangeConflict,
-    Deb822Editor,
-    dump_paragraphs,
-    reformat_deb822,
-    )
-from debmutate.reformatting import (
-    GeneratedFile,
-    )
+from debmutate.deb822 import (ChangeConflict, Deb822Editor, dump_paragraphs,
+                              reformat_deb822)
+from debmutate.reformatting import GeneratedFile
+
+from . import TestCase, TestCaseInTempDir
 
 
 class ReformatDeb822Tests(TestCase):

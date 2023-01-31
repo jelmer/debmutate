@@ -20,34 +20,24 @@
 
 """Tests for lintian_brush.changelog."""
 
-from datetime import datetime
-from debian.changelog import Changelog
 import os
 import shutil
 import tempfile
-
-from debmutate.changelog import (
-    ChangelogCreateError,
-    ChangelogEditor,
-    TextWrapper,
-    all_sha_prefixed,
-    rewrap_change,
-    find_extra_authors,
-    find_thanks,
-    increment_version,
-    changes_sections,
-    release,
-    strip_changelog_message,
-    new_upstream_package_version,
-    changeblock_ensure_first_line,
-    find_last_distribution,
-    upstream_merge_changelog_line,
-    take_uploadership,
-    )
-
-from debian.changelog import Version
-
+from datetime import datetime
 from unittest import TestCase
+
+from debian.changelog import Changelog, Version
+
+from debmutate.changelog import (ChangelogCreateError, ChangelogEditor,
+                                 TextWrapper, all_sha_prefixed,
+                                 changeblock_ensure_first_line,
+                                 changes_sections, find_extra_authors,
+                                 find_last_distribution, find_thanks,
+                                 increment_version,
+                                 new_upstream_package_version, release,
+                                 rewrap_change, strip_changelog_message,
+                                 take_uploadership,
+                                 upstream_merge_changelog_line)
 
 
 class CreateChangelogTests(TestCase):

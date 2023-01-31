@@ -15,8 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import os
 import json
+import os
 
 from debmutate.control import ControlEditor
 
@@ -31,8 +31,8 @@ def main():
         updater.source["Rules-Requires-Root"] = "no"
 
     if os.environ.get('SVP_API') == "1":
-        import debmutate
         import debian
+        import debmutate
         with open(os.environ['SVP_RESULT'], 'w') as f:
             json.dump({
                 'description': 'Set Rules-Requires-Root.',

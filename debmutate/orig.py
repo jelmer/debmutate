@@ -19,7 +19,6 @@
 
 import os
 
-
 SUPPORTED_SUFFIXES = [".tar.gz", ".tar.bz2", ".tar.lzma", ".tar.xz"]
 
 

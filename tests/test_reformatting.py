@@ -18,18 +18,12 @@
 
 """Tests for lintian brush reformatting tools."""
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
+from debmutate.reformatting import (FormattingUnpreservable, GeneratedFile,
+                                    check_generated_file,
+                                    check_preserve_formatting,
+                                    edit_formatted_file)
 
-from debmutate.reformatting import (
-    FormattingUnpreservable,
-    check_generated_file,
-    check_preserve_formatting,
-    edit_formatted_file,
-    GeneratedFile,
-    )
+from . import TestCase, TestCaseInTempDir
 
 
 class CheckPreserveFormattingTests(TestCase):

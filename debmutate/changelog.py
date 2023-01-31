@@ -40,21 +40,16 @@ __all__ = [
     'upstream_merge_changelog_line',
     ]
 
-from datetime import datetime
-from email.utils import format_datetime, parseaddr
 import re
 import textwrap
-from typing import List, Iterator, Tuple, Optional
+from datetime import datetime
+from email.utils import format_datetime, parseaddr
+from typing import Iterator, List, Optional, Tuple
 
-from debian.changelog import (
-    ChangeBlock,
-    Changelog,
-    ChangelogCreateError,
-    ChangelogParseError,
-    format_date,
-    get_maintainer,
-    Version,
-    )
+from debian.changelog import (ChangeBlock, Changelog, ChangelogCreateError,
+                              ChangelogParseError, Version, format_date,
+                              get_maintainer)
+
 from .reformatting import Editor
 
 WIDTH = 80
@@ -667,6 +662,7 @@ def is_unreleased_inaugural(cl: Changelog) -> bool:
 def gbp_dch(path: str) -> None:
     """Run 'gbp dch'."""
     import os
+
     from gbp.scripts.dch import main as dch_main
     old_cwd = os.getcwd()
     try:

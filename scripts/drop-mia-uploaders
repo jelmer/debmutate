@@ -15,17 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import logging
-
 import json
+import logging
 import os
-
-from typing import Optional, List
+from typing import List, Optional
 
 from debmutate.control import ControlEditor, delete_from_list
 from debmutate.deb822 import ChangeConflict
-from debmutate.reformatting import GeneratedFile, FormattingUnpreservable
-
+from debmutate.reformatting import FormattingUnpreservable, GeneratedFile
 
 BRANCH_NAME = "mia"
 MIA_EMAIL = "mia@qa.debian.org"
@@ -33,8 +30,8 @@ MIA_TEAMMAINT_USERTAG = "mia-teammaint"
 
 
 def versions_dict():
-    import debmutate
     import debian
+    import debmutate
     return {
         'debmutate': debmutate.version_string,
         'debian': debian.__version__,
@@ -148,7 +145,8 @@ def main():
 
     try:
         if os.path.exists('debian/debcargo.toml'):
-            from debmutate.debcargo import DebcargoControlShimEditor, DebcargoEditor
+            from debmutate.debcargo import (DebcargoControlShimEditor,
+                                            DebcargoEditor)
 
             control = DebcargoControlShimEditor.from_debian_dir('debian')
         else:

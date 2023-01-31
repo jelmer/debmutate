@@ -17,19 +17,13 @@
 
 """Tests for debmutate.patch."""
 
-from io import BytesIO
 import os
+from io import BytesIO
 
-from . import (
-    TestCase,
-    TestCaseInTempDir,
-    )
+from debmutate.patch import (QuiltSeriesEditor, find_common_patch_suffix,
+                             read_quilt_series)
 
-from debmutate.patch import (
-    find_common_patch_suffix,
-    read_quilt_series,
-    QuiltSeriesEditor,
-    )
+from . import TestCase, TestCaseInTempDir
 
 
 class ReadSeriesFileTests(TestCase):

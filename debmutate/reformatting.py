@@ -26,7 +26,7 @@ __all__ = [
 
 import logging
 import os
-from typing import Union, Optional, List, TypeVar, Generic
+from typing import Generic, List, Optional, TypeVar, Union
 
 
 class GeneratedFile(Exception):

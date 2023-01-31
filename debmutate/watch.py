@@ -17,22 +17,19 @@
 
 """Functions for working with watch files."""
 
-from io import StringIO
 import logging
-import pcre
 import re
 import sys
-from typing import (
-    Iterable, List, Union, Callable, Optional, TextIO, Iterator, Tuple)
+from io import StringIO
+from typing import (Callable, Iterable, Iterator, List, Optional, TextIO,
+                    Tuple, Union)
 from urllib.parse import urljoin
 
+import pcre
 from debian.changelog import Version
 
-from .reformatting import (
-    Editor,
-    )
-
 from . import __version__
+from .reformatting import Editor
 
 DEFAULT_USER_AGENT = 'debmutate/%s' % '.'.join([str(x) for x in __version__])
 
@@ -363,7 +360,7 @@ class Watch:
         return _subst(self.url, package)
 
     def discover(self, package) -> Iterator[Release]:
-        from urllib.request import urlopen, Request
+        from urllib.request import Request, urlopen
         url = self.format_url(package)
         try:
             user_agent = self.get_option('user-agent')

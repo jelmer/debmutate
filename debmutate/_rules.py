@@ -19,7 +19,7 @@
 
 import os
 import re
-from typing import Iterator, Optional, List, Union
+from typing import Iterator, List, Optional, Union
 
 from .reformatting import Editor
 

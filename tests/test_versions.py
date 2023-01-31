@@ -18,21 +18,16 @@
 """Tests for debmutate.versions."""
 
 from datetime import datetime
-
-from debmutate.versions import (
-    add_dfsg_suffix,
-    git_snapshot_data_from_version,
-    mangle_version_for_git,
-    new_package_version,
-    get_snapshot_revision,
-    upstream_version_add_revision,
-    debianize_upstream_version,
-    matches_release,
-    strip_dfsg_suffix,
-    )
+from unittest import TestCase
 
 from debian.changelog import Version
-from unittest import TestCase
+
+from debmutate.versions import (add_dfsg_suffix, debianize_upstream_version,
+                                get_snapshot_revision,
+                                git_snapshot_data_from_version,
+                                mangle_version_for_git, matches_release,
+                                new_package_version, strip_dfsg_suffix,
+                                upstream_version_add_revision)
 
 
 class MangleVersionForGitTests(TestCase):

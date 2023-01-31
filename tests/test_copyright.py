@@ -20,19 +20,11 @@
 import os
 import shutil
 import tempfile
-
 from unittest import TestCase
 
-from debian.copyright import (
-    FilesParagraph,
-    LicenseParagraph,
-    License,
-    )
+from debian.copyright import FilesParagraph, License, LicenseParagraph
 
-from debmutate.copyright import (
-    NotMachineReadableError,
-    CopyrightEditor,
-    )
+from debmutate.copyright import CopyrightEditor, NotMachineReadableError
 
 
 class UpdateCopyrightTests(TestCase):

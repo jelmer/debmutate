@@ -30,17 +30,13 @@ __all__ = [
 from io import BytesIO
 from typing import List, Optional, Union
 
+from debian._deb822_repro.parsing import Deb822FileElement as Deb822File
+from debian._deb822_repro.parsing import \
+    Deb822ParagraphElement as Deb822Paragraph
+from debian._deb822_repro.parsing import parse_deb822_file
 from debian.deb822 import Deb822
-from debian._deb822_repro.parsing import (
-    parse_deb822_file,
-    Deb822ParagraphElement as Deb822Paragraph,
-    Deb822FileElement as Deb822File,
-)
 
-from .reformatting import (
-    Editor,
-)
-
+from .reformatting import Editor
 
 # Urgh; this is bad form as a library, but the alternative is
 # silently discarding comments.
