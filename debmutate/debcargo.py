@@ -25,7 +25,7 @@ from itertools import chain
 from typing import Optional, Tuple
 
 from debian.changelog import Changelog
-from tomlkit import dumps, loads
+from tomlkit import dumps, loads, load
 
 from .reformatting import Editor
 
@@ -264,16 +264,19 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         suffixes.append(
             '-%d.%d.%d' % (parsed.major, parsed.minor, parsed.patch))
         for ver_suffix in suffixes:
-            for feature in chain([None], self.features or []):
+            feature_suffixes = set([''])
+            feature_suffixes.add('+default')
+            feature_suffixes.update(['+' + feature for feature in (self.features or [])])
+            for feature_suffix in feature_suffixes:
                 ret.append(debcargo_binary_name(
                     self.crate_name,
-                    suffix=ver_suffix + (('+' + feature) if feature else '')))
+                    suffix=ver_suffix + feature_suffix))
         if self.package_name in ret:
             ret.remove(self.package_name)
         if not ret:
             return None
         return '\n ' + ',\n '.join(
-            ['%s (= ${binary:Version})' % p for p in ret])
+            ['%s (= ${binary:Version})' % p for p in sorted(ret)])
 
     def _description(self):
         return (
@@ -410,7 +413,7 @@ class DebcargoControlShimEditor:
         if cargo is None:
             try:
                 with open(cargo_path) as f:
-                    cargo = loads(f.read())
+                    cargo = load(f)
                     crate_name = cargo["package"]["name"]
                     crate_version = cargo["package"]["version"]
                     features = list(cargo['features'])
