@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.mypy]
 warn_redundant_casts = true
 warn_unused_configs = true
 check_untyped_defs = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -17,3 +18,40 @@ module = [
     "pcre.*",
 ]
 ignore_missing_imports = true
+
+[project]
+name = "debmutate"
+authors = [{name = "Jelmer Vernooĳ", email = "jelmer@debian.org"}]
+description = "manipulation of Debian package control files"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "python_debian>=0.1.44",
+    "python-tr",
+    "merge3",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://salsa.debian.org/jelmer/debmutate"
+Repository = "https://salsa.debian.org/jelmer/debmutate.git"
+
+[project.optional-dependencies]
+debcargo = ["tomlkit"]
+watch = ["python-pcre"]
+
+[tool.setuptools]
+script-files = [
+    "scripts/deb-enable-rrr",
+    "scripts/drop-mia-uploaders",
+]
+include-package-data = false
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+[tool.setuptools.package-data]
+debmutate = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {attr = "debmutate.__version__"}

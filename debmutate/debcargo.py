@@ -266,7 +266,8 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         for ver_suffix in suffixes:
             feature_suffixes = set([''])
             feature_suffixes.add('+default')
-            feature_suffixes.update(['+' + feature for feature in (self.features or [])])
+            feature_suffixes.update(
+                ['+' + feature for feature in (self.features or [])])
             for feature_suffix in feature_suffixes:
                 ret.append(debcargo_binary_name(
                     self.crate_name,
