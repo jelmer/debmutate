@@ -1,0 +1,3 @@
+banned-modules =
+   dulwich = Avoid using VCS modules
+   breezy = Avoid using VCS modules
