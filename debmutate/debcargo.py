@@ -86,7 +86,7 @@ class DebcargoEditor(TomlEditor):
             type(self).__name__, self.path, self.allow_reformatting,
             self.allow_missing)
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         if self.allow_missing:
             return {}
         raise

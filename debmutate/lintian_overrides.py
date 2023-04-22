@@ -110,7 +110,7 @@ class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
         return [entry for entry in self.lines
                 if isinstance(entry, LintianOverride)]
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         return None
 
     def override_exists(self, tag, info=None, package=None):

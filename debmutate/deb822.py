@@ -170,7 +170,7 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
     def _format(self, paragraphs):
         return dump_paragraphs(paragraphs)
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         if self.allow_missing:
             return parse_deb822_file([])
         raise

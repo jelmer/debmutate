@@ -92,7 +92,7 @@ class SeriesTests(TestCaseInTempDir):
             ('debian/', ),
             ('debian/patches/', )])
 
-    def test_edit_nonexistant(self):
+    def test_edit_nonexistent(self):
         with QuiltSeriesEditor():
             pass
         self.assertFalse(os.path.exists('debian/patches/series'))

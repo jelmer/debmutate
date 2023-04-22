@@ -104,7 +104,7 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
     def _parse(self, content):
         return list(read_quilt_series(content.splitlines(True)))
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         return None
 
     def _format(self, parsed):

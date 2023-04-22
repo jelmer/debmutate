@@ -491,7 +491,7 @@ class WatchEditor(Editor[WatchFile, str]):
     def watch_file(self) -> WatchFile:
         return self._parsed
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         if self.allow_missing:
             return WatchFile([])
         raise

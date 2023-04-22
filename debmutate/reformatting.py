@@ -190,7 +190,7 @@ class Editor(Generic[T, P]):
                 os.environ.get('REFORMATTING', 'disallow') == 'allow')
         self.allow_reformatting = allow_reformatting
 
-    def _nonexistant(self) -> T:
+    def _nonexistent(self) -> T:
         raise
 
     def _parse(self, content: P) -> T:
@@ -207,7 +207,7 @@ class Editor(Generic[T, P]):
                 self._orig_content = f.read()
         except FileNotFoundError:
             self._orig_content = None
-            self._parsed = self._nonexistant()
+            self._parsed = self._nonexistent()
         else:
             self._parsed = self._parse(self._orig_content)
         if self._parsed is not None:

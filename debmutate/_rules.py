@@ -43,7 +43,7 @@ class Rule:
     """A make rule."""
 
     target: Optional[bytes]
-    comands: List[bytes]
+    commands: List[bytes]
     prereq_targets: List[bytes]
     precomment: List[bytes]
 
