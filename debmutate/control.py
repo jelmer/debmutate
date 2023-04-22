@@ -564,7 +564,7 @@ def parse_relations(text: str) -> List[Tuple[str, List[PkgRelation], str]]:
 
     (e.g. a Depends, Provides, Build-Depends, etc field)
 
-    This attemps to preserve some indentation.
+    This attempts to preserve some indentation.
 
     Args:
       text: Text to parse
@@ -601,7 +601,7 @@ def format_relations(
         relations: List[Tuple[str, List[PkgRelation], str]]) -> str:
     """Format a package relations string.
 
-    This attemps to create formatting.
+    This attempts to create formatting.
     """
     ret = []
     for (head_whitespace, relation, tail_whitespace) in relations:

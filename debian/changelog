@@ -104,7 +104,7 @@ debmutate (0.53) unstable; urgency=medium
 
 debmutate (0.52) unstable; urgency=medium
 
-  * Use pcre for better uscan compatibilty when parsing watch files.
+  * Use pcre for better uscan compatibility when parsing watch files.
   * Add debmutate.changelog.take_uploadership.
   * Update uploadership in debmutate.changelog.release.
 

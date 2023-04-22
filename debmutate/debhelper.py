@@ -39,7 +39,7 @@ from .reformatting import Editor
 def ensure_minimum_debhelper_version(
         source: Union[Deb822, Dict[str, str]],
         minimum_version: Union[str, Version]) -> bool:
-    """Ensure that the pakcage is at least using version x of debhelper.
+    """Ensure that the package is at least using version x of debhelper.
 
     This is a dedicated helper, since debhelper can now also be pulled in
     with a debhelper-compat dependency.
@@ -224,7 +224,7 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
         super().__init__(
             path=path, allow_reformatting=allow_reformatting)
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         return None
 
     def _parse(self, content):

@@ -27,7 +27,7 @@ from debmutate.debhelper import (MaintscriptEditor, MaintscriptMoveConffile,
 from . import TestCase, TestCaseInTempDir
 
 
-class EnsureMinumumDebhelperVersionTests(TestCase):
+class EnsureMinimumDebhelperVersionTests(TestCase):
 
     def test_already(self):
         d = {

@@ -91,7 +91,7 @@ class ChangelogEditor(Editor[Changelog, str]):
     def __getitem__(self, i):
         return self.changelog[i]
 
-    def _nonexistant(self):
+    def _nonexistent(self):
         if self.allow_missing:
             return Changelog()
         raise
