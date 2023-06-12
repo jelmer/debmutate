@@ -43,7 +43,6 @@ class Rule:
     """A make rule."""
 
     target: Optional[bytes]
-    commands: List[bytes]
     prereq_targets: List[bytes]
     precomment: List[bytes]
 
@@ -384,7 +383,9 @@ class RulesEditor(MakefileEditor):
                     line = global_line_cb(line)
                 if line is None:
                     if drop_related_comments:
-                        while newcontents and newcontents[-1].startswith(b'#'):
+                        while (newcontents
+                               and newcontents[-1].startswith(b'#')
+                               and not newcontents[-1].startswith(b'#!')):
                             del newcontents[-1]
                     if newcontents and not newcontents[-1]:
                         del newcontents[-1]
