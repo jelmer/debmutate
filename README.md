@@ -9,20 +9,26 @@ library, and was originally extracted from
 
 To modify one of the control files, use one of the context managers to edit the file.
 
-For example, for debian/control::
+For example, for debian/control:
 
-    from debmutate.control import ControlEditor
+```python
 
-    with ControlEditor(path='debian/control') as control:
-        print(control.source['Maintainer'])
-        control.source['Maintainer'] = "Jelmer Vernooĳ <jelmer@debian.org>"
+from debmutate.control import ControlEditor
 
-Or for debian/changelog::
+with ControlEditor(path='debian/control') as control:
+    print(control.source['Maintainer'])
+    control.source['Maintainer'] = "Jelmer Vernooĳ <jelmer@debian.org>"
+```
 
-    from debmutate.changelog import ChangelogEditor
+Or for debian/changelog:
 
-   with ChangelogEditor(path='debian/changelog') as editor:
-       editor.add_entry(['Some entry'])
+```python
+
+from debmutate.changelog import ChangelogEditor
+
+with ChangelogEditor(path='debian/changelog') as editor:
+   editor.add_entry(['Some entry'])
+```
 
 Once you leave the context manager, the changes will be written to disk if
 there were any. If the editor is unable to preserve the formatting of the
