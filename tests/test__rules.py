@@ -187,6 +187,29 @@ all:
 \techo blah
 """, 'debian/rules')
 
+    def test_keep_shebang(self):
+        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+#!/usr/bin/blah -f
+SOMETHING = 1
+
+all:
+\techo blah
+""")])
+
+        def remove(line):
+            if line == b'SOMETHING = 1':
+                return None
+            return line
+        self.assertTrue(update_rules(
+            global_line_cb=remove, drop_related_comments=True))
+        self.assertFalse(update_rules(global_line_cb=remove))
+        self.assertFileEqual("""\
+#!/usr/bin/blah -f
+
+all:
+\techo blah
+""", 'debian/rules')
+
     def test_keep_rule_cb(self):
         self.build_tree_contents([('debian/', ), ('debian/rules', """\
 SOMETHING = 1
