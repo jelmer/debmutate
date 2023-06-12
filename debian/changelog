@@ -1,10 +1,10 @@
-debmutate (0.66) UNRELEASED; urgency=medium
+debmutate (0.66) unstable; urgency=medium
 
   * is_relation_implied: fix logic when outer is empty
   * debcargo: Handle default feature.
   * rules: prevent deletion of shebang line.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 29 Jan 2023 19:05:56 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 12 Jun 2023 19:33:54 +0100
 
 debmutate (0.65) unstable; urgency=medium
 
