@@ -1059,8 +1059,8 @@ def is_relation_implied(
 
     # "bzr >= 1.3" implied by "bzr >= 1.3 | libc6"
     for inner_dep in inner_rel:
-        if outer_rel and all(is_dep_implied(inner_dep, outer_dep)
-                             for outer_dep in outer_rel):
+        if any(is_dep_implied(inner_dep, outer_dep)
+               for outer_dep in outer_rel):
             return True
     return False
 

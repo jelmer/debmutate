@@ -1,3 +1,9 @@
+debmutate (0.67) UNRELEASED; urgency=medium
+
+  * is_relation_implied: Improve handling of or relations.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 09 Aug 2023 22:51:58 +0100
+
 debmutate (0.66) unstable; urgency=medium
 
   * is_relation_implied: fix logic when outer is empty

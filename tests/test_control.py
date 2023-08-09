@@ -564,7 +564,7 @@ class EnsureRelationTests(TestCase):
                 'blah, debhelper (>= 8), debhelper (>= 8.1) | dh-systemd',
                 'debhelper (>= 9)'))
         self.assertEqual(
-            'blah, debhelper (>= 9), debhelper (>= 10) | dh-systemd',
+            'blah, debhelper (>= 8), debhelper (>= 10) | dh-systemd',
             ensure_relation(
                 'blah, debhelper (>= 8), debhelper (>= 10) | dh-systemd',
                 'debhelper (>= 9)'))
@@ -852,6 +852,9 @@ class IsDepImpliedTests(TestCase):
             is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (= 6)')))
         self.assertFalse(
             is_dep_implied(self.parse('bzr (>> 5)'), self.parse('bzr (= 5)')))
+        self.assertTrue(
+            is_dep_implied(
+                self.parse('bzr:any (>> 5)'), self.parse('bzr:any (= 6)')))
 
 
 class IsRelationImpliedTests(TestCase):
@@ -869,7 +872,7 @@ class IsRelationImpliedTests(TestCase):
 
     def test_ors(self):
         self.assertFalse(is_relation_implied('bzr (= 3)', 'bzr | foo'))
-        self.assertFalse(is_relation_implied('bzr', 'bzr | foo'))
+        self.assertTrue(is_relation_implied('bzr', 'bzr | foo'))
         self.assertTrue(is_relation_implied('bzr | foo', 'bzr | foo'))
 
     def test_implied(self):
@@ -879,6 +882,12 @@ class IsRelationImpliedTests(TestCase):
         self.assertTrue(is_relation_implied('bzr', 'bzr'))
         self.assertTrue(is_relation_implied('bzr | foo', 'bzr'))
         self.assertFalse(is_relation_implied('bzr (= 3)', 'bzr (>= 3)'))
+        self.assertTrue(is_relation_implied(
+            'python3:any | dh-sequence-python3',
+            'python3:any'))
+        self.assertTrue(is_relation_implied(
+            'python3:any | python3-dev:any | dh-sequence-python3',
+            'python3:any | python3-dev:any'))
 
 
 class CdbsResolverConflictTests(TestCase):
