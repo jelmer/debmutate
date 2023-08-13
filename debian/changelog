@@ -1,4 +1,4 @@
-debmutate (0.67) UNRELEASED; urgency=medium
+debmutate (0.67) unstable; urgency=medium
 
   * is_relation_implied: Improve handling of or relations.
 
