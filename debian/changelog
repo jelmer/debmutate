@@ -1,3 +1,10 @@
+debmutate (0.67+nmu1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * debmutate/__init__.py: match version to d/changelog to fix test.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 11 Sep 2023 14:53:35 +0200
+
 debmutate (0.67) unstable; urgency=medium
 
   * is_relation_implied: Improve handling of or relations.
