@@ -4,6 +4,7 @@ debmutate (0.67+nmu1) UNRELEASED; urgency=medium
   * debmutate/__init__.py: match version to d/changelog to fix test.
   * d/control: build-dep on pybuild-plugin-pyproject to enable PEP-517
     building.
+  * d/control and debmutate/watch.py: upgrade to pcre2. Closes: #1009815
 
  -- Michael R. Crusoe <crusoe@debian.org>  Mon, 11 Sep 2023 14:53:35 +0200
 

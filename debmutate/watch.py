@@ -18,14 +18,13 @@
 """Functions for working with watch files."""
 
 import logging
-import re
 import sys
 from io import StringIO
 from typing import (Callable, Iterable, Iterator, List, Optional, TextIO,
                     Tuple, Union)
 from urllib.parse import urljoin
 
-import pcre
+import pcre2
 from debian.changelog import Version
 
 from . import __version__
@@ -156,7 +155,7 @@ def parse_sed_expr(vm):
 def parse_subst_expr(vm: str) -> Tuple[str, str, Optional[str]]:
     if vm[0] != 's':
         raise InvalidUVersionMangle(vm, 'not a substitution regex')
-    parts = pcre.split(r'(?<!\\)' + vm[1], vm)
+    parts = pcre2.split(r'(?<!\\)' + vm[1], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -176,7 +175,7 @@ def parse_transl_expr(vm: str) -> Tuple[str, str, Optional[str]]:
         s = vm[1:]
     else:
         raise InvalidUVersionMangle(vm, 'not a translation regex')
-    parts = pcre.split(r'(?<!\\)' + s[0], vm)
+    parts = pcre2.split(r'(?<!\\)' + s[0], vm)
     if len(parts) < 3:
         raise InvalidUVersionMangle(vm)
     pattern = parts[1]
@@ -193,9 +192,7 @@ def apply_sed_expr(vm: str, orig: str) -> str:
     (kind, (pattern, replacement, flags)) = parse_sed_expr(vm)
     if kind == 's':
         # TODO(jelmer): Handle flags
-        replacement = re.sub(
-            r'\$([0-9]+)', lambda x: '{%s}' % x.group(1), replacement)
-        return pcre.sub(pattern, replacement, orig)
+        return pcre2.substitute(pattern, replacement, orig)
     elif kind == 'tr':
         from tr import tr
         return tr(pattern, replacement, orig, flags or '')
@@ -240,7 +237,7 @@ def html_search(body, matching_pattern, base_url):
         if not href:
             continue
         href = urljoin(base_url.rstrip('/') + '/', href)
-        m = pcre.match(matching_pattern, href)
+        m = pcre2.match(matching_pattern, href)
         if m:
             logging.debug('Matched pattern %r to %r', matching_pattern, href)
             yield m
@@ -250,7 +247,7 @@ def html_search(body, matching_pattern, base_url):
 
 
 def plain_search(body, matching_pattern, base_url):
-    return pcre.finditer(matching_pattern.encode(), body)
+    return pcre2.scan(matching_pattern.encode(), body)
 
 
 searchers = {
@@ -290,7 +287,7 @@ class Watch:
             return version
         try:
             return apply_sed_expr(vm, version)
-        except pcre.error as e:
+        except pcre2.exceptions.LibraryError as e:
             raise WatchSyntaxError(
                 'invalid uversionmangle {!r}: {}'.format(vm, e)) from e
 
@@ -464,7 +461,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
             except ValueError:
                 url = line
                 line = ''
-            m = pcre.findall(r'/([^/]*\([^/]*\)[^/]*)$', url)
+            m = pcre2.findall(r'/([^/]*\([^/]*\)[^/]*)$', url)
             if m:
                 parts = [m[0]] + line.split(maxsplit=1)
                 url = url[:-len(m[0])-1].strip()
