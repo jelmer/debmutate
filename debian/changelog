@@ -1,12 +1,12 @@
-debmutate (0.67+nmu1) UNRELEASED; urgency=medium
+debmutate (0.68) UNRELEASED; urgency=medium
 
-  * Non-maintainer upload.
+  [ Michael R. Crusoe ]
   * debmutate/__init__.py: match version to d/changelog to fix test.
   * d/control: build-dep on pybuild-plugin-pyproject to enable PEP-517
     building.
   * d/control and debmutate/watch.py: upgrade to pcre2. Closes: #1009815
 
- -- Michael R. Crusoe <crusoe@debian.org>  Mon, 11 Sep 2023 14:53:35 +0200
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 14 Sep 2023 09:27:56 +0100
 
 debmutate (0.67) unstable; urgency=medium
 
