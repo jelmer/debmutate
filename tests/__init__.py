@@ -17,9 +17,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 __all__ = [
-    'TestCase',
-    'TestCaseInTempDir',
-    ]
+    "TestCase",
+    "TestCaseInTempDir",
+]
 
 import os
 import tempfile
@@ -27,7 +27,6 @@ import unittest
 
 
 class TestCase(unittest.TestCase):
-
     def overrideEnv(self, key, value):
         oldvalue = os.environ.get(key)
 
@@ -42,9 +41,8 @@ class TestCase(unittest.TestCase):
 
 
 class TestCaseInTempDir(TestCase):
-
     def setUp(self):
-        td = tempfile.TemporaryDirectory(prefix='debmutate')
+        td = tempfile.TemporaryDirectory(prefix="debmutate")
         self.test_dir = td.name
         self.addCleanup(td.cleanup)
         cwd = os.getcwd()
@@ -53,14 +51,13 @@ class TestCaseInTempDir(TestCase):
 
     def build_tree_contents(self, entries):
         for entry in entries:
-            if entry[0].endswith('/'):
+            if entry[0].endswith("/"):
                 os.mkdir(entry[0])
             else:
-                with open(entry[0], 'w') as f:
+                with open(entry[0], "w") as f:
                     f.write(entry[1])
 
-    def assertFileEqual(
-            self, expected_content, path, strip_trailing_whitespace=False):
+    def assertFileEqual(self, expected_content, path, strip_trailing_whitespace=False):
         with open(path) as f:
             content = f.read()
         if strip_trailing_whitespace:
@@ -71,21 +68,21 @@ class TestCaseInTempDir(TestCase):
 
 def test_suite():
     names = [
-        'changelog',
-        'control',
-        'copyright',
-        'deb822',
-        'debcargo',
-        'debhelper',
-        'debmutate',
-        'lintian_overrides',
-        'patch',
-        'reformatting',
-        'vcs',
-        'versions',
-        'watch',
-        '_rules',
-        ]
-    module_names = [__name__ + '.test_' + name for name in names]
+        "changelog",
+        "control",
+        "copyright",
+        "deb822",
+        "debcargo",
+        "debhelper",
+        "debmutate",
+        "lintian_overrides",
+        "patch",
+        "reformatting",
+        "vcs",
+        "versions",
+        "watch",
+        "_rules",
+    ]
+    module_names = [__name__ + ".test_" + name for name in names]
     loader = unittest.TestLoader()
     return loader.loadTestsFromNames(module_names)

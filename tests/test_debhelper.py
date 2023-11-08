@@ -21,85 +21,110 @@ from typing import Dict
 
 from debian.changelog import Version
 
-from debmutate.debhelper import (MaintscriptEditor, MaintscriptMoveConffile,
-                                 ensure_minimum_debhelper_version)
+from debmutate.debhelper import (
+    MaintscriptEditor,
+    MaintscriptMoveConffile,
+    ensure_minimum_debhelper_version,
+)
 
 from . import TestCase, TestCaseInTempDir
 
 
 class EnsureMinimumDebhelperVersionTests(TestCase):
-
     def test_already(self):
         d = {
-            'Build-Depends': 'debhelper (>= 10)',
-            }
-        self.assertFalse(ensure_minimum_debhelper_version(d, '10'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper (>= 10)'})
-        self.assertFalse(ensure_minimum_debhelper_version(d, '9'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper (>= 10)'})
+            "Build-Depends": "debhelper (>= 10)",
+        }
+        self.assertFalse(ensure_minimum_debhelper_version(d, "10"))
+        self.assertEqual(d, {"Build-Depends": "debhelper (>= 10)"})
+        self.assertFalse(ensure_minimum_debhelper_version(d, "9"))
+        self.assertEqual(d, {"Build-Depends": "debhelper (>= 10)"})
 
     def test_already_compat(self):
         d = {
-            'Build-Depends': 'debhelper-compat (= 10)',
-            }
-        self.assertFalse(ensure_minimum_debhelper_version(d, '10'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper-compat (= 10)'})
-        self.assertFalse(ensure_minimum_debhelper_version(d, '9'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper-compat (= 10)'})
+            "Build-Depends": "debhelper-compat (= 10)",
+        }
+        self.assertFalse(ensure_minimum_debhelper_version(d, "10"))
+        self.assertEqual(d, {"Build-Depends": "debhelper-compat (= 10)"})
+        self.assertFalse(ensure_minimum_debhelper_version(d, "9"))
+        self.assertEqual(d, {"Build-Depends": "debhelper-compat (= 10)"})
 
     def test_bump(self):
         d = {
-            'Build-Depends': 'debhelper (>= 10)',
-            }
-        self.assertTrue(ensure_minimum_debhelper_version(d, '11'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper (>= 11)'})
+            "Build-Depends": "debhelper (>= 10)",
+        }
+        self.assertTrue(ensure_minimum_debhelper_version(d, "11"))
+        self.assertEqual(d, {"Build-Depends": "debhelper (>= 11)"})
 
     def test_bump_compat(self):
         d = {
-            'Build-Depends': 'debhelper-compat (= 10)',
-            }
-        self.assertTrue(ensure_minimum_debhelper_version(d, '11'))
-        self.assertEqual(d, {
-            'Build-Depends': 'debhelper-compat (= 10), debhelper (>= 11)'})
-        self.assertTrue(ensure_minimum_debhelper_version(d, '11.1'))
-        self.assertEqual(d, {
-            'Build-Depends': 'debhelper-compat (= 10), debhelper (>= 11.1)'})
+            "Build-Depends": "debhelper-compat (= 10)",
+        }
+        self.assertTrue(ensure_minimum_debhelper_version(d, "11"))
+        self.assertEqual(
+            d, {"Build-Depends": "debhelper-compat (= 10), debhelper (>= 11)"}
+        )
+        self.assertTrue(ensure_minimum_debhelper_version(d, "11.1"))
+        self.assertEqual(
+            d, {"Build-Depends": "debhelper-compat (= 10), debhelper (>= 11.1)"}
+        )
 
     def test_not_set(self):
         d: Dict[str, str] = {}
-        self.assertTrue(ensure_minimum_debhelper_version(d, '10'))
-        self.assertEqual(d, {'Build-Depends': 'debhelper (>= 10)'})
+        self.assertTrue(ensure_minimum_debhelper_version(d, "10"))
+        self.assertEqual(d, {"Build-Depends": "debhelper (>= 10)"})
 
     def test_in_indep(self):
-        d = {'Build-Depends-Indep': 'debhelper (>= 9)'}
-        self.assertRaises(Exception, ensure_minimum_debhelper_version, d, '10')
+        d = {"Build-Depends-Indep": "debhelper (>= 9)"}
+        self.assertRaises(Exception, ensure_minimum_debhelper_version, d, "10")
 
 
 class MaintscriptEditorTests(TestCaseInTempDir):
-
     def test_simple_edit(self):
-        self.build_tree_contents([('debian/', ), ('debian/maintscript', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/maintscript",
+                    """\
 mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
 0.3.3-13.1~
-""")])
+""",
+                ),
+            ]
+        )
         with MaintscriptEditor() as e:
-            self.assertEqual([MaintscriptMoveConffile(
-                '/etc/iptotal/apache.conf',
-                '/etc/apache2/conf-available/iptotal.conf',
-                Version('0.3.3-13.1~'))], e.entries)
+            self.assertEqual(
+                [
+                    MaintscriptMoveConffile(
+                        "/etc/iptotal/apache.conf",
+                        "/etc/apache2/conf-available/iptotal.conf",
+                        Version("0.3.3-13.1~"),
+                    )
+                ],
+                e.entries,
+            )
 
     def test_simple_missing(self):
         with MaintscriptEditor() as e:
             self.assertEqual([], e.entries)
 
     def test_simple_comment(self):
-        self.build_tree_contents([('debian/', ), ('debian/maintscript', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/maintscript",
+                    """\
 # I am a comment
 mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
 0.3.3-13.1~
-""")])
+""",
+                ),
+            ]
+        )
         with MaintscriptEditor() as e:
             del e[0]
             self.assertRaises(IndexError, e.__delitem__, 0)
-        with open('debian/maintscript') as f:
+        with open("debian/maintscript") as f:
             self.assertEqual("# I am a comment\n", f.read())

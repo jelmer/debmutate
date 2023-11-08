@@ -24,17 +24,16 @@ from typing import Iterator, List, Optional
 
 from .reformatting import Editor
 
-DEFAULT_DEBIAN_PATCHES_DIR = 'debian/patches'
+DEFAULT_DEBIAN_PATCHES_DIR = "debian/patches"
 
 
-QuiltSeriesEntry = namedtuple(
-    'QuiltSeriesEntry', ['name', 'quoted', 'options'])
+QuiltSeriesEntry = namedtuple("QuiltSeriesEntry", ["name", "quoted", "options"])
 
 
 def parse_quilt_series_line(line: bytes):
-    if line.startswith(b'#'):
+    if line.startswith(b"#"):
         quoted = True
-        line = line.split(b'#')[1].strip()
+        line = line.split(b"#")[1].strip()
     else:
         quoted = False
     args = line.decode().split()
@@ -54,7 +53,7 @@ def read_quilt_series(f: Iterator[bytes]) -> Iterator[QuiltSeriesEntry]:
             yield ret
 
 
-def find_common_patch_suffix(names: List[str], default: str = '.patch') -> str:
+def find_common_patch_suffix(names: List[str], default: str = ".patch") -> str:
     """Find the common prefix to use for patches.
 
     Args:
@@ -65,9 +64,9 @@ def find_common_patch_suffix(names: List[str], default: str = '.patch') -> str:
     """
     suffix_count = {}
     for name in names:
-        if name in ('series', '00list'):
+        if name in ("series", "00list"):
             continue
-        if name.startswith('README'):
+        if name.startswith("README"):
             continue
         suffix = os.path.splitext(name)[1]
         if suffix not in suffix_count:
@@ -82,13 +81,13 @@ def write_quilt_series(entries):
     for entry in entries:
         args = []
         if entry.name is not None:
-            args.append(entry.name.encode('utf-8'))
+            args.append(entry.name.encode("utf-8"))
         if entry.options:
-            args.extend([option.encode('utf-8') for option in entry.options])
-        line = b' '.join(args)
+            args.extend([option.encode("utf-8") for option in entry.options])
+        line = b" ".join(args)
         if entry.quoted:
-            line = b'# ' + line
-        line += b'\n'
+            line = b"# " + line
+        line += b"\n"
         yield line
 
 
@@ -96,10 +95,11 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
     """Edit a debian/patches/series file."""
 
     def __init__(
-            self, path: str = 'debian/patches/series',
-            allow_reformatting: Optional[bool] = None):
-        super().__init__(
-            path, mode='b', allow_reformatting=allow_reformatting)
+        self,
+        path: str = "debian/patches/series",
+        allow_reformatting: Optional[bool] = None,
+    ):
+        super().__init__(path, mode="b", allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
         return list(read_quilt_series(content.splitlines(True)))
@@ -111,7 +111,7 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
         if parsed is None:
             return None
         # TODO(jelmer): Support formatting comments and options
-        return b''.join(write_quilt_series(parsed))
+        return b"".join(write_quilt_series(parsed))
 
     def append(self, name, options=None):
         if options is None:

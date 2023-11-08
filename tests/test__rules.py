@@ -17,201 +17,293 @@
 
 """Tests for debmutate.rules."""
 
-from debmutate._rules import (Makefile, Rule, dh_invoke_add_with,
-                              dh_invoke_drop_with, dh_invoke_get_with,
-                              discard_pointless_override, matches_wildcard,
-                              update_rules)
+from debmutate._rules import (
+    Makefile,
+    Rule,
+    dh_invoke_add_with,
+    dh_invoke_drop_with,
+    dh_invoke_get_with,
+    discard_pointless_override,
+    matches_wildcard,
+    update_rules,
+)
 
 from . import TestCase, TestCaseInTempDir
 
 
 class MakefileParseTests(TestCase):
-
     def test_simple_rule(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 all:
 \ttest
-""")
-        self.assertEqual(mf.contents, [Rule(b'all', commands=[b'test'])])
+"""
+        )
+        self.assertEqual(mf.contents, [Rule(b"all", commands=[b"test"])])
 
     def test_conditional(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 all:
 ifeq (foo, bar)
 \ttest
   endif
-""")
+"""
+        )
         self.assertEqual(1, len(mf.contents))
 
     def test_conditional_rule(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 all: %: test
 \ttest
-""")
+"""
+        )
         self.assertEqual(
             mf.contents,
-            [Rule(b'all', commands=[b'test'], prereq_targets=[b'%:', b'test'])]
-            )
+            [Rule(b"all", commands=[b"test"], prereq_targets=[b"%:", b"test"])],
+        )
 
     def test_rule_with_comment(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 rule1:
 \ttest1
 
 # And this is a comment
 rule2:
 \ttest2
-""")
+"""
+        )
         self.assertEqual(
             mf.contents,
-            [Rule(b'rule1', commands=[b'test1']),
-             b'',
-             Rule(b'rule2', commands=[b'test2'],
-                  precomment=[b'# And this is a comment'])
-             ])
+            [
+                Rule(b"rule1", commands=[b"test1"]),
+                b"",
+                Rule(
+                    b"rule2",
+                    commands=[b"test2"],
+                    precomment=[b"# And this is a comment"],
+                ),
+            ],
+        )
 
 
 class UpdateRulesTests(TestCaseInTempDir):
-
     def test_update_command(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 SOMETHING = 1
 
 all:
 \techo blah
 \techo foo
-""")])
+""",
+                ),
+            ]
+        )
 
         def replace(line, target):
-            if line == b'echo blah':
-                return b'echo bloe'
+            if line == b"echo blah":
+                return b"echo bloe"
             return line
+
         self.assertTrue(update_rules(replace))
         self.assertFalse(update_rules(replace))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 SOMETHING = 1
 
 all:
 \techo bloe
 \techo foo
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_continuation(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 SOMETHING = 1
 
 all:
 \techo blah \\
 foo
-""")])
+""",
+                ),
+            ]
+        )
 
         def replace(line, target):
-            if line == b'echo blah \\\nfoo':
-                return b'echo bloe'
+            if line == b"echo blah \\\nfoo":
+                return b"echo bloe"
             return line
+
         self.assertTrue(update_rules(replace))
         self.assertFalse(update_rules(replace))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 SOMETHING = 1
 
 all:
 \techo bloe
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_empty_line(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 SOMETHING = 1
 
 all:
 \techo blah
 
 \techo foo
-""")])
+""",
+                ),
+            ]
+        )
 
         def replace(line, target):
-            if line == b'echo foo':
-                return b'echo bloe'
+            if line == b"echo foo":
+                return b"echo bloe"
             return line
+
         self.assertTrue(update_rules(replace))
         self.assertFalse(update_rules(replace))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 SOMETHING = 1
 
 all:
 \techo blah
 
 \techo bloe
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_remove_variable(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 # Comment
 SOMETHING = 1
 
 all:
 \techo blah
-""")])
+""",
+                ),
+            ]
+        )
 
         def remove(line):
-            if line == b'SOMETHING = 1':
+            if line == b"SOMETHING = 1":
                 return None
             return line
+
         self.assertTrue(update_rules(global_line_cb=remove))
         self.assertFalse(update_rules(global_line_cb=remove))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 # Comment
 
 all:
 \techo blah
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_remove_variable_with_comment(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 # Comment
 SOMETHING = 1
 
 all:
 \techo blah
-""")])
+""",
+                ),
+            ]
+        )
 
         def remove(line):
-            if line == b'SOMETHING = 1':
+            if line == b"SOMETHING = 1":
                 return None
             return line
-        self.assertTrue(update_rules(
-            global_line_cb=remove, drop_related_comments=True))
+
+        self.assertTrue(update_rules(global_line_cb=remove, drop_related_comments=True))
         self.assertFalse(update_rules(global_line_cb=remove))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 
 all:
 \techo blah
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_keep_shebang(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 #!/usr/bin/blah -f
 SOMETHING = 1
 
 all:
 \techo blah
-""")])
+""",
+                ),
+            ]
+        )
 
         def remove(line):
-            if line == b'SOMETHING = 1':
+            if line == b"SOMETHING = 1":
                 return None
             return line
-        self.assertTrue(update_rules(
-            global_line_cb=remove, drop_related_comments=True))
+
+        self.assertTrue(update_rules(global_line_cb=remove, drop_related_comments=True))
         self.assertFalse(update_rules(global_line_cb=remove))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 #!/usr/bin/blah -f
 
 all:
 \techo blah
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
     def test_keep_rule_cb(self):
-        self.build_tree_contents([('debian/', ), ('debian/rules', """\
+        self.build_tree_contents(
+            [
+                ("debian/",),
+                (
+                    "debian/rules",
+                    """\
 SOMETHING = 1
 
 all:
@@ -219,25 +311,32 @@ all:
 
 none:
 \techo foo
-""")])
+""",
+                ),
+            ]
+        )
 
         def discard_none(rule):
-            if rule.target == b'none':
+            if rule.target == b"none":
                 rule.clear()
+
         self.assertTrue(update_rules(rule_cb=discard_none))
         self.assertFalse(update_rules(rule_cb=discard_none))
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 SOMETHING = 1
 
 all:
 \techo blah
-""", 'debian/rules')
+""",
+            "debian/rules",
+        )
 
 
 class MakefileTests(TestCase):
-
     def test_add_rule(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 SOMETHING = 1
 
 all:
@@ -247,11 +346,13 @@ all:
 # Multi-line comment
 none:
 \techo foo
-""")
-        r = mf.add_rule(b'blah', precomment=[b'# A new rule'])
+"""
+        )
+        r = mf.add_rule(b"blah", precomment=[b"# A new rule"])
         self.assertIsInstance(r, Rule)
-        r.append_command(b'echo really blah')
-        self.assertEqual(b"""\
+        r.append_command(b"echo really blah")
+        self.assertEqual(
+            b"""\
 SOMETHING = 1
 
 all:
@@ -265,10 +366,13 @@ none:
 # A new rule
 blah:
 \techo really blah
-""", mf.dump())
+""",
+            mf.dump(),
+        )
 
     def test_get_variable(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 SOMETHING = 1
 export SOMETHING_ELSE = 2
 SOMETHING_EXPORTED := 4
@@ -276,105 +380,94 @@ SOMETHING_EXPORTED := 4
 all:
 \techo blah
 
-""")
-        self.assertEqual(b'1', mf.get_variable(b'SOMETHING'))
-        self.assertEqual(b'2', mf.get_variable(b'SOMETHING_ELSE'))
-        self.assertEqual(b'4', mf.get_variable(b'SOMETHING_EXPORTED'))
-        self.assertRaises(KeyError, mf.get_variable, b'SOMETHING_MISSING')
+"""
+        )
+        self.assertEqual(b"1", mf.get_variable(b"SOMETHING"))
+        self.assertEqual(b"2", mf.get_variable(b"SOMETHING_ELSE"))
+        self.assertEqual(b"4", mf.get_variable(b"SOMETHING_EXPORTED"))
+        self.assertRaises(KeyError, mf.get_variable, b"SOMETHING_MISSING")
 
 
 class InvokeDropWithTests(TestCase):
-
     def test_drop_with(self):
+        self.assertEqual(b"dh", dh_invoke_drop_with(b"dh --with=blah", b"blah"))
         self.assertEqual(
-            b'dh',
-            dh_invoke_drop_with(b'dh --with=blah', b'blah'))
+            b"dh --with=foo", dh_invoke_drop_with(b"dh --with=blah,foo", b"blah")
+        )
         self.assertEqual(
-            b'dh --with=foo',
-            dh_invoke_drop_with(b'dh --with=blah,foo', b'blah'))
+            b"dh --with=foo --other",
+            dh_invoke_drop_with(b"dh --with=blah,foo --other", b"blah"),
+        )
+        self.assertEqual(b"dh", dh_invoke_drop_with(b"dh --with=blah", b"blah"))
         self.assertEqual(
-            b'dh --with=foo --other',
-            dh_invoke_drop_with(b'dh --with=blah,foo --other', b'blah'))
+            b"dh --with=foo", dh_invoke_drop_with(b"dh --with=foo,blah", b"blah")
+        )
         self.assertEqual(
-            b'dh',
-            dh_invoke_drop_with(b'dh --with=blah', b'blah'))
-        self.assertEqual(
-            b'dh --with=foo',
-            dh_invoke_drop_with(b'dh --with=foo,blah', b'blah'))
-        self.assertEqual(
-            b'dh $@ --verbose --with autoreconf,cme-upgrade',
+            b"dh $@ --verbose --with autoreconf,cme-upgrade",
             dh_invoke_drop_with(
-                b'dh $@ --verbose --with autoreconf,systemd,cme-upgrade',
-                b'systemd'))
+                b"dh $@ --verbose --with autoreconf,systemd,cme-upgrade", b"systemd"
+            ),
+        )
         self.assertEqual(
-            b'dh $@ --with gir,python3,sphinxdoc --without autoreconf '
-            b'--buildsystem=cmake',
+            b"dh $@ --with gir,python3,sphinxdoc --without autoreconf "
+            b"--buildsystem=cmake",
             dh_invoke_drop_with(
-                b'dh $@ --with gir,python3,sphinxdoc,systemd '
-                b'--without autoreconf --buildsystem=cmake',
-                b'systemd'))
+                b"dh $@ --with gir,python3,sphinxdoc,systemd "
+                b"--without autoreconf --buildsystem=cmake",
+                b"systemd",
+            ),
+        )
         self.assertEqual(
-            b'dh $@',
-            dh_invoke_drop_with(
-                b'dh $@ --with systemd',
-                b'systemd'))
+            b"dh $@", dh_invoke_drop_with(b"dh $@ --with systemd", b"systemd")
+        )
 
 
 class DhInvokeGetWithsTests(TestCase):
-
     def test_simple(self):
+        self.assertEqual(["blah"], dh_invoke_get_with(b"dh --with=blah --foo"))
+        self.assertEqual(["blah"], dh_invoke_get_with(b"dh --with=blah"))
         self.assertEqual(
-            ['blah'],
-            dh_invoke_get_with(b'dh --with=blah --foo'))
-        self.assertEqual(
-            ['blah'],
-            dh_invoke_get_with(b'dh --with=blah'))
-        self.assertEqual(
-            ['blah', 'blie'],
-            dh_invoke_get_with(b'dh --with=blah --with blie'))
-        self.assertEqual(
-            ['blah', 'blie'],
-            dh_invoke_get_with(b'dh --with=blah,blie'))
+            ["blah", "blie"], dh_invoke_get_with(b"dh --with=blah --with blie")
+        )
+        self.assertEqual(["blah", "blie"], dh_invoke_get_with(b"dh --with=blah,blie"))
 
 
 class InvokeAddWithTests(TestCase):
-
     def test_add_with(self):
+        self.assertEqual(b"dh --with=blah", dh_invoke_add_with(b"dh", b"blah"))
         self.assertEqual(
-            b'dh --with=blah',
-            dh_invoke_add_with(b'dh', b'blah'))
+            b"dh --with=foo,blah", dh_invoke_add_with(b"dh --with=foo", b"blah")
+        )
         self.assertEqual(
-            b'dh --with=foo,blah',
-            dh_invoke_add_with(b'dh --with=foo', b'blah'))
-        self.assertEqual(
-            b'dh --with=foo,blah --other',
-            dh_invoke_add_with(b'dh --with=foo --other', b'blah'))
+            b"dh --with=foo,blah --other",
+            dh_invoke_add_with(b"dh --with=foo --other", b"blah"),
+        )
 
 
 class MatchesWildcardTests(TestCase):
-
     def test_some(self):
-        self.assertTrue(matches_wildcard('foo', 'foo'))
-        self.assertTrue(matches_wildcard('foo', 'fo%'))
-        self.assertTrue(matches_wildcard('foo', '%'))
-        self.assertFalse(matches_wildcard('foo', 'bar'))
-        self.assertFalse(matches_wildcard('foo', 'fo'))
-        self.assertFalse(matches_wildcard('foo', 'oo'))
-        self.assertFalse(matches_wildcard('foo', 'b%'))
+        self.assertTrue(matches_wildcard("foo", "foo"))
+        self.assertTrue(matches_wildcard("foo", "fo%"))
+        self.assertTrue(matches_wildcard("foo", "%"))
+        self.assertFalse(matches_wildcard("foo", "bar"))
+        self.assertFalse(matches_wildcard("foo", "fo"))
+        self.assertFalse(matches_wildcard("foo", "oo"))
+        self.assertFalse(matches_wildcard("foo", "b%"))
 
 
 class DiscardPointlessOverrideTests(TestCase):
-
     def test_simple(self):
-        mf = Makefile.from_bytes(b"""\
+        mf = Makefile.from_bytes(
+            b"""\
 override_dh_blah:
 \tdh_blah
 
 .PHONY: override_dh_blah
-""")
+"""
+        )
 
-        rule = next(mf.iter_rules(b'override_dh_blah'))
+        rule = next(mf.iter_rules(b"override_dh_blah"))
         discard_pointless_override(mf, rule)
         self.assertEqual(rule.lines, [])
-        phony = next(mf.iter_rules(b'.PHONY'))
+        phony = next(mf.iter_rules(b".PHONY"))
         self.assertEqual([], phony.components)

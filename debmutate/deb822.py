@@ -19,20 +19,19 @@
 """Utility functions for dealing with deb822 files."""
 
 __all__ = [
-    'dump_paragraphs',
-    'reformat_deb822',
-    'ChangeConflict',
-    'Deb822Editor',
-    'parse_deb822_file',
-    'Deb822Paragraph',
+    "dump_paragraphs",
+    "reformat_deb822",
+    "ChangeConflict",
+    "Deb822Editor",
+    "parse_deb822_file",
+    "Deb822Paragraph",
 ]
 
 from io import BytesIO
 from typing import List, Optional, Union
 
 from debian._deb822_repro.parsing import Deb822FileElement as Deb822File
-from debian._deb822_repro.parsing import \
-    Deb822ParagraphElement as Deb822Paragraph
+from debian._deb822_repro.parsing import Deb822ParagraphElement as Deb822Paragraph
 from debian._deb822_repro.parsing import parse_deb822_file
 from debian.deb822 import Deb822
 
@@ -52,7 +51,7 @@ def dump_paragraphs(paragraphs: Union[Deb822File, List[Deb822]]) -> bytes:
       formatted text (as bytes)
     """
     outf = BytesIO()
-    if hasattr(paragraphs, 'dump'):
+    if hasattr(paragraphs, "dump"):
         # deb822_repro
         paragraphs.dump(outf)
     else:
@@ -60,7 +59,7 @@ def dump_paragraphs(paragraphs: Union[Deb822File, List[Deb822]]) -> bytes:
         for paragraph in paragraphs:
             if paragraph:
                 if not first:
-                    outf.write(b'\n')
+                    outf.write(b"\n")
                 paragraph.dump(fd=outf)
                 first = False
     return outf.getvalue()
@@ -78,11 +77,11 @@ def reformat_deb822(contents: bytes) -> bytes:
 
 
 class ChangeConflict(Exception):
-    """Indicates that a proposed change didn't match what was found.
-    """
+    """Indicates that a proposed change didn't match what was found."""
 
-    def __init__(self, para_key, field, expected_old_value, actual_old_value,
-                 new_value):
+    def __init__(
+        self, para_key, field, expected_old_value, actual_old_value, new_value
+    ):
         self.paragraph_key = para_key
         self.field = field
         self.expected_old_value = expected_old_value
@@ -90,26 +89,37 @@ class ChangeConflict(Exception):
         self.new_value = new_value
 
     def __repr__(self):
-        return ("%s(para_key=%r, field=%r, expected_old_value=%r, "
-                "actual_old_value=%r, new_value=%r)" % (
-                    type(self).__name__,
-                    self.paragraph_key, self.field, self.expected_old_value,
-                    self.actual_old_value, self.new_value))
+        return (
+            "%s(para_key=%r, field=%r, expected_old_value=%r, "
+            "actual_old_value=%r, new_value=%r)"
+            % (
+                type(self).__name__,
+                self.paragraph_key,
+                self.field,
+                self.expected_old_value,
+                self.actual_old_value,
+                self.new_value,
+            )
+        )
 
 
 class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
-    """Update the contents of a Deb822-style file.
+    """Update the contents of a Deb822-style file."""
 
-    """
-
-    def __init__(self, path: str, allow_generated: bool = False,
-                 allow_reformatting: Optional[bool] = None,
-                 allow_missing: bool = False,
-                 accept_files_with_error_tokens: bool = False) -> None:
+    def __init__(
+        self,
+        path: str,
+        allow_generated: bool = False,
+        allow_reformatting: Optional[bool] = None,
+        allow_missing: bool = False,
+        accept_files_with_error_tokens: bool = False,
+    ) -> None:
         super().__init__(
-            path, allow_generated=allow_generated,
+            path,
+            allow_generated=allow_generated,
             allow_reformatting=allow_reformatting,
-            mode='b')
+            mode="b",
+        )
         self.allow_missing = allow_missing
         self.accept_files_with_error_tokens = accept_files_with_error_tokens
 
@@ -123,12 +133,13 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
                 (para_key, field, actual_old_value, template_old_value,
                  actual_new_value) and returns a new template value
         """
+
         def _default_resolve_conflict(
-                para_key, field, actual_old_value,
-                template_old_value, actual_new_value):
+            para_key, field, actual_old_value, template_old_value, actual_new_value
+        ):
             raise ChangeConflict(
-                para_key, field, actual_old_value, template_old_value,
-                actual_new_value)
+                para_key, field, actual_old_value, template_old_value, actual_new_value
+            )
 
         if resolve_conflict is None:
             resolve_conflict = _default_resolve_conflict
@@ -140,8 +151,8 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
                 for key, old_value, new_value in changes.pop(item, []):
                     if paragraph.get(key) != old_value:
                         new_value = resolve_conflict(
-                            item, key, old_value, paragraph.get(key),
-                            new_value)
+                            item, key, old_value, paragraph.get(key), new_value
+                        )
                     if new_value is None:
                         del paragraph[key]
                     else:
@@ -149,10 +160,9 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
         # Add any new paragraphs that weren't processed earlier
         for key, p in changes.items():
             paragraph = Deb822Paragraph.new_empty_paragraph()
-            for (field, old_value, new_value) in p:
+            for field, old_value, new_value in p:
                 if old_value is not None:
-                    new_value = resolve_conflict(
-                        key, field, old_value, None, new_value)
+                    new_value = resolve_conflict(key, field, old_value, None, new_value)
                 if new_value is None:
                     continue
                 paragraph[field] = new_value
@@ -161,7 +171,8 @@ class Deb822Editor(Editor[List[Deb822Paragraph], bytes]):
     def _parse(self, content):
         return parse_deb822_file(
             content.splitlines(True),
-            accept_files_with_error_tokens=self.accept_files_with_error_tokens)
+            accept_files_with_error_tokens=self.accept_files_with_error_tokens,
+        )
 
     @property
     def paragraphs(self) -> List[Deb822Paragraph]:

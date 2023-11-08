@@ -33,24 +33,23 @@ class PkgRelation:
     """A package requirement."""
 
     __dep_RE = re.compile(
-        r'^\s*(?P<name>[a-zA-Z0-9.+\-]{2,})'
-        r'(:(?P<archqual>([a-zA-Z0-9][a-zA-Z0-9-]*)))?'
-        r'(\s*\(\s*(?P<relop>[>=<]+)\s*'
-        r'(?P<version>[0-9a-zA-Z:\-+~.]+)\s*\))?'
-        r'(\s*\[(?P<archs>[\s!\w\-]+)\])?\s*'
-        r'((?P<restrictions><.+>))?\s*'
-        r'$')
-    __pipe_sep_RE = re.compile(r'\s*\|\s*')
-    __blank_sep_RE = re.compile(r'\s+')
-    __restriction_sep_RE = re.compile(r'>\s*<')
-    __restriction_RE = re.compile(
-        r'(?P<enabled>\!)?'
-        r'(?P<profile>[^\s]+)')
+        r"^\s*(?P<name>[a-zA-Z0-9.+\-]{2,})"
+        r"(:(?P<archqual>([a-zA-Z0-9][a-zA-Z0-9-]*)))?"
+        r"(\s*\(\s*(?P<relop>[>=<]+)\s*"
+        r"(?P<version>[0-9a-zA-Z:\-+~.]+)\s*\))?"
+        r"(\s*\[(?P<archs>[\s!\w\-]+)\])?\s*"
+        r"((?P<restrictions><.+>))?\s*"
+        r"$"
+    )
+    __pipe_sep_RE = re.compile(r"\s*\|\s*")
+    __blank_sep_RE = re.compile(r"\s+")
+    __restriction_sep_RE = re.compile(r">\s*<")
+    __restriction_RE = re.compile(r"(?P<enabled>\!)?" r"(?P<profile>[^\s]+)")
 
-    ArchRestriction = collections.namedtuple('ArchRestriction',
-                                             ['enabled', 'arch'])
-    BuildRestriction = collections.namedtuple('BuildRestriction',
-                                              ['enabled', 'profile'])
+    ArchRestriction = collections.namedtuple("ArchRestriction", ["enabled", "arch"])
+    BuildRestriction = collections.namedtuple(
+        "BuildRestriction", ["enabled", "profile"]
+    )
 
     @classmethod
     def parse(cls, text):
@@ -59,7 +58,7 @@ class PkgRelation:
             # assumption: no space between '!' and architecture name
             archs = []
             for arch in cls.__blank_sep_RE.split(raw.strip()):
-                disabled = arch[0] == '!'
+                disabled = arch[0] == "!"
                 if disabled:
                     arch = arch[1:]
                 archs.append(cls.ArchRestriction(not disabled, arch))
@@ -67,7 +66,7 @@ class PkgRelation:
 
         def parse_restrictions(raw):
             # type: (str) -> list[list[PkgRelation.BuildRestriction]]
-            """ split a restriction formula into a list of restriction lists
+            """split a restriction formula into a list of restriction lists
 
             Each term in the restriction list is a namedtuple of form:
 
@@ -78,7 +77,7 @@ class PkgRelation:
                 profile: the profile name of the term e.g. 'stage1'
             """
             restrictions = []
-            groups = cls.__restriction_sep_RE.split(raw.lower().strip('<> '))
+            groups = cls.__restriction_sep_RE.split(raw.lower().strip("<> "))
             for rgrp in groups:
                 group = []
                 for restriction in cls.__blank_sep_RE.split(rgrp):
@@ -87,9 +86,10 @@ class PkgRelation:
                         parts = match.groupdict()
                         group.append(
                             cls.BuildRestriction(
-                                parts['enabled'] != '!',
-                                parts['profile'],
-                            ))
+                                parts["enabled"] != "!",
+                                parts["profile"],
+                            )
+                        )
                 restrictions.append(group)
             return restrictions
 
@@ -98,29 +98,25 @@ class PkgRelation:
             if match:
                 parts = match.groupdict()
                 d = {
-                    'name': parts['name'],
-                    'archqual': parts['archqual'],
-                    'version': None,
-                    'arch': None,
-                    'restrictions': None,
+                    "name": parts["name"],
+                    "archqual": parts["archqual"],
+                    "version": None,
+                    "arch": None,
+                    "restrictions": None,
                 }
-                if parts['relop'] or parts['version']:
-                    d['version'] = (parts['relop'], parts['version'])
-                if parts['archs']:
-                    d['arch'] = parse_archs(parts['archs'])
-                if parts['restrictions']:
-                    d['restrictions'] = parse_restrictions(
-                        parts['restrictions'])
+                if parts["relop"] or parts["version"]:
+                    d["version"] = (parts["relop"], parts["version"])
+                if parts["archs"]:
+                    d["arch"] = parse_archs(parts["archs"])
+                if parts["restrictions"]:
+                    d["restrictions"] = parse_restrictions(parts["restrictions"])
                 return PkgRelation(**d)
 
             logging.debug(
-                'cannot parse package'
-                ' relationship "%s", returning it raw' % raw)
-            return PkgRelation(
-                name=raw,
-                version=None,
-                arch=None
+                "cannot parse package" ' relationship "%s", returning it raw' % raw
             )
+            return PkgRelation(name=raw, version=None, arch=None)
+
         if text == "":
             return []
         or_deps = cls.__pipe_sep_RE.split(text)
@@ -128,22 +124,26 @@ class PkgRelation:
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(
-            self.__class__.__name__, self.name, self.version, self.arch,
-            self.archqual, self.restrictions)
+            self.__class__.__name__,
+            self.name,
+            self.version,
+            self.arch,
+            self.archqual,
+            self.restrictions,
+        )
 
     def __tuple__(self):
-        return (self.name, self.version, self.arch, self.archqual,
-                self.restrictions)
+        return (self.name, self.version, self.arch, self.archqual, self.restrictions)
 
     def __eq__(self, other):
         if not isinstance(other, PkgRelation):
             return False
-        return (self.__tuple__() == other.__tuple__())
+        return self.__tuple__() == other.__tuple__()
 
     def __lt__(self, other):
         if not isinstance(other, PkgRelation):
             raise TypeError
-        return (self.__tuple__() < other.__tuple__())
+        return self.__tuple__() < other.__tuple__()
 
     def str(self):
         """Format to string structured inter-package relationships
@@ -151,10 +151,11 @@ class PkgRelation:
         Perform the inverse operation of parse_relations, returning a string
         suitable to be written in a package stanza.
         """
+
         def pp_arch(arch_spec):
             # type: (PkgRelation.ArchRestriction) -> str
-            return '{}{}'.format(
-                '' if arch_spec.enabled else '!',
+            return "{}{}".format(
+                "" if arch_spec.enabled else "!",
                 arch_spec.arch,
             )
 
@@ -162,28 +163,21 @@ class PkgRelation:
             # type: (list[PkgRelation.BuildRestriction]) -> str
             s = []
             for term in restrictions:
-                s.append(
-                    '{}{}'.format(
-                        '' if term.enabled else '!',
-                        term.profile
-                    )
-                )
-            return '<%s>' % ' '.join(s)
+                s.append("{}{}".format("" if term.enabled else "!", term.profile))
+            return "<%s>" % " ".join(s)
 
         s = self.name
         if self.archqual is not None:
-            s += ':%s' % self.archqual
+            s += ":%s" % self.archqual
         if self.version is not None:
-            s += ' (%s %s)' % self.version
+            s += " (%s %s)" % self.version
         if self.arch is not None:
-            s += ' [%s]' % ' '.join(map(pp_arch, self.arch))
+            s += " [%s]" % " ".join(map(pp_arch, self.arch))
         if self.restrictions is not None:
-            s += ' %s' % ' '.join(map(pp_restrictions,
-                                      self.restrictions))
+            s += " %s" % " ".join(map(pp_restrictions, self.restrictions))
         return s
 
-    def __init__(self, name, version=None, arch=None, archqual=None,
-                 restrictions=None):
+    def __init__(self, name, version=None, arch=None, archqual=None, restrictions=None):
         self.name = name
         self.version = version
         self.arch = arch

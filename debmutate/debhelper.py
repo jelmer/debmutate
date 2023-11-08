@@ -19,9 +19,9 @@
 """Debhelper utility functions."""
 
 __all__ = [
-    'ensure_minimum_debhelper_version',
-    'read_debhelper_compat_file',
-    'get_debhelper_compat_level',
+    "ensure_minimum_debhelper_version",
+    "read_debhelper_compat_file",
+    "get_debhelper_compat_level",
 ]
 
 import os
@@ -31,14 +31,18 @@ from typing import Dict, List, Optional, Union
 from debian.changelog import Version
 from debian.deb822 import Deb822
 
-from .control import (ControlEditor, ensure_minimum_version, get_relation,
-                      parse_relations)
+from .control import (
+    ControlEditor,
+    ensure_minimum_version,
+    get_relation,
+    parse_relations,
+)
 from .reformatting import Editor
 
 
 def ensure_minimum_debhelper_version(
-        source: Union[Deb822, Dict[str, str]],
-        minimum_version: Union[str, Version]) -> bool:
+    source: Union[Deb822, Dict[str, str]], minimum_version: Union[str, Version]
+) -> bool:
     """Ensure that the package is at least using version x of debhelper.
 
     This is a dedicated helper, since debhelper can now also be pulled in
@@ -49,42 +53,39 @@ def ensure_minimum_debhelper_version(
       version: The minimum version
     """
     # TODO(jelmer): Also check Build-Depends-Indep and Build-Depends-Arch?
-    for field in ['Build-Depends-Arch', 'Build-Depends-Indep']:
-        value = source.get(field, '')
+    for field in ["Build-Depends-Arch", "Build-Depends-Indep"]:
+        value = source.get(field, "")
         try:
-            offset, debhelper_compat = get_relation(
-                value, "debhelper-compat")
+            offset, debhelper_compat = get_relation(value, "debhelper-compat")
         except KeyError:
             pass
         else:
-            raise Exception('debhelper-compat in %s' % field)
+            raise Exception("debhelper-compat in %s" % field)
         try:
-            offset, debhelper_compat = get_relation(
-                value, "debhelper")
+            offset, debhelper_compat = get_relation(value, "debhelper")
         except KeyError:
             pass
         else:
-            raise Exception('debhelper compat in %s' % field)
+            raise Exception("debhelper compat in %s" % field)
 
-    build_depends = source.get('Build-Depends', '')
+    build_depends = source.get("Build-Depends", "")
     minimum_version = Version(minimum_version)
     try:
-        offset, debhelper_compat = get_relation(
-            build_depends, "debhelper-compat")
+        offset, debhelper_compat = get_relation(build_depends, "debhelper-compat")
     except KeyError:
         pass
     else:
         if len(debhelper_compat) > 1:
             raise Exception("Complex rule for debhelper-compat, aborting")
-        if debhelper_compat[0].version[0] != '=':
+        if debhelper_compat[0].version[0] != "=":
             raise Exception("Complex rule for debhelper-compat, aborting")
         if Version(debhelper_compat[0].version[1]) >= minimum_version:
             return False
     new_build_depends = ensure_minimum_version(
-        build_depends,
-        "debhelper", minimum_version)
-    if new_build_depends != source.get('Build-Depends'):
-        source['Build-Depends'] = new_build_depends
+        build_depends, "debhelper", minimum_version
+    )
+    if new_build_depends != source.get("Build-Depends"):
+        source["Build-Depends"] = new_build_depends
         return True
     return False
 
@@ -96,28 +97,29 @@ def read_debhelper_compat_file(path: str) -> int:
       path: Path to read from
     """
     with open(path) as f:
-        line = f.readline().split('#', 1)[0]
+        line = f.readline().split("#", 1)[0]
         return int(line.strip())
 
 
 def get_debhelper_compat_level_from_control(control) -> Optional[int]:
     try:
         offset, [relation] = get_relation(
-            control.get("Build-Depends", ""), "debhelper-compat")
+            control.get("Build-Depends", ""), "debhelper-compat"
+        )
     except (IndexError, KeyError):
         return None
     else:
         return int(str(relation.version[1]))
 
 
-def get_debhelper_compat_level(path: str = '.') -> Optional[int]:
+def get_debhelper_compat_level(path: str = ".") -> Optional[int]:
     try:
-        return read_debhelper_compat_file(os.path.join(path, 'debian/compat'))
+        return read_debhelper_compat_file(os.path.join(path, "debian/compat"))
     except FileNotFoundError:
         pass
 
     try:
-        with open(os.path.join(path, 'debian/control')) as f:
+        with open(os.path.join(path, "debian/control")) as f:
             control = Deb822(f)
     except FileNotFoundError:
         return None
@@ -130,7 +132,7 @@ class MaintscriptSupports:
     command: str
 
     def args(self):
-        return ['supports', self.command]
+        return ["supports", self.command]
 
 
 @dataclass
@@ -140,7 +142,7 @@ class MaintscriptRemoveConffile:
     package: Optional[str] = None
 
     def args(self):
-        ret = ['rm_conffile', self.conffile]
+        ret = ["rm_conffile", self.conffile]
         if self.prior_version:
             ret.append(str(self.prior_version))
             if self.package:
@@ -156,7 +158,7 @@ class MaintscriptMoveConffile:
     package: Optional[str] = None
 
     def args(self):
-        ret = ['mv_conffile', self.old_conffile, self.new_conffile]
+        ret = ["mv_conffile", self.old_conffile, self.new_conffile]
         if self.prior_version:
             ret.append(str(self.prior_version))
             if self.package:
@@ -172,7 +174,7 @@ class MaintscriptSymlinkToDir:
     package: Optional[str] = None
 
     def args(self):
-        ret = ['symlink_to_dir', self.pathname, self.old_target]
+        ret = ["symlink_to_dir", self.pathname, self.old_target]
         if self.prior_version:
             ret.append(str(self.prior_version))
             if self.package:
@@ -188,7 +190,7 @@ class MaintscriptDirToSymlink:
     package: Optional[str] = None
 
     def args(self):
-        ret = ['dir_to_symlink', self.pathname, self.new_target]
+        ret = ["dir_to_symlink", self.pathname, self.new_target]
         if self.prior_version:
             ret.append(str(self.prior_version))
             if self.package:
@@ -199,30 +201,34 @@ class MaintscriptDirToSymlink:
 def parse_maintscript_line(line):
     args = line.split()
     return {
-        'supports': MaintscriptSupports,
-        'rm_conffile': MaintscriptRemoveConffile,
-        'mv_conffile': MaintscriptMoveConffile,
-        'symlink_to_dir': MaintscriptSymlinkToDir,
-        'dir_to_symlink': MaintscriptDirToSymlink,
+        "supports": MaintscriptSupports,
+        "rm_conffile": MaintscriptRemoveConffile,
+        "mv_conffile": MaintscriptMoveConffile,
+        "symlink_to_dir": MaintscriptSymlinkToDir,
+        "dir_to_symlink": MaintscriptDirToSymlink,
     }.get(args[0], list)(*args[1:])
 
 
 MaintscriptEntry = Union[
-    MaintscriptSupports, MaintscriptRemoveConffile, MaintscriptMoveConffile,
-    MaintscriptSymlinkToDir, MaintscriptDirToSymlink]
+    MaintscriptSupports,
+    MaintscriptRemoveConffile,
+    MaintscriptMoveConffile,
+    MaintscriptSymlinkToDir,
+    MaintscriptDirToSymlink,
+]
 
 
 def serialize_maintscript_line(args):
-    return ' '.join(args)
+    return " ".join(args)
 
 
 class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
-
     def __init__(
-            self, path: str = 'debian/maintscript',
-            allow_reformatting: Optional[bool] = None):
-        super().__init__(
-            path=path, allow_reformatting=allow_reformatting)
+        self,
+        path: str = "debian/maintscript",
+        allow_reformatting: Optional[bool] = None,
+    ):
+        super().__init__(path=path, allow_reformatting=allow_reformatting)
 
     def _nonexistent(self):
         return None
@@ -231,8 +237,8 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
         """Parse the specified bytestring and returned parsed object."""
         ret = []
         for line in content.splitlines(True):
-            if line.startswith('#') or not line.strip():
-                ret.append(line.rstrip('\n'))
+            if line.startswith("#") or not line.strip():
+                ret.append(line.rstrip("\n"))
             else:
                 ret.append(parse_maintscript_line(line))
         return ret
@@ -245,8 +251,7 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
 
     @property
     def entries(self):
-        return [entry for entry in self.lines
-                if not isinstance(entry, str)]
+        return [entry for entry in self.lines if not isinstance(entry, str)]
 
     def __delitem__(self, req):
         ei = 0
@@ -278,20 +283,21 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
         ret = []
         for entry in self._parsed:
             if isinstance(entry, str):
-                ret.append(entry + '\n')
+                ret.append(entry + "\n")
             else:
-                ret.append(serialize_maintscript_line(entry.args()) + '\n')
+                ret.append(serialize_maintscript_line(entry.args()) + "\n")
         if ret:
-            return ''.join(ret)
+            return "".join(ret)
         return None
 
 
-def get_sequences(debian_path='debian', control_editor=None):
+def get_sequences(debian_path="debian", control_editor=None):
     if control_editor is None:
-        control_editor = ControlEditor(os.path.join(debian_path, 'control'))
+        control_editor = ControlEditor(os.path.join(debian_path, "control"))
     with control_editor:
         for _ws1, entry, _ws2 in parse_relations(
-                control_editor.source.get('Build-Depends', '')):
+            control_editor.source.get("Build-Depends", "")
+        ):
             for option in entry:
-                if option.name.startswith('dh-sequence-'):
-                    yield option.name[len('dh-sequence-'):]
+                if option.name.startswith("dh-sequence-"):
+                    yield option.name[len("dh-sequence-") :]

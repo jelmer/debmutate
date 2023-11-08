@@ -18,7 +18,7 @@
 """Utility functions for dealing with changelog files."""
 
 __all__ = [
-    'get_vendor_name',
+    "get_vendor_name",
 ]
 
 
@@ -27,14 +27,14 @@ import os
 from debian.deb822 import Deb822
 
 
-def _load_vendor_file(vendor: str = 'default') -> Deb822:
-    with open('/etc/dpkg/origins/%s' % vendor) as f:
+def _load_vendor_file(vendor: str = "default") -> Deb822:
+    with open("/etc/dpkg/origins/%s" % vendor) as f:
         return Deb822(f)
 
 
 def get_vendor_name() -> str:
-    if 'DEB_VENDOR' in os.environ:
-        return os.environ['DEB_VENDOR']
+    if "DEB_VENDOR" in os.environ:
+        return os.environ["DEB_VENDOR"]
 
-    vendor = _load_vendor_file('default')
-    return vendor['Vendor']
+    vendor = _load_vendor_file("default")
+    return vendor["Vendor"]

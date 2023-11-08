@@ -21,24 +21,24 @@
 """Utility functions for dealing with changelog files."""
 
 __all__ = [
-    'ChangelogParseError',
-    'ChangelogCreateError',
-    'ChangelogEditor',
-    'changes_sections',
-    'changes_by_author',
-    'changelog_add_entry',
-    'changeblock_add_line',
-    'changeblock_ensure_first_line',
-    'all_sha_prefixed',
-    'any_long_lines',
-    'find_extra_authors',
-    'find_thanks',
-    'rewrap_change',
-    'strip_changelog_message',
-    'new_changelog_entries',
-    'is_unreleased_inaugural',
-    'upstream_merge_changelog_line',
-    ]
+    "ChangelogParseError",
+    "ChangelogCreateError",
+    "ChangelogEditor",
+    "changes_sections",
+    "changes_by_author",
+    "changelog_add_entry",
+    "changeblock_add_line",
+    "changeblock_ensure_first_line",
+    "all_sha_prefixed",
+    "any_long_lines",
+    "find_extra_authors",
+    "find_thanks",
+    "rewrap_change",
+    "strip_changelog_message",
+    "new_changelog_entries",
+    "is_unreleased_inaugural",
+    "upstream_merge_changelog_line",
+]
 
 import re
 import textwrap
@@ -46,15 +46,21 @@ from datetime import datetime
 from email.utils import format_datetime, parseaddr
 from typing import Iterator, List, Optional, Tuple
 
-from debian.changelog import (ChangeBlock, Changelog, ChangelogCreateError,
-                              ChangelogParseError, Version, format_date,
-                              get_maintainer)
+from debian.changelog import (
+    ChangeBlock,
+    Changelog,
+    ChangelogCreateError,
+    ChangelogParseError,
+    Version,
+    format_date,
+    get_maintainer,
+)
 
 from .reformatting import Editor
 
 WIDTH = 80
-INITIAL_INDENT = '  * '
-DEFAULT_DISTRIBUTION = 'unstable'
+INITIAL_INDENT = "  * "
+DEFAULT_DISTRIBUTION = "unstable"
 
 
 class ChangelogEditor(Editor[Changelog, str]):
@@ -64,21 +70,23 @@ class ChangelogEditor(Editor[Changelog, str]):
     """
 
     def __init__(
-            self, path: str = 'debian/changelog',
-            allow_reformatting: Optional[bool] = False,
-            allow_missing: bool = False):
-        super().__init__(
-            path, allow_reformatting=allow_reformatting)
+        self,
+        path: str = "debian/changelog",
+        allow_reformatting: Optional[bool] = False,
+        allow_missing: bool = False,
+    ):
+        super().__init__(path, allow_reformatting=allow_reformatting)
         self.allow_missing = allow_missing
 
     @classmethod
-    def create(cls, path: str = 'debian/changelog'):
+    def create(cls, path: str = "debian/changelog"):
         return cls(path, allow_reformatting=True, allow_missing=True)
 
     def _parse(self, content):
         cl = Changelog()
         cl.parse_changelog(
-            content, max_blocks=None, allow_empty_author=True, strict=False)
+            content, max_blocks=None, allow_empty_author=True, strict=False
+        )
         return cl
 
     def _format(self, parsed):
@@ -100,35 +108,39 @@ class ChangelogEditor(Editor[Changelog, str]):
         return self.changelog.new_block(*args, **kwargs)
 
     def auto_version(self, version, **kwargs):
-        return changelog_auto_version(
-            self.changelog, version=version, **kwargs)
+        return changelog_auto_version(self.changelog, version=version, **kwargs)
 
     def add_entry(
-            self,
-            summary: List[str],
-            maintainer: Optional[Tuple[str, str]] = None,
-            timestamp: Optional[datetime] = None,
-            urgency: str = 'low') -> None:
+        self,
+        summary: List[str],
+        maintainer: Optional[Tuple[str, str]] = None,
+        timestamp: Optional[datetime] = None,
+        urgency: str = "low",
+    ) -> None:
         return changelog_add_entry(
-            self.changelog, summary=summary, maintainer=maintainer,
-            timestamp=timestamp, urgency=urgency)
+            self.changelog,
+            summary=summary,
+            maintainer=maintainer,
+            timestamp=timestamp,
+            urgency=urgency,
+        )
 
 
 def changelog_auto_version(
-        cl: Changelog, version: Version,
-        maintainer: Optional[Tuple[str, str]] = None,
-        timestamp: Optional[datetime] = None,
-        package: Optional[str] = None,
-        urgency: str = 'low'):
-    """Update current changelog entry to version or create a new one.
-    """
+    cl: Changelog,
+    version: Version,
+    maintainer: Optional[Tuple[str, str]] = None,
+    timestamp: Optional[datetime] = None,
+    package: Optional[str] = None,
+    urgency: str = "low",
+):
+    """Update current changelog entry to version or create a new one."""
     if maintainer is None:
         maintainer_name, maintainer_email = get_maintainer()
     else:
         maintainer_name, maintainer_email = maintainer
     if maintainer_name is None or maintainer_email is None:
-        raise ValueError(
-            'unable to determine maintainer details and none specified')
+        raise ValueError("unable to determine maintainer details and none specified")
     if package is None:
         package = cl[0].package
     if timestamp is None:
@@ -140,17 +152,18 @@ def changelog_auto_version(
         # TODO(jelmer): Also set maintainer again?
     else:
         cl.new_block(
-            version=version, package=package,
-            distributions='UNRELEASED', urgency=urgency,
+            version=version,
+            package=package,
+            distributions="UNRELEASED",
+            urgency=urgency,
             author="{} <{}>".format(maintainer_name, maintainer_email),
-            date=format_datetime(timestamp))
+            date=format_datetime(timestamp),
+        )
 
 
 def changes_sections(
-        changes: List[str]
-        ) -> Iterator[
-            Tuple[Optional[str], List[int], List[List[Tuple[int, str]]]]
-        ]:
+    changes: List[str]
+) -> Iterator[Tuple[Optional[str], List[int], List[List[Tuple[int, str]]]]]:
     """Return the different sections from a set of changelog entries.
 
     Args:
@@ -159,9 +172,11 @@ def changes_sections(
       iterator over tuples with:
         (author, list of line numbers, list of list of (lineno, line) tuples
     """
-    section: Tuple[
-        Optional[str], List[int],
-        List[List[Tuple[int, str]]]] = (None, [], [])
+    section: Tuple[Optional[str], List[int], List[List[Tuple[int, str]]]] = (
+        None,
+        [],
+        [],
+    )
     change: List[Tuple[int, str]] = []
     for i, line in enumerate(changes):
         if not line and i == 0:
@@ -170,7 +185,7 @@ def changes_sections(
         if not line:
             section[1].append(i)
             continue
-        m = re.fullmatch(r'  \[ (.*) \]', line)
+        m = re.fullmatch(r"  \[ (.*) \]", line)
         if m:
             if change:
                 section[2].append(change)
@@ -194,8 +209,8 @@ def changes_sections(
 
 
 def changes_by_author(
-        changes: List[str]
-        ) -> Iterator[Tuple[Optional[str], List[int], List[str]]]:
+    changes: List[str]
+) -> Iterator[Tuple[Optional[str], List[int], List[str]]]:
     """Changes by author.
 
     Args:
@@ -203,31 +218,36 @@ def changes_by_author(
     Returns:
       Iterator over items by author (maintainer, offsets, changes)
     """
-    for (author, _linenos, contents) in changes_sections(changes):
+    for author, _linenos, contents in changes_sections(changes):
         for change_entries in contents:
             change_linenos, change_lines = zip(*change_entries)
             yield (author, change_linenos, change_lines)  # type: ignore
 
 
 class TextWrapper(textwrap.TextWrapper):
-
-    whitespace = r'[%s]' % re.escape('\t\n\x0b\x0c\r ')
-    wordsep_simple_re = re.compile(r'(%s+)' % whitespace)
+    whitespace = r"[%s]" % re.escape("\t\n\x0b\x0c\r ")
+    wordsep_simple_re = re.compile(r"(%s+)" % whitespace)
 
     def __init__(self, initial_indent=INITIAL_INDENT):
         super().__init__(
-            width=WIDTH, initial_indent=initial_indent,
-            subsequent_indent=' ' * len(initial_indent),
-            break_long_words=False, break_on_hyphens=False)
+            width=WIDTH,
+            initial_indent=initial_indent,
+            subsequent_indent=" " * len(initial_indent),
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
 
     def _split(self, text):
         chunks = [c for c in self.wordsep_simple_re.split(text) if c]
         ret = []
         i = 0
         while i < len(chunks):
-            if (any(chunks[i].endswith(x) for x in ['Closes:', 'LP:']) and
-                    i+2 < len(chunks) and chunks[i+2].startswith('#')):
-                ret.append('{} {}'.format(chunks[i], chunks[i+2]))
+            if (
+                any(chunks[i].endswith(x) for x in ["Closes:", "LP:"])
+                and i + 2 < len(chunks)
+                and chunks[i + 2].startswith("#")
+            ):
+                ret.append("{} {}".format(chunks[i], chunks[i + 2]))
                 i += 3
             else:
                 ret.append(chunks[i])
@@ -235,23 +255,22 @@ class TextWrapper(textwrap.TextWrapper):
         return ret
 
 
-_initial_re = re.compile(r'^[  ]+[\+\-\*] ')
+_initial_re = re.compile(r"^[  ]+[\+\-\*] ")
 
 
 def _can_join(line1, line2):
-    if line1.endswith(':'):
+    if line1.endswith(":"):
         return False
     if line2 and line2[:1].isupper():
-        if line1.endswith(']') or line1.endswith('}'):
+        if line1.endswith("]") or line1.endswith("}"):
             return False
-        if not line1.endswith('.'):
+        if not line1.endswith("."):
             return False
     return True
 
 
 def any_long_lines(lines: List[str], width: int = WIDTH) -> bool:
-    """Check if any lines are longer than the specified width.
-    """
+    """Check if any lines are longer than the specified width."""
     return any([len(line) > width for line in lines])
 
 
@@ -274,14 +293,15 @@ def rewrap_change(change: List[str]) -> List[str]:
     todo = [lines[0]]
     ret = []
     for i in range(len(lines) - 1):
-        if _can_join(lines[i], lines[i+1]) and any_long_lines(
-                todo, WIDTH-prefix_len):
-            todo.append(lines[i+1])
+        if _can_join(lines[i], lines[i + 1]) and any_long_lines(
+            todo, WIDTH - prefix_len
+        ):
+            todo.append(lines[i + 1])
         else:
-            ret.extend(wrapper.wrap('\n'.join(todo)))
-            wrapper = TextWrapper(change[i+1][:len(m.group(0))])
-            todo = [lines[i+1]]
-    ret.extend(wrapper.wrap('\n'.join(todo)))
+            ret.extend(wrapper.wrap("\n".join(todo)))
+            wrapper = TextWrapper(change[i + 1][: len(m.group(0))])
+            todo = [lines[i + 1]]
+    ret.extend(wrapper.wrap("\n".join(todo)))
     return ret
 
 
@@ -294,7 +314,7 @@ def rewrap_changes(changes: Iterator[str]) -> Iterator[str]:
             yield from rewrap_change(change)
             change = [line]
             indent = len(m.group(0))
-        elif change and line.startswith(' ' * indent):  # type: ignore
+        elif change and line.startswith(" " * indent):  # type: ignore
             change.append(line)
         else:
             yield from rewrap_change(change)
@@ -308,17 +328,17 @@ def increment_version(version: Version) -> Version:
     # TODO(jelmer): Add ubuntuX suffix on Ubuntu
     if ret.debian_revision:
         # Non-native package
-        m = re.match('^(.*?)([0-9]+)$', ret.debian_revision)
+        m = re.match("^(.*?)([0-9]+)$", ret.debian_revision)
         if m:
-            ret.debian_revision = m.group(1) + str(int(m.group(2))+1)
+            ret.debian_revision = m.group(1) + str(int(m.group(2)) + 1)
         else:
             ret.debian_revision += "1"
         return ret
     elif ret.upstream_version:
         # Native package
-        m = re.match('^(.*?)([0-9]+)$', ret.upstream_version)
+        m = re.match("^(.*?)([0-9]+)$", ret.upstream_version)
         if m:
-            ret.upstream_version = m.group(1) + str(int(m.group(2))+1)
+            ret.upstream_version = m.group(1) + str(int(m.group(2)) + 1)
         else:
             ret.upstream_version += "1"
         return ret
@@ -328,10 +348,12 @@ def increment_version(version: Version) -> Version:
 
 
 def changelog_add_entry(
-        cl: Changelog, summary: List[str],
-        maintainer: Optional[Tuple[str, str]] = None,
-        timestamp: Optional[datetime] = None,
-        urgency: str = 'low') -> None:
+    cl: Changelog,
+    summary: List[str],
+    maintainer: Optional[Tuple[str, str]] = None,
+    timestamp: Optional[datetime] = None,
+    urgency: str = "low",
+) -> None:
     """Add an entry to a changelog.
 
     Args:
@@ -351,27 +373,27 @@ def changelog_add_entry(
     else:
         maintainer_name, maintainer_email = maintainer
     if maintainer_name is None or maintainer_email is None:
-        raise ValueError(
-            'unable to determine maintainer details and none specified')
-    if (distribution_is_unreleased(cl[0].distributions) or (
-                cl[0].author is None and cl[0].date is None)):
+        raise ValueError("unable to determine maintainer details and none specified")
+    if distribution_is_unreleased(cl[0].distributions) or (
+        cl[0].author is None and cl[0].date is None
+    ):
         by_author = list(changes_by_author(cl[0].changes()))
         if cl[0]._changes == []:
-            cl[0]._changes.append('')
+            cl[0]._changes.append("")
         if all([author is None for (author, linenos, change) in by_author]):
             if cl[0].author is not None:
                 entry_maintainer = parseaddr(cl[0].author)
                 if entry_maintainer != (maintainer_name, maintainer_email):
-                    cl[0]._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
+                    cl[0]._changes.insert(1, "  [ %s ]" % entry_maintainer[0])
                     if cl[0]._changes[-1]:
-                        cl[0]._changes.append('')
-                    cl[0]._changes.append('  [ %s ]' % maintainer_name)
+                        cl[0]._changes.append("")
+                    cl[0]._changes.append("  [ %s ]" % maintainer_name)
         else:
             if by_author[-1][0] != maintainer_name:
                 if cl[0]._changes[-1]:
-                    cl[0]._changes.append('')
-                cl[0]._changes.append('  [ %s ]' % maintainer_name)
-        if len(cl[0] ._changes) > 1 and not cl[0]._changes[-1].strip():
+                    cl[0]._changes.append("")
+                cl[0]._changes.append("  [ %s ]" % maintainer_name)
+        if len(cl[0]._changes) > 1 and not cl[0]._changes[-1].strip():
             del cl[0]._changes[-1]
     else:
         cl.new_block(
@@ -380,8 +402,9 @@ def changelog_add_entry(
             urgency=urgency,
             author="{} <{}>".format(maintainer_name, maintainer_email),
             date=format_datetime(timestamp),
-            distributions='UNRELEASED',
-            changes=[''])
+            distributions="UNRELEASED",
+            changes=[""],
+        )
     changeblock_add_line(cl[0], summary)
 
 
@@ -389,13 +412,13 @@ def changeblock_add_line(block, lines):
     wrapper = TextWrapper(INITIAL_INDENT)
     block._changes.extend(wrapper.wrap(lines[0]))
     for line in lines[1:]:
-        prefix = len(INITIAL_INDENT) * ' '
-        m = re.match(r'^[  ]*[\+\-\*] ', line)
+        prefix = len(INITIAL_INDENT) * " "
+        m = re.match(r"^[  ]*[\+\-\*] ", line)
         if m:
             prefix += m.group(0)
-            line = line[len(m.group(0)):]
+            line = line[len(m.group(0)) :]
         block._changes.extend(TextWrapper(prefix).wrap(line))
-    block._changes.append('')
+    block._changes.append("")
 
 
 def strip_changelog_message(changes: List[str]) -> List[str]:
@@ -411,41 +434,40 @@ def strip_changelog_message(changes: List[str]) -> List[str]:
     """
     if not changes:
         return changes
-    while changes and changes[-1] == '':
+    while changes and changes[-1] == "":
         changes.pop()
-    while changes and changes[0] == '':
+    while changes and changes[0] == "":
         changes.pop(0)
 
-    whitespace_column_re = re.compile(r'  |\t')
-    changes = [whitespace_column_re.sub('', line, 1) for line in changes]
+    whitespace_column_re = re.compile(r"  |\t")
+    changes = [whitespace_column_re.sub("", line, 1) for line in changes]
 
-    leader_re = re.compile(r'[ \t]*[*+-] ')
+    leader_re = re.compile(r"[ \t]*[*+-] ")
     count = len([line for line in changes if leader_re.match(line)])
     if count == 1:
-        return [leader_re.sub('', line, 1).lstrip() for line in changes]
+        return [leader_re.sub("", line, 1).lstrip() for line in changes]
     else:
         return changes
 
 
-def new_changelog_entries(
-        old_text: List[bytes], new_text: List[bytes]) -> List[str]:
+def new_changelog_entries(old_text: List[bytes], new_text: List[bytes]) -> List[str]:
     import difflib
+
     sequencematcher = difflib.SequenceMatcher
     changes = []
-    for group in sequencematcher(
-            None, old_text, new_text).get_grouped_opcodes(0):
+    for group in sequencematcher(None, old_text, new_text).get_grouped_opcodes(0):
         j1, j2 = group[0][3], group[-1][4]
         for line in new_text[j1:j2]:
             if line.startswith(b"  "):
                 # Debian Policy Manual states that debian/changelog must be
                 # UTF-8
-                changes.append(line.decode('utf-8'))
+                changes.append(line.decode("utf-8"))
     return changes
 
 
 def new_upstream_package_version(
-        upstream_version: str, distribution_name: str,
-        epoch: Optional[str] = None) -> Version:
+    upstream_version: str, distribution_name: str, epoch: Optional[str] = None
+) -> Version:
     """Determine the package version for a new upstream.
 
     Args:
@@ -474,23 +496,22 @@ def all_sha_prefixed(cb: ChangeBlock) -> bool:
     """
     sha_prefixed = 0
     for change in cb.changes():
-        if not change.startswith('  * '):
+        if not change.startswith("  * "):
             continue
-        if re.match(r'  \* \[[0-9a-f]{7}\] ', change):
+        if re.match(r"  \* \[[0-9a-f]{7}\] ", change):
             sha_prefixed += 1
         else:
             return False
-    return (sha_prefixed > 0)
+    return sha_prefixed > 0
 
 
 def distribution_is_unreleased(distribution):
-    return (
-        distribution == 'UNRELEASED' or
-        distribution.startswith('UNRELEASED-'))
+    return distribution == "UNRELEASED" or distribution.startswith("UNRELEASED-")
 
 
 def changeblock_ensure_first_line(
-        block, line, maintainer: Optional[Tuple[str, str]] = None):
+    block, line, maintainer: Optional[Tuple[str, str]] = None
+):
     """Ensure that the first line matches the specified line.
 
     Args:
@@ -503,24 +524,22 @@ def changeblock_ensure_first_line(
     else:
         maintainer_name, maintainer_email = maintainer
     if maintainer_name is None or maintainer_email is None:
-        raise ValueError(
-            'unable to determine maintainer details and none specified')
+        raise ValueError("unable to determine maintainer details and none specified")
     if block._changes[0]:
-        raise ValueError('first block line not empty')
-    line = '  * ' + line
+        raise ValueError("first block line not empty")
+    line = "  * " + line
     if block._changes[1] == line:
         return
     block._changes.insert(1, line)
-    if block._changes[2].startswith('  ['):
-        block._changes.insert(2, '')
+    if block._changes[2].startswith("  ["):
+        block._changes.insert(2, "")
     elif parseaddr(block.author)[0] != maintainer_name:
-        block._changes.insert(2, '  [ %s ]' % parseaddr(block.author)[0])
-        block._changes.insert(2, '')
+        block._changes.insert(2, "  [ %s ]" % parseaddr(block.author)[0])
+        block._changes.insert(2, "")
         block.author = "{} <{}>".format(maintainer_name, maintainer_email)
 
 
-def take_uploadership(
-        block, maintainer: Optional[Tuple[str, str]] = None) -> None:
+def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> None:
     """Take uploaderhsip of a changelog entry, but attribute contributors.
 
     Args:
@@ -532,25 +551,28 @@ def take_uploadership(
     else:
         maintainer_name, maintainer_email = maintainer
     if maintainer_name is None or maintainer_email is None:
-        raise ValueError(
-            'unable to determine maintainer details and none specified')
+        raise ValueError("unable to determine maintainer details and none specified")
     if block.author is not None:
         entry_maintainer = parseaddr(block.author)
-        if (entry_maintainer != (maintainer_name, maintainer_email) and
-                len(block._changes) >= 2 and
-                not block._changes[1].startswith('  [ ')):
-            block._changes.insert(1, '  [ %s ]' % entry_maintainer[0])
+        if (
+            entry_maintainer != (maintainer_name, maintainer_email)
+            and len(block._changes) >= 2
+            and not block._changes[1].startswith("  [ ")
+        ):
+            block._changes.insert(1, "  [ %s ]" % entry_maintainer[0])
             if block._changes[-1]:
-                block._changes.append('')
-    block.author = '{} <{}>'.format(maintainer_name, maintainer_email)
+                block._changes.append("")
+    block.author = "{} <{}>".format(maintainer_name, maintainer_email)
 
 
 def release(
-        cl, distribution: Optional[str] = None, timestamp=None,
-        localtime: bool = True,
-        maintainer: Optional[Tuple[str, str]] = None):
-    """Create a release for a changelog file.
-    """
+    cl,
+    distribution: Optional[str] = None,
+    timestamp=None,
+    localtime: bool = True,
+    maintainer: Optional[Tuple[str, str]] = None,
+):
+    """Create a release for a changelog file."""
     if distribution is None:
         try:
             distribution = cl[1].distributions
@@ -606,10 +628,11 @@ def find_thanks(changes):
         r"[tT]hank(?:(?:s)|(?:you))(?:\s*to)?"
         "((?:\\s+(?:(?:\\w\\.)|(?:\\w+(?:-\\w+)*)))+"
         "(?:\\s+<[^@>]+@[^@>]+>)?)",
-        re.UNICODE)
+        re.UNICODE,
+    )
     thanks: List[str] = []
     for _new_author, _linenos, lines in changes_by_author(changes):
-        for match in thanks_re.finditer(''.join(lines)):
+        for match in thanks_re.finditer("".join(lines)):
             if thanks is None:
                 thanks = []
             thanks_str = match.group(1).strip()
@@ -654,7 +677,7 @@ def is_unreleased_inaugural(cl: Changelog) -> bool:
     actual = [change for change in cl[0].changes() if change.strip()]
     if len(actual) != 1:
         return False
-    if not actual[0].startswith('  * Initial release'):
+    if not actual[0].startswith("  * Initial release"):
         return False
     return True
 
@@ -664,9 +687,10 @@ def gbp_dch(path: str) -> None:
     import os
 
     from gbp.scripts.dch import main as dch_main
+
     old_cwd = os.getcwd()
     try:
         os.chdir(path)
-        dch_main(['gbp-dch', '--ignore-branch'])
+        dch_main(["gbp-dch", "--ignore-branch"])
     finally:
         os.chdir(old_cwd)

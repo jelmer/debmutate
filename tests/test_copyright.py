@@ -28,17 +28,17 @@ from debmutate.copyright import CopyrightEditor, NotMachineReadableError
 
 
 class UpdateCopyrightTests(TestCase):
-
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.test_dir)
         self.addCleanup(os.chdir, os.getcwd())
         os.chdir(self.test_dir)
-        os.mkdir('debian')
+        os.mkdir("debian")
 
     def test_preservable_weird_spacing(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -48,27 +48,32 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
 Files: *
 License: GPL
 Copyright: 2012...
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
-            updater.copyright.header.upstream_name = 'llintian-brush'
+            updater.copyright.header.upstream_name = "llintian-brush"
 
     def test_old_style(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 This package was debianized in 1995 by Joe Example <joe@example.com>
 
 It was downloaded from ftp://ftp.example.com/pub/blah.
-""")
+"""
+            )
 
         def dummy():
             with CopyrightEditor():
                 pass
+
         self.assertRaises(NotMachineReadableError, dummy)
 
     def test_modify(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -76,15 +81,16 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
 Files: *
 License: GPL
 Copyright: 2012...
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
-            p = FilesParagraph.create(
-                ['foo.c'], "2012 Joe Example", License("Apache"))
+            p = FilesParagraph.create(["foo.c"], "2012 Joe Example", License("Apache"))
             updater.copyright.add_files_paragraph(p)
         self.assertTrue(updater.changed)
-        with open('debian/copyright') as f:
-            self.assertEqual("""\
+        with open("debian/copyright") as f:
+            self.assertEqual(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -96,22 +102,28 @@ Copyright: 2012...
 Files: foo.c
 Copyright: 2012 Joe Example
 License: Apache
-""", f.read())
+""",
+                f.read(),
+            )
 
     def test_add_paragraph(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
-            updater.copyright.add_license_paragraph(LicenseParagraph.create(
-                License("Blah", 'Blah\nblah blah\nblah\n\n')))
+            updater.copyright.add_license_paragraph(
+                LicenseParagraph.create(License("Blah", "Blah\nblah blah\nblah\n\n"))
+            )
         self.assertTrue(updater.changed)
-        with open('debian/copyright') as f:
-            self.assertEqual("""\
+        with open("debian/copyright") as f:
+            self.assertEqual(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -121,11 +133,14 @@ License: Blah
  blah blah
  blah
  .
-""", f.read())
+""",
+                f.read(),
+            )
 
     def test_preserve_whitespace(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -133,18 +148,18 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
 License: Blah
  blah
  .
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
             license_para = list(updater.copyright.all_license_paragraphs())[0]
-            self.assertEqual(
-                'License: Blah\n blah\n .\n',
-                license_para.dump())
+            self.assertEqual("License: Blah\n blah\n .\n", license_para.dump())
             self.assertEqual("blah\n", license_para.license.text)
 
     def test_remove_paragraph(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -152,36 +167,41 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
 License: Blah
  blah
  .
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
             license_para = list(updater.copyright.all_license_paragraphs())[0]
             updater.remove(license_para)
-        with open('debian/copyright') as f:
-            self.assertEqual("""\
+        with open("debian/copyright") as f:
+            self.assertEqual(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
-""", f.read())
+""",
+                f.read(),
+            )
 
     def test_append_paragraph(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
 
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
-            p = FilesParagraph.create(
-                ['foo.c'], "2012 Joe Example", License("Apache"))
+            p = FilesParagraph.create(["foo.c"], "2012 Joe Example", License("Apache"))
             updater.append(p)
-            p = FilesParagraph.create(
-                ['bar.c'], "2013 Joe Example", License("Apache"))
+            p = FilesParagraph.create(["bar.c"], "2013 Joe Example", License("Apache"))
             updater.append(p)
-        with open('debian/copyright') as f:
-            self.assertEqual("""\
+        with open("debian/copyright") as f:
+            self.assertEqual(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -193,11 +213,14 @@ License: Apache
 Files: bar.c
 Copyright: 2013 Joe Example
 License: Apache
-""", f.read())
+""",
+                f.read(),
+            )
 
     def test_insert_paragraph(self):
-        with open('debian/copyright', 'w') as f:
-            f.write("""\
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -205,14 +228,15 @@ Upstream-Contact: Jelmer <jelmer@samba.org>
 Files: bar.c
 Copyright: 2013 Joe Example
 License: Apache
-""")
+"""
+            )
 
         with CopyrightEditor() as updater:
-            p = FilesParagraph.create(
-                ['foo.c'], "2012 Joe Example", License("Apache"))
+            p = FilesParagraph.create(["foo.c"], "2012 Joe Example", License("Apache"))
             updater.insert(0, p)
-        with open('debian/copyright') as f:
-            self.assertEqual("""\
+        with open("debian/copyright") as f:
+            self.assertEqual(
+                """\
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lintian-brush
 Upstream-Contact: Jelmer <jelmer@samba.org>
@@ -224,4 +248,6 @@ License: Apache
 Files: bar.c
 Copyright: 2013 Joe Example
 License: Apache
-""", f.read())
+""",
+                f.read(),
+            )

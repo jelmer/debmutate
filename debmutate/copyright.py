@@ -18,30 +18,31 @@
 """Utility functions for dealing with copyright files."""
 
 __all__ = [
-    'NotMachineReadableError',
-    'MachineReadableFormatError',
-    'CopyrightEditor',
-    'upstream_fields_in_copyright',
+    "NotMachineReadableError",
+    "MachineReadableFormatError",
+    "CopyrightEditor",
+    "upstream_fields_in_copyright",
 ]
 
 from typing import Dict, Optional
 
-from debian.copyright import (Copyright, MachineReadableFormatError,
-                              NotMachineReadableError)
+from debian.copyright import (
+    Copyright,
+    MachineReadableFormatError,
+    NotMachineReadableError,
+)
 from debian.deb822 import RestrictedField
 
 from .reformatting import Editor
 
 
 class CopyrightEditor(Editor[Copyright, str]):
-    """Update a machine-readable copyright file.
-    """
+    """Update a machine-readable copyright file."""
 
     def __init__(
-            self, path: str = 'debian/copyright',
-            allow_reformatting: Optional[bool] = None) -> None:
-        super().__init__(
-            path, allow_reformatting=allow_reformatting)
+        self, path: str = "debian/copyright", allow_reformatting: Optional[bool] = None
+    ) -> None:
+        super().__init__(path, allow_reformatting=allow_reformatting)
 
     def _parse(self, content):
         try:
@@ -71,7 +72,8 @@ class CopyrightEditor(Editor[Copyright, str]):
 
     def insert(self, idx, paragraph):
         self._parsed._Copyright__paragraphs.insert(  # type: ignore
-            idx, paragraph)
+            idx, paragraph
+        )
         self._deb822.insert(idx + 1, paragraph._underlying_paragraph)
 
     def pop(self, idx):
@@ -81,7 +83,8 @@ class CopyrightEditor(Editor[Copyright, str]):
 
 
 def upstream_fields_in_copyright(
-        path: str = 'debian/copyright') -> Dict[str, RestrictedField]:
+    path: str = "debian/copyright"
+) -> Dict[str, RestrictedField]:
     """Extract upstream fields from a copyright file.
 
     Args:
@@ -93,12 +96,16 @@ def upstream_fields_in_copyright(
     try:
         with open(path) as f:
             c = Copyright(f, strict=False)
-    except (ValueError, FileNotFoundError, NotMachineReadableError,
-            MachineReadableFormatError):
+    except (
+        ValueError,
+        FileNotFoundError,
+        NotMachineReadableError,
+        MachineReadableFormatError,
+    ):
         return {}
     else:
         if c.header.upstream_contact:
-            ret['Contact'] = c.header.upstream_contact
+            ret["Contact"] = c.header.upstream_contact
         if c.header.upstream_name:
-            ret['Name'] = c.header.upstream_name
+            ret["Name"] = c.header.upstream_name
     return ret

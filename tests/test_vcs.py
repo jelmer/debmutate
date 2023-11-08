@@ -19,83 +19,82 @@
 
 from unittest import TestCase
 
-from debmutate.vcs import (VcsUrl, gbp_expand_tag_name, mangle_version_for_git,
-                           split_vcs_url, unsplit_vcs_url)
+from debmutate.vcs import (
+    VcsUrl,
+    gbp_expand_tag_name,
+    mangle_version_for_git,
+    split_vcs_url,
+    unsplit_vcs_url,
+)
 
 
 class SplitVcsUrlTests(TestCase):
-
     def test_none(self):
         self.assertEqual(
-            VcsUrl('https://github.com/jelmer/example', None, None),
-            split_vcs_url('https://github.com/jelmer/example'))
+            VcsUrl("https://github.com/jelmer/example", None, None),
+            split_vcs_url("https://github.com/jelmer/example"),
+        )
         self.assertEqual(
-            VcsUrl(
-                'https://github.com/jelmer/example', None,
-                'path/to/packaging'),
-            split_vcs_url(
-                'https://github.com/jelmer/example [path/to/packaging]'))
+            VcsUrl("https://github.com/jelmer/example", None, "path/to/packaging"),
+            split_vcs_url("https://github.com/jelmer/example [path/to/packaging]"),
+        )
 
     def test_branch(self):
         self.assertEqual(
-            VcsUrl(
-                'https://github.com/jelmer/example', 'master',
-                'path/to/packaging'),
+            VcsUrl("https://github.com/jelmer/example", "master", "path/to/packaging"),
             split_vcs_url(
-                'https://github.com/jelmer/example [path/to/packaging] '
-                '-b master'))
+                "https://github.com/jelmer/example [path/to/packaging] " "-b master"
+            ),
+        )
         self.assertEqual(
-            VcsUrl(
-                'https://github.com/jelmer/example', 'master',
-                'path/to/packaging'),
+            VcsUrl("https://github.com/jelmer/example", "master", "path/to/packaging"),
             split_vcs_url(
-                'https://github.com/jelmer/example -b master '
-                '[path/to/packaging]'))
+                "https://github.com/jelmer/example -b master " "[path/to/packaging]"
+            ),
+        )
         self.assertEqual(
-            VcsUrl('https://github.com/jelmer/example', 'master', None),
-            split_vcs_url(
-                'https://github.com/jelmer/example -b master'))
+            VcsUrl("https://github.com/jelmer/example", "master", None),
+            split_vcs_url("https://github.com/jelmer/example -b master"),
+        )
 
 
 class UnsplitVcsUrlTests(TestCase):
-
     def test_none(self):
         self.assertEqual(
-            'https://github.com/jelmer/example',
-            unsplit_vcs_url('https://github.com/jelmer/example', None, None))
+            "https://github.com/jelmer/example",
+            unsplit_vcs_url("https://github.com/jelmer/example", None, None),
+        )
         self.assertEqual(
-            'https://github.com/jelmer/example [path/to/packaging]',
+            "https://github.com/jelmer/example [path/to/packaging]",
             unsplit_vcs_url(
-                'https://github.com/jelmer/example', None,
-                'path/to/packaging'))
+                "https://github.com/jelmer/example", None, "path/to/packaging"
+            ),
+        )
 
     def test_branch(self):
         self.assertEqual(
-            'https://github.com/jelmer/example -b master '
-            '[path/to/packaging]',
+            "https://github.com/jelmer/example -b master " "[path/to/packaging]",
             unsplit_vcs_url(
-                'https://github.com/jelmer/example', 'master',
-                'path/to/packaging'))
+                "https://github.com/jelmer/example", "master", "path/to/packaging"
+            ),
+        )
         self.assertEqual(
-            'https://github.com/jelmer/example -b master',
-            unsplit_vcs_url(
-                'https://github.com/jelmer/example', 'master', None))
+            "https://github.com/jelmer/example -b master",
+            unsplit_vcs_url("https://github.com/jelmer/example", "master", None),
+        )
 
 
 class MangleVersionForGitTests(TestCase):
-
     def test_replace_tilde(self):
-        self.assertEqual('1.0_1', mangle_version_for_git('1.0~1'))
+        self.assertEqual("1.0_1", mangle_version_for_git("1.0~1"))
 
     def test_normal(self):
-        self.assertEqual('1.0', mangle_version_for_git('1.0'))
+        self.assertEqual("1.0", mangle_version_for_git("1.0"))
 
 
 class ExpandGbpTagFormatTests(TestCase):
-
     def test_gbp_tag_format(self):
+        self.assertEqual("blah-1.0", gbp_expand_tag_name("blah-%(version)s", "1.0"))
         self.assertEqual(
-            'blah-1.0', gbp_expand_tag_name('blah-%(version)s', '1.0'))
-        self.assertEqual(
-            'blah-0.1-1',
-            gbp_expand_tag_name('blah-%(version%~%-)s', '0.1~1'))
+            "blah-0.1-1", gbp_expand_tag_name("blah-%(version%~%-)s", "0.1~1")
+        )

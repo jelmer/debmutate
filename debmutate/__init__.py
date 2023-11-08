@@ -3,4 +3,4 @@
 """Make changes to Debian packages."""
 
 __version__ = (0, 68)
-version_string = '.'.join([str(x) for x in __version__])
+version_string = ".".join([str(x) for x in __version__])

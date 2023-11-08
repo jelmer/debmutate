@@ -29,8 +29,7 @@ class DebmutateVersion(TestCase):
     def test_matches_package_version(self):
         if not os.path.exists("debian/changelog"):
             self.skipTest(
-                "no debian/changelog available. "
-                "Running outside of source tree?"
+                "no debian/changelog available. " "Running outside of source tree?"
             )
         with open("debian/changelog") as f:
             cl = Changelog(f, max_blocks=1)

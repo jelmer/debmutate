@@ -24,21 +24,22 @@ from typing import Optional, Tuple, Union
 from debian.changelog import Version
 
 __all__ = [
-    'git_snapshot_data_from_version',
-    'mangle_version_for_git',
-    'upstream_version_add_revision',
+    "git_snapshot_data_from_version",
+    "mangle_version_for_git",
+    "upstream_version_add_revision",
 ]
 
 
 # Ideally we wouldn't have a list like this, but unfortunately we do.
-COMMON_VENDORS = ['debian', 'ubuntu', 'kali']
+COMMON_VENDORS = ["debian", "ubuntu", "kali"]
 
 
-DFSG_REGEX = re.compile(r'^(.*)([\+~])(dfsg|ds)([0-9]*)$')
+DFSG_REGEX = re.compile(r"^(.*)([\+~])(dfsg|ds)([0-9]*)$")
 
 
 def git_snapshot_data_from_version(
-        version: Union[str, Version]) -> Tuple[Optional[str], Optional[str]]:
+    version: Union[str, Version]
+) -> Tuple[Optional[str], Optional[str]]:
     """Extract git snapshot information from an upstream version string.
 
     Args:
@@ -49,13 +50,14 @@ def git_snapshot_data_from_version(
     date = None
     if "+git" in version or "~git" in version or "-git" in version:
         m = re.match(
-            ".*[~+-]git([0-9]{4})([0-9]{2})([0-9]{2})\\.([0-9a-f]{7}).*",
-            version)
+            ".*[~+-]git([0-9]{4})([0-9]{2})([0-9]{2})\\.([0-9a-f]{7}).*", version
+        )
         if not m:
             m = re.match(
                 ".*[~+-]git([0-9]{4})([0-9]{2})([0-9]{2})\\."
                 "[0-9+]\\.([0-9a-f]{7}).*",
-                version)
+                version,
+            )
         if m:
             git_id = m.group(4)
             date = "{}-{}-{}".format(m.group(1), m.group(2), m.group(3))
@@ -72,12 +74,11 @@ def git_snapshot_data_from_version(
 def mangle_version_for_git(version: Union[Version, str]) -> str:
     version = str(version)
     # See https://dep-team.pages.debian.net/deps/dep14/
-    manipulated = (
-        version.replace("~", "_").replace(':', '%').replace('..', '.#.'))
-    if manipulated.endswith('.'):
-        manipulated += '#'
-    if manipulated.endswith('.lock'):
-        manipulated = manipulated[:-4] + '#lock'
+    manipulated = version.replace("~", "_").replace(":", "%").replace("..", ".#.")
+    if manipulated.endswith("."):
+        manipulated += "#"
+    if manipulated.endswith(".lock"):
+        manipulated = manipulated[:-4] + "#lock"
     return manipulated
 
 
@@ -88,8 +89,7 @@ def initial_debian_revision(distribution_name):
         return "1"
 
 
-def new_upstream_package_version(
-        upstream_version, debian_revision, epoch=None):
+def new_upstream_package_version(upstream_version, debian_revision, epoch=None):
     ret = Version("{}-{}".format(upstream_version, debian_revision))
     ret.epoch = epoch
     return ret
@@ -104,8 +104,7 @@ def new_package_version(upstream_version, distribution_name, epoch=None):
       epoch: Optional epoch
     """
     debian_revision = initial_debian_revision(distribution_name)
-    return new_upstream_package_version(
-        upstream_version, debian_revision, epoch=epoch)
+    return new_upstream_package_version(upstream_version, debian_revision, epoch=epoch)
 
 
 def get_snapshot_revision(upstream_version):
@@ -132,8 +131,7 @@ def get_snapshot_revision(upstream_version):
     match = re.search("(?:~|\\+)svn([0-9]+)$", upstream_version)
     if match is not None:
         return ("svn", match.groups()[0])
-    match = re.match(r"^(.*)([\+~])git(\d{8})\.([a-f0-9]{7})$",
-                     upstream_version)
+    match = re.match(r"^(.*)([\+~])git(\d{8})\.([a-f0-9]{7})$", upstream_version)
     if match:
         return ("git", match.group(4))
     match = re.match(r"^(.*)([\+~])git(\d{8})$", upstream_version)
@@ -143,11 +141,13 @@ def get_snapshot_revision(upstream_version):
 
 
 def upstream_version_add_revision(
-        version_string: str, sep: str = '+',
-        gitid: Optional[bytes] = None,
-        gitdate: Optional[datetime] = None,
-        bzr_revno: Optional[str] = None,
-        svn_revno: Optional[int] = None):
+    version_string: str,
+    sep: str = "+",
+    gitid: Optional[bytes] = None,
+    gitdate: Optional[datetime] = None,
+    bzr_revno: Optional[str] = None,
+    svn_revno: Optional[int] = None,
+):
     """Update the revision in a upstream version string.
 
     Args:
@@ -168,28 +168,33 @@ def upstream_version_add_revision(
             return "{}{}bzr{}".format(m.group(1), m.group(2), bzr_revno)
 
     if gitid:
-        decoded_gitid: Optional[str] = gitid[:7].decode('ascii')
+        decoded_gitid: Optional[str] = gitid[:7].decode("ascii")
     else:
         decoded_gitid = None
     if gitdate:
-        gitdate_formatted: Optional[str] = gitdate.strftime('%Y%m%d')
+        gitdate_formatted: Optional[str] = gitdate.strftime("%Y%m%d")
     else:
         gitdate_formatted = None
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})\.([a-f0-9]{7})$", version_string)
     if m and decoded_gitid:
         return "{}{}git{}.{}".format(
-            m.group(1), m.group(2), gitdate_formatted, decoded_gitid)
+            m.group(1), m.group(2), gitdate_formatted, decoded_gitid
+        )
 
-    m = re.match(r"^(.*)([\+~-])git(\d{8})\.(\d+)\.([a-f0-9]{7})$",
-                 version_string)
+    m = re.match(r"^(.*)([\+~-])git(\d{8})\.(\d+)\.([a-f0-9]{7})$", version_string)
     if m and decoded_gitid:
         if gitdate_formatted == m.group(3):
             snapshot = int(m.group(4)) + 1
         else:
             snapshot = 0
         return "%s%sgit%s.%d.%s" % (
-            m.group(1), m.group(2), gitdate_formatted, snapshot, decoded_gitid)
+            m.group(1),
+            m.group(2),
+            gitdate_formatted,
+            snapshot,
+            decoded_gitid,
+        )
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
     if m and decoded_gitid:
@@ -204,15 +209,15 @@ def upstream_version_add_revision(
         return "%s%ssvn%d" % (version_string, sep, svn_revno)
     elif decoded_gitid:
         return "{}{}git{}.1.{}".format(
-            version_string, sep, gitdate_formatted, decoded_gitid)
+            version_string, sep, gitdate_formatted, decoded_gitid
+        )
     elif bzr_revno is not None:
         return "{}{}bzr{}".format(version_string, sep, bzr_revno)
     else:
         raise ValueError
 
 
-def debianize_upstream_version(
-        version: str, package: Optional[str] = None) -> str:
+def debianize_upstream_version(version: str, package: Optional[str] = None) -> str:
     """Make an upstream version string suitable for Debian.
 
     Args:
@@ -221,20 +226,20 @@ def debianize_upstream_version(
     Returns:
       mangled version string for use in Debian versions
     """
-    if version.count('_') == 1 and version.count('.') > 0:
+    if version.count("_") == 1 and version.count(".") > 0:
         # This is a style commonly used for perl packages.
         # Most debian packages seem to just drop the underscore.
         # See
         # http://blogs.perl.org/users/grinnz/2018/04/a-guide-to-versions-in-perl.html
-        version = version.replace('_', '')
-    if '_' in version and '.' not in version:
-        version = version.replace('_', '.')
-    version = version.replace('-rc', '~rc')
-    version = version.replace('-beta', '~beta')
-    version = version.replace('-alpha', '~alpha')
-    m = re.fullmatch(r'(.*)\.([0-9])(a|b|rc|alpha|beta)([0-9]*)', version)
+        version = version.replace("_", "")
+    if "_" in version and "." not in version:
+        version = version.replace("_", ".")
+    version = version.replace("-rc", "~rc")
+    version = version.replace("-beta", "~beta")
+    version = version.replace("-alpha", "~alpha")
+    m = re.fullmatch(r"(.*)\.([0-9])(a|b|rc|alpha|beta)([0-9]*)", version)
     if m:
-        version = m.group(1) + '.' + m.group(2) + '~' + m.group(3) + m.group(4)
+        version = m.group(1) + "." + m.group(2) + "~" + m.group(3) + m.group(4)
     return version
 
 
@@ -257,7 +262,7 @@ def matches_release(upstream_version: str, release_version: str) -> bool:
     m = re.match("(.*)([~+-]).*", upstream_version)
     if m and m.group(1) == release_version:
         return True
-    m = re.match('.*~([0-9.]+)$', upstream_version)
+    m = re.match(".*~([0-9.]+)$", upstream_version)
     if m and m.group(1) == release_version:
         return True
     return False
@@ -272,8 +277,8 @@ def strip_dfsg_suffix(version: str) -> str:
 
 
 def add_dfsg_suffix(
-        upstream_version: str,
-        old_upstream_version: Optional[str] = None) -> str:
+    upstream_version: str, old_upstream_version: Optional[str] = None
+) -> str:
     """Add a dfsg suffix to an version version string.
 
     Allow old_upstream_version to be passed in so optionally the format can be

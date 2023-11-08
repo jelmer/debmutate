@@ -23,32 +23,38 @@ from . import TestCase
 
 
 class ComponentFromOrigTarballTests(TestCase):
-
     def test_base_tarball(self):
         self.assertIs(
-            None,
-            component_from_orig_tarball(
-                "foo_0.1.orig.tar.gz", "foo", "0.1"))
+            None, component_from_orig_tarball("foo_0.1.orig.tar.gz", "foo", "0.1")
+        )
         self.assertRaises(
-            ValueError,
-            component_from_orig_tarball, "foo_0.1.orig.tar.gz", "bar", "0.1")
+            ValueError, component_from_orig_tarball, "foo_0.1.orig.tar.gz", "bar", "0.1"
+        )
 
     def test_invalid_extension(self):
         self.assertRaises(
             ValueError,
-            component_from_orig_tarball, "foo_0.1.orig.unknown", "foo", "0.1")
+            component_from_orig_tarball,
+            "foo_0.1.orig.unknown",
+            "foo",
+            "0.1",
+        )
 
     def test_component(self):
         self.assertEqual(
             "comp",
-            component_from_orig_tarball(
-                "foo_0.1.orig-comp.tar.gz", "foo", "0.1"))
+            component_from_orig_tarball("foo_0.1.orig-comp.tar.gz", "foo", "0.1"),
+        )
         self.assertEqual(
             "comp-dash",
-            component_from_orig_tarball(
-                "foo_0.1.orig-comp-dash.tar.gz", "foo", "0.1"))
+            component_from_orig_tarball("foo_0.1.orig-comp-dash.tar.gz", "foo", "0.1"),
+        )
 
     def test_invalid_character(self):
         self.assertRaises(
             ValueError,
-            component_from_orig_tarball, "foo_0.1.orig;.tar.gz", "foo", "0.1")
+            component_from_orig_tarball,
+            "foo_0.1.orig;.tar.gz",
+            "foo",
+            "0.1",
+        )

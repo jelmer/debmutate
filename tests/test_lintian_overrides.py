@@ -19,112 +19,133 @@
 
 from io import StringIO
 
-from debmutate.lintian_overrides import (LintianOverride,
-                                         LintianOverridesEditor,
-                                         iter_overrides, parse_override,
-                                         serialize_override)
+from debmutate.lintian_overrides import (
+    LintianOverride,
+    LintianOverridesEditor,
+    iter_overrides,
+    parse_override,
+    serialize_override,
+)
 
 from . import TestCase, TestCaseInTempDir
 
 
 class UpdateOverridesEditorTests(TestCaseInTempDir):
-
     def test_no_changes(self):
         CONTENT = """\
 # An architecture wildcard would look like:
 foo [any-i386] binary: another-tag optional-extra
 """
-        self.build_tree_contents([('overrides', CONTENT)])
+        self.build_tree_contents([("overrides", CONTENT)])
 
-        with LintianOverridesEditor(path='overrides'):
+        with LintianOverridesEditor(path="overrides"):
             pass
-        self.assertFileEqual(CONTENT, 'overrides')
+        self.assertFileEqual(CONTENT, "overrides")
 
     def test_empty(self):
         CONTENT = """\
 """
-        self.build_tree_contents([('overrides', CONTENT)])
+        self.build_tree_contents([("overrides", CONTENT)])
 
-        with LintianOverridesEditor(path='overrides'):
+        with LintianOverridesEditor(path="overrides"):
             pass
-        self.assertFileEqual(CONTENT, 'overrides')
+        self.assertFileEqual(CONTENT, "overrides")
 
     def test_missing(self):
-        with LintianOverridesEditor(path='overrides'):
+        with LintianOverridesEditor(path="overrides"):
             pass
 
     def test_change_set_archlist(self):
-        self.build_tree_contents([('overrides', """\
+        self.build_tree_contents(
+            [
+                (
+                    "overrides",
+                    """\
 # An architecture wildcard would look like:
 foo binary: another-tag optional-extra
-""")])
+""",
+                )
+            ]
+        )
 
-        with LintianOverridesEditor(path='overrides') as editor:
-            editor.overrides[0].archlist = ['any-i386']
+        with LintianOverridesEditor(path="overrides") as editor:
+            editor.overrides[0].archlist = ["any-i386"]
 
-        self.assertFileEqual("""\
+        self.assertFileEqual(
+            """\
 # An architecture wildcard would look like:
 foo [any-i386] binary: another-tag optional-extra
-""", 'overrides')
+""",
+            "overrides",
+        )
 
 
 class ParseOverrideTests(TestCase):
-
     def test_tag_only(self):
-        self.assertEqual(
-            LintianOverride(tag='sometag'),
-            parse_override('sometag\n'))
+        self.assertEqual(LintianOverride(tag="sometag"), parse_override("sometag\n"))
 
     def test_origin(self):
         self.assertEqual(
-            LintianOverride(tag='sometag', package='mypkg'),
-            parse_override('mypkg: sometag\n'))
+            LintianOverride(tag="sometag", package="mypkg"),
+            parse_override("mypkg: sometag\n"),
+        )
 
     def test_archlist(self):
         self.assertEqual(
-            LintianOverride(tag='sometag', archlist=['i386', 'amd64']),
-            parse_override('[i386 amd64]: sometag\n'))
+            LintianOverride(tag="sometag", archlist=["i386", "amd64"]),
+            parse_override("[i386 amd64]: sometag\n"),
+        )
 
     def test_iter_overrides(self):
-        self.assertEqual([
-            LintianOverride(tag='sometag', archlist=['i386', 'amd64']),
-            LintianOverride(tag='anothertag', info='optional-extra')],
-            list(iter_overrides(StringIO("""
+        self.assertEqual(
+            [
+                LintianOverride(tag="sometag", archlist=["i386", "amd64"]),
+                LintianOverride(tag="anothertag", info="optional-extra"),
+            ],
+            list(
+                iter_overrides(
+                    StringIO(
+                        """
 [i386 amd64]: sometag
 anothertag optional-extra
-"""))))
+"""
+                    )
+                )
+            ),
+        )
 
 
 class SerializeOverrideTests(TestCase):
-
     def test_tag_only(self):
         self.assertEqual(
-            serialize_override(LintianOverride(tag='sometag')),
-            'sometag\n')
+            serialize_override(LintianOverride(tag="sometag")), "sometag\n"
+        )
 
     def test_origin(self):
         self.assertEqual(
-            serialize_override(
-                LintianOverride(tag='sometag', package='mypkg')),
-            'mypkg: sometag\n')
+            serialize_override(LintianOverride(tag="sometag", package="mypkg")),
+            "mypkg: sometag\n",
+        )
 
     def test_archlist(self):
         self.assertEqual(
-            serialize_override(
-                LintianOverride(tag='sometag', archlist=['i386'])),
-            '[i386]: sometag\n')
+            serialize_override(LintianOverride(tag="sometag", archlist=["i386"])),
+            "[i386]: sometag\n",
+        )
 
 
 class MatchesOverrideTests(TestCase):
-
     def test_wildcard(self):
         override = parse_override(
-            'debootstrap source: '
-            'debian-source-options-has-custom-compression-settings '
-            'compression = gzip (line *)')
+            "debootstrap source: "
+            "debian-source-options-has-custom-compression-settings "
+            "compression = gzip (line *)"
+        )
         self.assertTrue(
             override.matches(
-                package='debootstrap',
-                tag='debian-source-options-has-custom-compression-settings',
-                info='compression = gzip (line 15)',
-                type='source'))
+                package="debootstrap",
+                tag="debian-source-options-has-custom-compression-settings",
+                info="compression = gzip (line 15)",
+                type="source",
+            )
+        )
