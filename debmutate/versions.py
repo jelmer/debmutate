@@ -60,14 +60,14 @@ def git_snapshot_data_from_version(
             )
         if m:
             git_id = m.group(4)
-            date = "{}-{}-{}".format(m.group(1), m.group(2), m.group(3))
+            date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
         else:
             m = re.match(".*[~+]git([0-9]{4})([0-9]{2})([0-9]{2}).*", version)
             if m:
-                date = "{}-{}-{}".format(m.group(1), m.group(2), m.group(3))
+                date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
     m = re.match(r".*\+next\.([0-9]{4})([0-9]{2})([0-9]{2}).*", version)
     if m:
-        date = "{}-{}-{}".format(m.group(1), m.group(2), m.group(3))
+        date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
     return (git_id, date)
 
 
@@ -90,7 +90,7 @@ def initial_debian_revision(distribution_name):
 
 
 def new_upstream_package_version(upstream_version, debian_revision, epoch=None):
-    ret = Version("{}-{}".format(upstream_version, debian_revision))
+    ret = Version(f"{upstream_version}-{debian_revision}")
     ret.epoch = epoch
     return ret
 
@@ -120,6 +120,7 @@ def get_snapshot_revision(upstream_version):
 
     Args:
       upstream_version: a string containing the upstream version number.
+
     Returns:
       a string containing a revision specifier for the revision of the
       upstream branch that the snapshot was taken from, or None if it
@@ -165,7 +166,7 @@ def upstream_version_add_revision(
     if bzr_revno is not None:
         m = re.match(r"^(.*)([\+~])bzr(\d+)$", version_string)
         if m:
-            return "{}{}bzr{}".format(m.group(1), m.group(2), bzr_revno)
+            return f"{m.group(1)}{m.group(2)}bzr{bzr_revno}"
 
     if gitid:
         decoded_gitid: Optional[str] = gitid[:7].decode("ascii")
@@ -178,9 +179,7 @@ def upstream_version_add_revision(
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})\.([a-f0-9]{7})$", version_string)
     if m and decoded_gitid:
-        return "{}{}git{}.{}".format(
-            m.group(1), m.group(2), gitdate_formatted, decoded_gitid
-        )
+        return f"{m.group(1)}{m.group(2)}git{gitdate_formatted}.{decoded_gitid}"
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})\.(\d+)\.([a-f0-9]{7})$", version_string)
     if m and decoded_gitid:
@@ -198,7 +197,7 @@ def upstream_version_add_revision(
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
     if m and decoded_gitid:
-        return "{}{}git{}".format(m.group(1), m.group(2), gitdate_formatted)
+        return f"{m.group(1)}{m.group(2)}git{gitdate_formatted}"
 
     m = re.match(r"^(.*)([\+~])svn(\d+)$", version_string)
     # FIXME: Raise error if +svn/~svn is present and svn_revno is not set?
@@ -208,11 +207,9 @@ def upstream_version_add_revision(
     if svn_revno:
         return "%s%ssvn%d" % (version_string, sep, svn_revno)
     elif decoded_gitid:
-        return "{}{}git{}.1.{}".format(
-            version_string, sep, gitdate_formatted, decoded_gitid
-        )
+        return f"{version_string}{sep}git{gitdate_formatted}.1.{decoded_gitid}"
     elif bzr_revno is not None:
-        return "{}{}bzr{}".format(version_string, sep, bzr_revno)
+        return f"{version_string}{sep}bzr{bzr_revno}"
     else:
         raise ValueError
 

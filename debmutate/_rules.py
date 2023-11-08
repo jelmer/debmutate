@@ -79,7 +79,7 @@ class Rule:
         return self
 
     def __repr__(self):
-        return "<{}({!r})>".format(type(self).__name__, self.target)
+        return f"<{type(self).__name__}({self.target!r})>"
 
     @property
     def targets(self) -> List[bytes]:

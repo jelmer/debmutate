@@ -23,7 +23,6 @@ import tempfile
 from unittest import TestCase
 
 from debian.copyright import FilesParagraph, License, LicenseParagraph
-
 from debmutate.copyright import CopyrightEditor, NotMachineReadableError
 
 

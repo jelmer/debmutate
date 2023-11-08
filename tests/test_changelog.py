@@ -27,7 +27,6 @@ from datetime import datetime
 from unittest import TestCase
 
 from debian.changelog import Changelog, Version
-
 from debmutate.changelog import (
     ChangelogCreateError,
     ChangelogEditor,

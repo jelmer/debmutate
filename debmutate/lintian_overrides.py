@@ -149,7 +149,7 @@ class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
 
 
 def parse_override(line: str) -> LintianOverride:
-    """Parse an override line
+    """Parse an override line.
 
     Args:
       line: Line to parse

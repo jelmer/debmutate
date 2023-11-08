@@ -156,7 +156,7 @@ def changelog_auto_version(
             package=package,
             distributions="UNRELEASED",
             urgency=urgency,
-            author="{} <{}>".format(maintainer_name, maintainer_email),
+            author=f"{maintainer_name} <{maintainer_email}>",
             date=format_datetime(timestamp),
         )
 
@@ -247,7 +247,7 @@ class TextWrapper(textwrap.TextWrapper):
                 and i + 2 < len(chunks)
                 and chunks[i + 2].startswith("#")
             ):
-                ret.append("{} {}".format(chunks[i], chunks[i + 2]))
+                ret.append(f"{chunks[i]} {chunks[i + 2]}")
                 i += 3
             else:
                 ret.append(chunks[i])
@@ -400,7 +400,7 @@ def changelog_add_entry(
             package=cl[0].package,
             version=increment_version(cl[0].version),
             urgency=urgency,
-            author="{} <{}>".format(maintainer_name, maintainer_email),
+            author=f"{maintainer_name} <{maintainer_email}>",
             date=format_datetime(timestamp),
             distributions="UNRELEASED",
             changes=[""],
@@ -536,7 +536,7 @@ def changeblock_ensure_first_line(
     elif parseaddr(block.author)[0] != maintainer_name:
         block._changes.insert(2, "  [ %s ]" % parseaddr(block.author)[0])
         block._changes.insert(2, "")
-        block.author = "{} <{}>".format(maintainer_name, maintainer_email)
+        block.author = f"{maintainer_name} <{maintainer_email}>"
 
 
 def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> None:
@@ -562,7 +562,7 @@ def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> No
             block._changes.insert(1, "  [ %s ]" % entry_maintainer[0])
             if block._changes[-1]:
                 block._changes.append("")
-    block.author = "{} <{}>".format(maintainer_name, maintainer_email)
+    block.author = f"{maintainer_name} <{maintainer_email}>"
 
 
 def release(

@@ -96,7 +96,7 @@ class TemplateExpansionFailed(Exception):
     def __init__(self, command, stderr):
         self.command = command
         self.stderr = stderr
-        super().__init__("Template expansion ({!r}) failed: {}".format(command, stderr))
+        super().__init__(f"Template expansion ({command!r}) failed: {stderr}")
 
 
 class TemplateExpandCommandMissing(Exception):
@@ -896,6 +896,7 @@ def add_dependency(relationstr, relation, position=None):
       relationstr: existing relations line
       relation: New relation
       position: Optional position to insert relation at (defaults to last)
+
     Returns:
       Nothing
     """

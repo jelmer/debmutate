@@ -76,9 +76,9 @@ def unsplit_vcs_url(
     """
     url = repo_url
     if branch:
-        url = "{} -b {}".format(url, branch)
+        url = f"{url} -b {branch}"
     if subpath:
-        url = "{} [{}]".format(url, subpath)
+        url = f"{url} [{subpath}]"
     return url
 
 

@@ -24,6 +24,7 @@ from typing import Callable, Iterable, Iterator, List, Optional, TextIO, Tuple, 
 from urllib.parse import urljoin
 
 import pcre2
+
 from debian.changelog import Version
 
 from . import __version__
@@ -52,7 +53,7 @@ SUBSTITUTIONS = {
 
 
 class InvalidUVersionMangle(ValueError):
-    """uversionmangle is invalid"""
+    """uversionmangle is invalid."""
 
 
 class WatchFile:
@@ -85,7 +86,7 @@ class WatchFile:
         if newvalue is None:
             nv = name
         else:
-            nv = "{}={}".format(name, newvalue)
+            nv = f"{name}={newvalue}"
         for i, option in enumerate(self.options):
             try:
                 key, value = option.split("=", 1)
@@ -297,7 +298,7 @@ class Watch:
             return apply_sed_expr(vm, version)
         except pcre2.exceptions.LibraryError as e:
             raise WatchSyntaxError(
-                "invalid uversionmangle {!r}: {}".format(vm, e)
+                f"invalid uversionmangle {vm!r}: {e}"
             ) from e
 
     def get_option(self, name):
@@ -322,7 +323,7 @@ class Watch:
         if newvalue is None:
             nv = name
         else:
-            nv = "{}={}".format(name, newvalue)
+            nv = f"{name}={newvalue}"
         for i, option in enumerate(self.options):
             try:
                 key, value = option.split("=", 1)

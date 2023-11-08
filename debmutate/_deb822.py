@@ -66,7 +66,7 @@ class PkgRelation:
 
         def parse_restrictions(raw):
             # type: (str) -> list[list[PkgRelation.BuildRestriction]]
-            """split a restriction formula into a list of restriction lists
+            """Split a restriction formula into a list of restriction lists.
 
             Each term in the restriction list is a namedtuple of form:
 
@@ -146,7 +146,7 @@ class PkgRelation:
         return self.__tuple__() < other.__tuple__()
 
     def str(self):
-        """Format to string structured inter-package relationships
+        """Format to string structured inter-package relationships.
 
         Perform the inverse operation of parse_relations, returning a string
         suitable to be written in a package stanza.
@@ -170,7 +170,7 @@ class PkgRelation:
         if self.archqual is not None:
             s += ":%s" % self.archqual
         if self.version is not None:
-            s += " (%s %s)" % self.version
+            s += " ({} {})".format(*self.version)
         if self.arch is not None:
             s += " [%s]" % " ".join(map(pp_arch, self.arch))
         if self.restrictions is not None:

@@ -20,7 +20,6 @@
 from typing import Dict
 
 from debian.changelog import Version
-
 from debmutate.debhelper import (
     MaintscriptEditor,
     MaintscriptMoveConffile,

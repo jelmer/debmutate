@@ -19,7 +19,6 @@
 """Tests for debmutate.deb822."""
 
 from debian.deb822 import Deb822
-
 from debmutate.deb822 import (
     ChangeConflict,
     Deb822Editor,

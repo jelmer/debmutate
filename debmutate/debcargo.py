@@ -24,8 +24,9 @@ from collections.abc import MutableMapping
 from itertools import chain
 from typing import Optional, Tuple
 
+from tomlkit import dumps, load, loads
+
 from debian.changelog import Changelog
-from tomlkit import dumps, loads, load
 
 from .reformatting import Editor
 
@@ -380,7 +381,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
 def debcargo_version_to_semver(version):
     m = re.fullmatch("(.*)~([a-z]+)(.*)", version)
     if m:
-        return "{}-{}{}".format(m.group(1), m.group(2), m.group(3))
+        return f"{m.group(1)}-{m.group(2)}{m.group(3)}"
     return version
 
 

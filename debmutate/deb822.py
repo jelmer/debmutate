@@ -90,9 +90,8 @@ class ChangeConflict(Exception):
 
     def __repr__(self):
         return (
-            "%s(para_key=%r, field=%r, expected_old_value=%r, "
-            "actual_old_value=%r, new_value=%r)"
-            % (
+            "{}(para_key={!r}, field={!r}, expected_old_value={!r}, "
+            "actual_old_value={!r}, new_value={!r})".format(
                 type(self).__name__,
                 self.paragraph_key,
                 self.field,

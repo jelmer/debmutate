@@ -24,7 +24,7 @@ SUPPORTED_SUFFIXES = [".tar.gz", ".tar.bz2", ".tar.lzma", ".tar.xz"]
 
 def component_from_orig_tarball(tarball_filename, package, version):
     tarball_filename = os.path.basename(tarball_filename)
-    prefix = "{}_{}.orig".format(package, version)
+    prefix = f"{package}_{version}.orig"
     if not tarball_filename.startswith(prefix):
         raise ValueError(
             "invalid orig tarball file {} does not have expected prefix {}".format(
