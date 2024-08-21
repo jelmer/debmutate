@@ -1,9 +1,12 @@
-check:: testsuite style typing
+check:: testsuite style typing check-fmt
 
 .PHONY: style testsuite unsupported
 
+check-fmt::
+	ruff format --check .
+
 style::
-	flake8
+	ruff check .
 
 typing::
 	mypy debmutate tests
