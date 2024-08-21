@@ -8,17 +8,6 @@ warn_unused_configs = true
 check_untyped_defs = true
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = [
-    "merge3.*",
-    "devscripts.control.*",
-    "tr.*",
-    "gbp.scripts.dch.*",
-    "semver.*",
-    "pcre.*",
-]
-ignore_missing_imports = true
-
 [project]
 name = "debmutate"
 authors = [{name = "Jelmer Vernooĳ", email = "jelmer@debian.org"}]
@@ -38,7 +27,7 @@ Repository = "https://salsa.debian.org/jelmer/debmutate.git"
 
 [project.optional-dependencies]
 debcargo = ["tomlkit"]
-watch = ["python-pcre"]
+watch = ["pcre2"]
 
 [tool.setuptools]
 script-files = [
