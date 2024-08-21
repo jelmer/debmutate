@@ -1,4 +1,4 @@
-debmutate (0.69) UNRELEASED; urgency=medium
+debmutate (0.69) unstable; urgency=medium
 
   * Use ruff for formatting.
   * Drop obsolete setup.cfg and references to python-pcre.
