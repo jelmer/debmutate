@@ -14,10 +14,10 @@ Coding Style
 
 lintian-brush uses PEP8 as its coding style.
 
-Code style can be checked by running ``flake8``:
+Code style can be checked by running ``ruff``:
 
 ```shell
-flake8
+ruff check debmutate tests
 ```
 
 Tests
