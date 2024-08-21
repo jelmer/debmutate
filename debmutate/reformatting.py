@@ -131,12 +131,10 @@ def edit_formatted_file(
     if (
         updated_contents is not None
         and rewritten_contents is not None
-        and type(updated_contents) != type(rewritten_contents)
+        and type(updated_contents) is not type(rewritten_contents)
     ):
         raise TypeError(
-            "inconsistent types: {!r}, {!r}".format(
-                type(updated_contents), type(rewritten_contents)
-            )
+            f"inconsistent types: {type(updated_contents)!r}, {type(rewritten_contents)!r}"
         )
     if updated_contents in (rewritten_contents, original_contents):
         return False

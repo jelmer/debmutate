@@ -40,7 +40,7 @@ def _parse_benitem(v):
             try:
                 field, expr = o.split("~", 1)
             except ValueError:
-                raise ValueError("expected ~: %r" % o)
+                raise ValueError(f"expected ~: {o!r}")
             expr = re.compile(_parse_benitem(expr.strip()))
             regex.append((field.strip(), expr))
         return regex
@@ -70,7 +70,7 @@ def parse_ben(f):
             assignment[lastk] = v[:-1]
             lastk = None
     if lastk is not None:
-        raise ValueError("unterminated key: %r" % lastk)
+        raise ValueError(f"unterminated key: {lastk!r}")
     for k, v in assignment.items():
         ret[k] = _parse_benitem(v)
     return ret

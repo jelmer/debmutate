@@ -27,9 +27,7 @@ def component_from_orig_tarball(tarball_filename, package, version):
     prefix = f"{package}_{version}.orig"
     if not tarball_filename.startswith(prefix):
         raise ValueError(
-            "invalid orig tarball file {} does not have expected prefix {}".format(
-                tarball_filename, prefix
-            )
+            f"invalid orig tarball file {tarball_filename} does not have expected prefix {prefix}"
         )
     base = tarball_filename[len(prefix) :]
     for ext in SUPPORTED_SUFFIXES:
@@ -38,7 +36,7 @@ def component_from_orig_tarball(tarball_filename, package, version):
             break
     else:
         raise ValueError(
-            "orig tarball file %s has unknown extension" % tarball_filename
+            f"orig tarball file {tarball_filename} has unknown extension"
         )
     if base == "":
         return None
@@ -47,5 +45,5 @@ def component_from_orig_tarball(tarball_filename, package, version):
         return base[1:]
     else:
         raise ValueError(
-            "Invalid extra characters in tarball filename %s" % tarball_filename
+            f"Invalid extra characters in tarball filename {tarball_filename}"
         )

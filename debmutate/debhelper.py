@@ -60,13 +60,13 @@ def ensure_minimum_debhelper_version(
         except KeyError:
             pass
         else:
-            raise Exception("debhelper-compat in %s" % field)
+            raise Exception(f"debhelper-compat in {field}")
         try:
             offset, debhelper_compat = get_relation(value, "debhelper")
         except KeyError:
             pass
         else:
-            raise Exception("debhelper compat in %s" % field)
+            raise Exception(f"debhelper compat in {field}")
 
     build_depends = source.get("Build-Depends", "")
     minimum_version = Version(minimum_version)

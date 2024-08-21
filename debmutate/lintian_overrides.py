@@ -59,14 +59,7 @@ class LintianOverride:
         self._info_match = _create_matcher(self.info)
 
     def __repr__(self):
-        return "{}(package={!r}, archlist={!r}, type={!r}, tag={!r}, info={!r})".format(
-            type(self).__name__,
-            self.package,
-            self.archlist,
-            self.type,
-            self.tag,
-            self.info,
-        )
+        return f"{type(self).__name__}(package={self.package!r}, archlist={self.archlist!r}, type={self.type!r}, tag={self.tag!r}, info={self.info!r})"
 
     def matches(
         self,

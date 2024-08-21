@@ -102,7 +102,7 @@ class TemplateExpansionFailed(Exception):
 class TemplateExpandCommandMissing(Exception):
     def __init__(self, command):
         self.command = command
-        super().__init__("Command for expanding template file missing: %s" % command)
+        super().__init__(f"Command for expanding template file missing: {command}")
 
 
 def parse_relation(t: str):
@@ -159,7 +159,7 @@ def dh_gnome_clean(path: str = ".") -> None:
         if n.endswith(".debhelper.log"):
             raise AssertionError("pre-existing .debhelper.log files")
     if not os.path.exists(os.path.join(path, "debian/changelog")):
-        raise AssertionError("no changelog file in %s" % path)
+        raise AssertionError(f"no changelog file in {path}")
     try:
         subprocess.check_call(["dh_gnome_clean"], cwd=path)
     except FileNotFoundError as e:
@@ -652,7 +652,7 @@ def get_relation(relationstr: str, package: str) -> Tuple[int, List[PkgRelation]
     for offset, relation in iter_relations(relationstr, package):
         names = [r.name for r in relation]
         if len(names) > 1 and package in names:
-            raise ValueError("Complex rule for %s , aborting" % package)
+            raise ValueError(f"Complex rule for {package} , aborting")
         if names != [package]:
             continue
         return offset, relation
@@ -765,7 +765,7 @@ def ensure_exact_version(
             continue
         names = [r.name for r in relation]
         if len(names) > 1 and names[0] == package:
-            raise Exception("Complex rule for %s , aborting" % package)
+            raise Exception(f"Complex rule for {package} , aborting")
         if names != [package]:
             continue
         found = True
@@ -871,7 +871,7 @@ def _add_relation(
         position = len(relations)
 
     if position < 0 or position > len(relations):
-        raise IndexError("position out of bounds: %r" % position)
+        raise IndexError(f"position out of bounds: {position!r}")
 
     if position == len(relations):
         if len(relations) == 0:
@@ -924,7 +924,7 @@ def ensure_some_version(relationstr: str, package: str) -> str:
             continue
         names = [r.name for r in relation]
         if len(names) > 1 and names[0] == package:
-            raise Exception("Complex rule for %s , aborting" % package)
+            raise Exception(f"Complex rule for {package} , aborting")
         if names != [package]:
             continue
         return relationstr
@@ -1027,7 +1027,7 @@ def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
         elif outer.version[0] in ("<<", "<="):
             return False
         else:
-            raise AssertionError("unsupported: %s" % outer.version[0])
+            raise AssertionError(f"unsupported: {outer.version[0]}")
     elif dep.version[0] == "=":
         if outer.version[0] == "=":
             return Version(outer.version[1]) == Version(dep.version[1])
@@ -1041,14 +1041,14 @@ def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
         elif outer.version[0] in (">>", ">="):
             return False
         else:
-            raise AssertionError("unsupported: %s" % outer.version[0])
+            raise AssertionError(f"unsupported: {outer.version[0]}")
     elif dep.version[0] == "<=":
         if outer.version[0] in ("<=", "=", "<<"):
             return Version(outer.version[1]) <= Version(dep.version[1])
         elif outer.version[0] in (">>", ">="):
             return False
         else:
-            raise AssertionError("unsupported: %s" % outer.version[0])
+            raise AssertionError(f"unsupported: {outer.version[0]}")
     elif dep.version[0] == ">>":
         if outer.version[0] == ">>":
             return Version(outer.version[1]) >= Version(dep.version[1])
@@ -1057,9 +1057,9 @@ def is_dep_implied(dep: PkgRelation, outer: PkgRelation) -> bool:
         elif outer.version[0] in ("<<", "<="):
             return False
         else:
-            raise AssertionError("unsupported: %s" % outer.version[0])
+            raise AssertionError(f"unsupported: {outer.version[0]}")
     else:
-        raise AssertionError("unable to handle checks for %s" % dep.version[0])
+        raise AssertionError(f"unable to handle checks for {dep.version[0]}")
 
 
 def is_relation_implied(
@@ -1192,7 +1192,7 @@ class PkgRelationFieldEditor:
         for offset, relation in self.iter_relations(package):
             names = [r.name for r in relation]
             if len(names) > 1 and package in names:
-                raise ValueError("Complex rule for %s , aborting" % package)
+                raise ValueError(f"Complex rule for {package} , aborting")
             if names != [package]:
                 continue
             return offset, relation
@@ -1226,4 +1226,4 @@ class PkgRelationFieldEditor:
 
 def format_description(summary, long_description):
     """Format a description based on summary and long description lines."""
-    return summary + "\n" + "".join([" %s\n" % line for line in long_description])
+    return summary + "\n" + "".join([f" {line}\n" for line in long_description])

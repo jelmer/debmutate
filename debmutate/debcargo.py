@@ -84,9 +84,7 @@ class DebcargoEditor(TomlEditor):
         self.allow_missing = allow_missing
 
     def __repr__(self):
-        return "{}({!r}, allow_reformatting={!r}, allow_missing={!r})".format(
-            type(self).__name__, self.path, self.allow_reformatting, self.allow_missing
-        )
+        return f"{type(self).__name__}({self.path!r}, allow_reformatting={self.allow_reformatting!r}, allow_missing={self.allow_missing!r})"
 
     def _nonexistent(self):
         if self.allow_missing:
@@ -149,7 +147,7 @@ class DebcargoSourceShimEditor(ShimParagraph):
                     self.crate_name.lower().replace("_", "-"),
                     semver_pair(self.crate_version),
                 )
-            return "rust-%s" % self.crate_name.lower().replace("_", "-")
+            return "rust-{}".format(self.crate_name.lower().replace("_", "-"))
         elif name == "Priority":
             return "optional"
         elif name == "Rules-Requires-Root":
@@ -160,13 +158,13 @@ class DebcargoSourceShimEditor(ShimParagraph):
     def _default_vcs_git(self):
         return (
             "https://salsa.debian.org/rust-team/debcargo-conf.git "
-            "[src/%s]" % self.crate_name.lower()
+            f"[src/{self.crate_name.lower()}]"
         )
 
     def _default_vcs_browser(self):
         return (
             "https://salsa.debian.org/rust-team/debcargo-conf/tree/"
-            "master/src/%s" % self.crate_name.lower()
+            f"master/src/{self.crate_name.lower()}"
         )
 
     def _build_depends(self):
@@ -285,7 +283,7 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         if not ret:
             return None
         return "\n " + ",\n ".join(
-            ["%s (= ${binary:Version})" % p for p in sorted(ret)]
+            [f"{p} (= ${{binary:Version}})" for p in sorted(ret)]
         )
 
     def _description(self):
@@ -398,12 +396,7 @@ class DebcargoControlShimEditor:
         self.features = features
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r})".format(
-            type(self).__name__,
-            self.debcargo_editor,
-            self.crate_name,
-            self.crate_version,
-        )
+        return f"{type(self).__name__}({self.debcargo_editor!r}, {self.crate_name!r}, {self.crate_version!r})"
 
     @property
     def source(self):

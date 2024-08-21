@@ -28,7 +28,7 @@ from debian.deb822 import Deb822
 
 
 def _load_vendor_file(vendor: str = "default") -> Deb822:
-    with open("/etc/dpkg/origins/%s" % vendor) as f:
+    with open(f"/etc/dpkg/origins/{vendor}") as f:
         return Deb822(f)
 
 

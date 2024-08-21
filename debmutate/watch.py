@@ -30,7 +30,7 @@ from debian.changelog import Version
 from . import __version__
 from .reformatting import Editor
 
-DEFAULT_USER_AGENT = "debmutate/%s" % ".".join([str(x) for x in __version__])
+DEFAULT_USER_AGENT = "debmutate/{}".format(".".join([str(x) for x in __version__]))
 
 DEFAULT_VERSION: int = 4
 
@@ -222,14 +222,12 @@ class Release:
         self.pgpsigurl = pgpsigurl
 
     def __lt__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             raise TypeError(other)
         return Version(self.version) < Version(other.version)
 
     def __repr__(self):
-        return "{}({!r}, {!r}, pgpsigurl={!r})".format(
-            type(self).__name__, self.version, self.url, self.pgpsigurl
-        )
+        return f"{type(self).__name__}({self.version!r}, {self.url!r}, pgpsigurl={self.pgpsigurl!r})"
 
 
 def html_search(body, matching_pattern, base_url):
@@ -348,14 +346,7 @@ class Watch:
 
     def __repr__(self) -> str:
         return (
-            "{}({!r}, matching_pattern={!r}, " "version={!r}, script={!r}, opts={!r})"
-        ).format(
-            self.__class__.__name__,
-            self.url,
-            self.matching_pattern,
-            self.version,
-            self.script,
-            self.options,
+            f"{self.__class__.__name__}({self.url!r}, matching_pattern={self.matching_pattern!r}, " f"version={self.version!r}, script={self.script!r}, opts={self.options!r})"
         )
 
     def __eq__(self, other: object) -> bool:
@@ -458,7 +449,7 @@ def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
             if line[5] == '"':
                 optend = line.index('"', 6)
                 if optend == -1:
-                    raise ValueError('Not matching " in %r' % line)
+                    raise ValueError(f'Not matching " in {line!r}')
                 opts_str = line[6:optend]
                 line = line[optend + 1 :]
             else:
@@ -527,9 +518,9 @@ class WatchEditor(Editor[WatchFile, str]):
 
 def uscan(wf, package):
     for entry in wf.entries:
-        logging.info("entry: %s" % entry)
+        logging.info(f"entry: {entry}")
         for d in entry.discover(package):
-            logging.info("  %s" % d)
+            logging.info(f"  {d}")
 
 
 def main(argv):

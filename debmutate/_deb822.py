@@ -113,7 +113,7 @@ class PkgRelation:
                 return PkgRelation(**d)
 
             logging.debug(
-                "cannot parse package" ' relationship "%s", returning it raw' % raw
+                "cannot parse package" f' relationship "{raw}", returning it raw'
             )
             return PkgRelation(name=raw, version=None, arch=None)
 
@@ -123,14 +123,7 @@ class PkgRelation:
         return [parse_rel(or_dep) for or_dep in or_deps]
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(
-            self.__class__.__name__,
-            self.name,
-            self.version,
-            self.arch,
-            self.archqual,
-            self.restrictions,
-        )
+        return f"{self.__class__.__name__}({self.name!r}, {self.version!r}, {self.arch!r}, {self.archqual!r}, {self.restrictions!r})"
 
     def __tuple__(self):
         return (self.name, self.version, self.arch, self.archqual, self.restrictions)
@@ -164,17 +157,17 @@ class PkgRelation:
             s = []
             for term in restrictions:
                 s.append("{}{}".format("" if term.enabled else "!", term.profile))
-            return "<%s>" % " ".join(s)
+            return "<{}>".format(" ".join(s))
 
         s = self.name
         if self.archqual is not None:
-            s += ":%s" % self.archqual
+            s += f":{self.archqual}"
         if self.version is not None:
             s += " ({} {})".format(*self.version)
         if self.arch is not None:
-            s += " [%s]" % " ".join(map(pp_arch, self.arch))
+            s += " [{}]".format(" ".join(map(pp_arch, self.arch)))
         if self.restrictions is not None:
-            s += " %s" % " ".join(map(pp_restrictions, self.restrictions))
+            s += " {}".format(" ".join(map(pp_restrictions, self.restrictions)))
         return s
 
     def __init__(self, name, version=None, arch=None, archqual=None, restrictions=None):

@@ -225,8 +225,8 @@ def changes_by_author(
 
 
 class TextWrapper(textwrap.TextWrapper):
-    whitespace = r"[%s]" % re.escape("\t\n\x0b\x0c\r ")
-    wordsep_simple_re = re.compile(r"(%s+)" % whitespace)
+    whitespace = r"[{}]".format(re.escape("\t\n\x0b\x0c\r "))
+    wordsep_simple_re = re.compile(rf"({whitespace}+)")
 
     def __init__(self, initial_indent=INITIAL_INDENT):
         super().__init__(
@@ -384,15 +384,15 @@ def changelog_add_entry(
             if cl[0].author is not None:
                 entry_maintainer = parseaddr(cl[0].author)
                 if entry_maintainer != (maintainer_name, maintainer_email):
-                    cl[0]._changes.insert(1, "  [ %s ]" % entry_maintainer[0])
+                    cl[0]._changes.insert(1, f"  [ {entry_maintainer[0]} ]")
                     if cl[0]._changes[-1]:
                         cl[0]._changes.append("")
-                    cl[0]._changes.append("  [ %s ]" % maintainer_name)
+                    cl[0]._changes.append(f"  [ {maintainer_name} ]")
         else:
             if by_author[-1][0] != maintainer_name:
                 if cl[0]._changes[-1]:
                     cl[0]._changes.append("")
-                cl[0]._changes.append("  [ %s ]" % maintainer_name)
+                cl[0]._changes.append(f"  [ {maintainer_name} ]")
         if len(cl[0]._changes) > 1 and not cl[0]._changes[-1].strip():
             del cl[0]._changes[-1]
     else:
@@ -478,9 +478,9 @@ def new_upstream_package_version(
       The new version
     """
     if distribution_name == "ubuntu":
-        ret = Version("%s-0ubuntu1" % upstream_version)
+        ret = Version(f"{upstream_version}-0ubuntu1")
     else:
-        ret = Version("%s-1" % upstream_version)
+        ret = Version(f"{upstream_version}-1")
     ret.epoch = epoch
     return ret
 
@@ -534,7 +534,7 @@ def changeblock_ensure_first_line(
     if block._changes[2].startswith("  ["):
         block._changes.insert(2, "")
     elif parseaddr(block.author)[0] != maintainer_name:
-        block._changes.insert(2, "  [ %s ]" % parseaddr(block.author)[0])
+        block._changes.insert(2, f"  [ {parseaddr(block.author)[0]} ]")
         block._changes.insert(2, "")
         block.author = f"{maintainer_name} <{maintainer_email}>"
 
@@ -559,7 +559,7 @@ def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> No
             and len(block._changes) >= 2
             and not block._changes[1].startswith("  [ ")
         ):
-            block._changes.insert(1, "  [ %s ]" % entry_maintainer[0])
+            block._changes.insert(1, f"  [ {entry_maintainer[0]} ]")
             if block._changes[-1]:
                 block._changes.append("")
     block.author = f"{maintainer_name} <{maintainer_email}>"
