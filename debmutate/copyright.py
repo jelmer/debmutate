@@ -83,7 +83,7 @@ class CopyrightEditor(Editor[Copyright, str]):
 
 
 def upstream_fields_in_copyright(
-    path: str = "debian/copyright"
+    path: str = "debian/copyright",
 ) -> Dict[str, RestrictedField]:
     """Extract upstream fields from a copyright file.
 

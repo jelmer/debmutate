@@ -295,9 +295,7 @@ class Watch:
         try:
             return apply_sed_expr(vm, version)
         except pcre2.exceptions.LibraryError as e:
-            raise WatchSyntaxError(
-                f"invalid uversionmangle {vm!r}: {e}"
-            ) from e
+            raise WatchSyntaxError(f"invalid uversionmangle {vm!r}: {e}") from e
 
     def get_option(self, name):
         for option in self.options:
@@ -346,7 +344,8 @@ class Watch:
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}({self.url!r}, matching_pattern={self.matching_pattern!r}, " f"version={self.version!r}, script={self.script!r}, opts={self.options!r})"
+            f"{self.__class__.__name__}({self.url!r}, matching_pattern={self.matching_pattern!r}, "
+            f"version={self.version!r}, script={self.script!r}, opts={self.options!r})"
         )
 
     def __eq__(self, other: object) -> bool:

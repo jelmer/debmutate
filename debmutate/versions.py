@@ -38,7 +38,7 @@ DFSG_REGEX = re.compile(r"^(.*)([\+~])(dfsg|ds)([0-9]*)$")
 
 
 def git_snapshot_data_from_version(
-    version: Union[str, Version]
+    version: Union[str, Version],
 ) -> Tuple[Optional[str], Optional[str]]:
     """Extract git snapshot information from an upstream version string.
 

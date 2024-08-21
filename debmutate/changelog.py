@@ -162,7 +162,7 @@ def changelog_auto_version(
 
 
 def changes_sections(
-    changes: List[str]
+    changes: List[str],
 ) -> Iterator[Tuple[Optional[str], List[int], List[List[Tuple[int, str]]]]]:
     """Return the different sections from a set of changelog entries.
 
@@ -209,7 +209,7 @@ def changes_sections(
 
 
 def changes_by_author(
-    changes: List[str]
+    changes: List[str],
 ) -> Iterator[Tuple[Optional[str], List[int], List[str]]]:
     """Changes by author.
 

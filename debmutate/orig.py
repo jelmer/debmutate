@@ -35,9 +35,7 @@ def component_from_orig_tarball(tarball_filename, package, version):
             base = base[: -len(ext)]
             break
     else:
-        raise ValueError(
-            f"orig tarball file {tarball_filename} has unknown extension"
-        )
+        raise ValueError(f"orig tarball file {tarball_filename} has unknown extension")
     if base == "":
         return None
     elif base[0] == "-":
