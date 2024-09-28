@@ -1,3 +1,5 @@
 Tests: testsuite
-Depends: @, python3-tomlkit, python3-semver
+Depends: python3-semver,
+         python3-tomlkit,
+         @
 Restrictions: allow-stderr
