@@ -1,9 +1,9 @@
-debmutate (0.70) UNRELEASED; urgency=medium
+debmutate (0.70) unstable; urgency=medium
 
   * watch: Handle match errors properly when discovering URLs
   * Add missing dependency on beautifulsoup4
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 28 Sep 2024 13:50:50 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 28 Sep 2024 14:07:59 +0100
 
 debmutate (0.69) unstable; urgency=medium
 
