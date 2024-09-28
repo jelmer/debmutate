@@ -230,7 +230,7 @@ class Release:
         return f"{type(self).__name__}({self.version!r}, {self.url!r}, pgpsigurl={self.pgpsigurl!r})"
 
 
-def html_search(body, matching_pattern, base_url):
+def html_search(body: bytes, matching_pattern, base_url):
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(body, "html.parser")
@@ -241,16 +241,17 @@ def html_search(body, matching_pattern, base_url):
         if not href:
             continue
         href = urljoin(base_url.rstrip("/") + "/", href)
-        m = pcre2.match(matching_pattern, href)
-        if m:
+        try:
+            m = pcre2.match(matching_pattern, href)
             logging.debug("Matched pattern %r to %r", matching_pattern, href)
-            yield m
-        else:
+            yield (m.substring(1), urljoin(base_url, m.substring(0)))
+        except pcre2.exceptions.MatchError:
             logging.debug("Did not match pattern %r to %r", matching_pattern, href)
 
 
-def plain_search(body, matching_pattern, base_url):
-    return pcre2.scan(matching_pattern.encode(), body)
+def plain_search(body: bytes, matching_pattern, base_url) -> Iterator[Tuple[str, str]]:
+    for m in pcre2.scan(matching_pattern.encode(), body):
+        yield (m.substring(1).decode(), urljoin(base_url, m.substring(0).decode()))
 
 
 searchers = {
@@ -378,18 +379,17 @@ class Watch:
         req = Request(url, headers={"User-Agent": user_agent})
         resp = urlopen(req)
         assert self.matching_pattern
-        for m in searchers[searchmode](
+        for full_url, version in searchers[searchmode](
             resp.read(), _subst(self.matching_pattern, package), url
         ):
             # TODO(jelmer): Apply uversionmangle
-            full_url = urljoin(url, m.group(0))
             try:
                 pgpsigurlmangle = self.get_option("pgpsigurlmangle")
             except KeyError:
                 pgpsigurl = None
             else:
                 pgpsigurl = apply_url_mangle(pgpsigurlmangle, full_url)
-            yield Release(m.group(1), full_url, pgpsigurl=pgpsigurl)
+            yield Release(version, full_url, pgpsigurl=pgpsigurl)
 
 
 class MissingVersion(Exception):

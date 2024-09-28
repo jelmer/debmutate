@@ -1,3 +1,9 @@
+debmutate (0.70) UNRELEASED; urgency=medium
+
+  * watch: Handle match errors properly when discovering URLs
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 28 Sep 2024 13:50:50 +0100
+
 debmutate (0.69) unstable; urgency=medium
 
   * Use ruff for formatting.

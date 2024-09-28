@@ -29,7 +29,9 @@ from debmutate.watch import (
     Watch,
     WatchEditor,
     WatchFile,
+    html_search,
     parse_watch_file,
+    plain_search,
 )
 
 
@@ -409,3 +411,94 @@ https://pypi.debian.net/case case-(.+)\\.tar.gz
 """,
                 f.read(),
             )
+
+
+class HtmlSearchTests(TestCase):
+    def test_html_search(self):
+        body = b"""\
+<html>
+<head>
+<title>Upstream release page</title>
+</head>
+<body>
+<h1>Some title</h1>
+<p>Some text</p>
+<a href="https://example.com/foo-1.0.tar.gz">foo-1.0.tar.gz</a>
+</body>
+</html>
+"""
+        self.assertEqual(
+            [("1.0", "https://example.com/foo-1.0.tar.gz")],
+            list(
+                html_search(
+                    body, "/foo-(\\d+\\.\\d+)\\.tar\\.gz", "https://example.com/"
+                )
+            ),
+        )
+
+        # Try with a pattern that is not found
+        self.assertEqual(
+            [],
+            list(
+                html_search(
+                    body, "/bar-(\\d+\\.\\d+)\\.tar\\.gz", "https://example.com/"
+                )
+            ),
+        )
+
+        # Try with a full URL pattern
+        self.assertEqual(
+            [("1.0", "https://example.com/foo-1.0.tar.gz")],
+            list(
+                html_search(
+                    body,
+                    "https://example.com/foo-(\\d+\\.\\d+)\\.tar\\.gz",
+                    "https://bar.com/",
+                )
+            ),
+        )
+
+
+class PlainSearchTests(TestCase):
+    def test_plain_search(self):
+        body = b"""\
+Some text
+foo-1.0.tar.gz
+Some more text
+"""
+        self.assertEqual(
+            [("1.0", "https://example.com/foo-1.0.tar.gz")],
+            list(
+                plain_search(
+                    body, "foo-(\\d+\\.\\d+)\\.tar\\.gz", "https://example.com/"
+                )
+            ),
+        )
+
+        # Try with a pattern that is not found
+        self.assertEqual(
+            [],
+            list(
+                plain_search(
+                    body, "bar-(\\d+\\.\\d+)\\.tar\\.gz", "https://example.com/"
+                )
+            ),
+        )
+
+        body = b"""\
+Some text
+https://example.com/foo-1.0.tar.gz
+Some more text
+"""
+
+        # Try with a full URL pattern
+        self.assertEqual(
+            [("1.0", "https://example.com/foo-1.0.tar.gz")],
+            list(
+                plain_search(
+                    body,
+                    "https://example.com/foo-(\\d+\\.\\d+)\\.tar\\.gz",
+                    "https://bar.com/",
+                )
+            ),
+        )
