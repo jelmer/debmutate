@@ -130,7 +130,7 @@ class WatchFile:
                 return 'opts="' + s + '"'
             return "opts=" + s
 
-        f.write("version=%d\n" % self.version)
+        f.write(f"version={self.version}\n")
         if self.options:
             f.write(serialize_options(self.options) + "\n")
         for entry in self.entries:
@@ -395,9 +395,13 @@ class Watch:
         resp = urlopen(req)
         assert self.matching_pattern
 
-        for version, full_url in search(searchmode, resp,
-                                        matching_pattern=self.matching_pattern,
-                                        package=package, url=url):
+        for version, full_url in search(
+            searchmode,
+            resp,
+            matching_pattern=self.matching_pattern,
+            package=package,
+            url=url,
+        ):
             # TODO(jelmer): Apply uversionmangle
             try:
                 pgpsigurlmangle = self.get_option("pgpsigurlmangle")

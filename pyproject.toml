@@ -28,6 +28,9 @@ Repository = "https://salsa.debian.org/jelmer/debmutate.git"
 [project.optional-dependencies]
 debcargo = ["tomlkit"]
 watch = ["pcre2"]
+dev = [
+    "ruff==0.7.1"
+]
 
 [tool.setuptools]
 script-files = [
@@ -58,8 +61,6 @@ ignore = [
     "ANN001",
     "ANN002",
     "ANN003",
-    "ANN101",  # missing-type-self
-    "ANN102",
     "ANN201",
     "ANN202",
     "ANN204",

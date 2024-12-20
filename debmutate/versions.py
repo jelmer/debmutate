@@ -187,13 +187,7 @@ def upstream_version_add_revision(
             snapshot = int(m.group(4)) + 1
         else:
             snapshot = 0
-        return "%s%sgit%s.%d.%s" % (
-            m.group(1),
-            m.group(2),
-            gitdate_formatted,
-            snapshot,
-            decoded_gitid,
-        )
+        return f"{m.group(1)}{m.group(2)}git{gitdate_formatted}.{snapshot}.{decoded_gitid}"
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
     if m and decoded_gitid:
@@ -202,10 +196,10 @@ def upstream_version_add_revision(
     m = re.match(r"^(.*)([\+~])svn(\d+)$", version_string)
     # FIXME: Raise error if +svn/~svn is present and svn_revno is not set?
     if m and svn_revno:
-        return "%s%ssvn%d" % (m.group(1), m.group(2), svn_revno)
+        return f"{m.group(1)}{m.group(2)}svn{svn_revno}"
 
     if svn_revno:
-        return "%s%ssvn%d" % (version_string, sep, svn_revno)
+        return f"{version_string}{sep}svn{svn_revno}"
     elif decoded_gitid:
         return f"{version_string}{sep}git{gitdate_formatted}.1.{decoded_gitid}"
     elif bzr_revno is not None:

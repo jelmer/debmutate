@@ -524,9 +524,10 @@ class SearchTests(TestCase):
             list(
                 search(
                     "html",
-                    StringIO(body.decode()), matching_pattern="/foo-(\\d+\\.\\d+)\\.tar\\.gz", url="https://example.com/", package="foo"
+                    StringIO(body.decode()),
+                    matching_pattern="/foo-(\\d+\\.\\d+)\\.tar\\.gz",
+                    url="https://example.com/",
+                    package="foo",
                 )
             ),
         )
-
-
