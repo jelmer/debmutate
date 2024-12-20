@@ -1,4 +1,4 @@
-debmutate (0.71) UNRELEASED; urgency=medium
+debmutate (0.71) unstable; urgency=medium
 
   * Fix argument order for watch entries. Closes: #1090859
 
