@@ -1,3 +1,9 @@
+debmutate (0.71) UNRELEASED; urgency=medium
+
+  * Fix argument order for watch entries. Closes: #1090859
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 20 Dec 2024 12:33:49 +0000
+
 debmutate (0.70) unstable; urgency=medium
 
   * watch: Handle match errors properly when discovering URLs

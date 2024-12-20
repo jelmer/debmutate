@@ -260,6 +260,18 @@ searchers = {
 }
 
 
+def search(searchmode, resp, *, matching_pattern, package, url):
+    """Search for versions in a response.
+
+    Args:
+      full_url: URL of the version
+      version: Version string
+    """
+    yield from searchers[searchmode](
+        resp.read(), _subst(matching_pattern, package), url
+    )
+
+
 def _subst(text: str, package: Union[str, Callable[[], str]]):
     substs = dict(SUBSTITUTIONS)
     if "@PACKAGE@" in text:
@@ -335,7 +347,7 @@ class Watch:
     def del_option(self, name):
         for i, option in enumerate(self.options):
             try:
-                key, value = option.split("=", 1)
+                key, _value = option.split("=", 1)
             except ValueError:
                 key = option
             if key == name:
@@ -376,19 +388,26 @@ class Watch:
         except KeyError:
             searchmode = "html"
         logging.debug("Fetching url %s; searchmode=%s", url, searchmode)
-        req = Request(url, headers={"User-Agent": user_agent})
+        headers = {}
+        if user_agent:
+            headers["User-Agent"] = user_agent
+        req = Request(url, headers=headers)
         resp = urlopen(req)
         assert self.matching_pattern
-        for full_url, version in searchers[searchmode](
-            resp.read(), _subst(self.matching_pattern, package), url
-        ):
+
+        for version, full_url in search(searchmode, resp,
+                                        matching_pattern=self.matching_pattern,
+                                        package=package, url=url):
             # TODO(jelmer): Apply uversionmangle
             try:
                 pgpsigurlmangle = self.get_option("pgpsigurlmangle")
             except KeyError:
                 pgpsigurl = None
             else:
-                pgpsigurl = apply_url_mangle(pgpsigurlmangle, full_url)
+                if pgpsigurlmangle is None:
+                    pgpsigurl = None
+                else:
+                    pgpsigurl = apply_url_mangle(pgpsigurlmangle, full_url)
             yield Release(version, full_url, pgpsigurl=pgpsigurl)
 
 
@@ -507,7 +526,7 @@ class WatchEditor(Editor[WatchFile, str]):
             return WatchFile([])
         return wf
 
-    def _format(self, parsed: WatchFile) -> str:
+    def _format(self, parsed: WatchFile) -> Optional[str]:
         if parsed is None:
             return None
         nf = StringIO()

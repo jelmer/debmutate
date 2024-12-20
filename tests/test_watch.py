@@ -32,6 +32,7 @@ from debmutate.watch import (
     html_search,
     parse_watch_file,
     plain_search,
+    search,
 )
 
 
@@ -502,3 +503,30 @@ Some more text
                 )
             ),
         )
+
+
+class SearchTests(TestCase):
+    def test_search(self):
+        body = b"""\
+<html>
+<head>
+<title>Upstream release page</title>
+</head>
+<body>
+<h1>Some title</h1>
+<p>Some text</p>
+<a href="https://example.com/foo-1.0.tar.gz">foo-1.0.tar.gz</a>
+</body>
+</html>
+"""
+        self.assertEqual(
+            [("1.0", "https://example.com/foo-1.0.tar.gz")],
+            list(
+                search(
+                    "html",
+                    StringIO(body.decode()), matching_pattern="/foo-(\\d+\\.\\d+)\\.tar\\.gz", url="https://example.com/", package="foo"
+                )
+            ),
+        )
+
+
