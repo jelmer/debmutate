@@ -89,7 +89,7 @@ class DebcargoControlShimEditorTests(TestCase):
 
     def test_source_vcs_browser(self):
         self.assertEqual(
-            "https://salsa.debian.org/rust-team/" "debcargo-conf/tree/master/src/crate",
+            "https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/crate",
             self.editor.source["Vcs-Browser"],
         )
 

@@ -130,7 +130,7 @@ class WatchFile:
                 return 'opts="' + s + '"'
             return "opts=" + s
 
-        f.write("version=%d\n" % self.version)
+        f.write(f"version={self.version}\n")
         if self.options:
             f.write(serialize_options(self.options) + "\n")
         for entry in self.entries:

@@ -45,7 +45,7 @@ def semver_pair(version):
     import semver
 
     parsed = semver.VersionInfo.parse(version)
-    return "%d.%d" % (parsed.major, parsed.minor)
+    return f"{parsed.major}.{parsed.minor}"
 
 
 class TomlEditor(Editor):
@@ -263,9 +263,9 @@ class DebcargoBinaryShimEditor(ShimParagraph):
         suffixes = []
         if not semver_suffix:
             suffixes.append("")
-        suffixes.append("-%d" % (parsed.major,))
-        suffixes.append("-%d.%d" % (parsed.major, parsed.minor))
-        suffixes.append("-%d.%d.%d" % (parsed.major, parsed.minor, parsed.patch))
+        suffixes.append(f"-{parsed.major}")
+        suffixes.append(f"-{parsed.major}.{parsed.minor}")
+        suffixes.append(f"-{parsed.major}.{parsed.minor}.{parsed.patch}")
         for ver_suffix in suffixes:
             feature_suffixes = set([""])
             feature_suffixes.add("+default")
