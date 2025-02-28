@@ -186,7 +186,9 @@ def upstream_version_add_revision(
             snapshot = int(m.group(4)) + 1
         else:
             snapshot = 0
-        return f"{m.group(1)}{m.group(2)}git{gitdate_formatted}.{snapshot}.{decoded_gitid}"
+        return (
+            f"{m.group(1)}{m.group(2)}git{gitdate_formatted}.{snapshot}.{decoded_gitid}"
+        )
 
     m = re.match(r"^(.*)([\+~-])git(\d{8})$", version_string)
     if m and decoded_gitid:
