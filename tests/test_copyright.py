@@ -69,6 +69,26 @@ It was downloaded from ftp://ftp.example.com/pub/blah.
 
         self.assertRaises(NotMachineReadableError, dummy)
 
+    def test_utf8(self):
+        with open("debian/copyright", "w") as f:
+            f.write(
+                """\
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lintian-brush
+Upstream-Contact: Jelmer Vernooĳ <jelmer@jelmer.uk>
+
+Files: *
+License: GPL
+Copyright: 2012...
+"""
+            )
+
+        with CopyrightEditor() as updater:
+            self.assertEqual(
+                ("Jelmer Vernooĳ <jelmer@jelmer.uk>",),
+                updater.copyright.header.upstream_contact,
+            )
+
     def test_modify(self):
         with open("debian/copyright", "w") as f:
             f.write(
