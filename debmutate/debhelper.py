@@ -96,7 +96,7 @@ def read_debhelper_compat_file(path: str) -> int:
     Args:
       path: Path to read from
     """
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         line = f.readline().split("#", 1)[0]
         return int(line.strip())
 
@@ -119,7 +119,7 @@ def get_debhelper_compat_level(path: str = ".") -> Optional[int]:
         pass
 
     try:
-        with open(os.path.join(path, "debian/control")) as f:
+        with open(os.path.join(path, "debian/control"), encoding="utf-8") as f:
             control = Deb822(f)
     except FileNotFoundError:
         return None

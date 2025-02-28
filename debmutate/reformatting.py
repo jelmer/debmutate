@@ -28,6 +28,8 @@ import logging
 import os
 from typing import Generic, List, Optional, TypeVar, Union
 
+DEFAULT_ENCODING = "utf-8"
+
 
 class GeneratedFile(Exception):
     """The specified file is generated."""
@@ -115,6 +117,7 @@ def edit_formatted_file(
     updated_contents: Union[str, bytes],
     allow_generated: bool = False,
     allow_reformatting: bool = False,
+    encoding: str = DEFAULT_ENCODING,
 ) -> bool:
     """Edit a formatted file.
 
@@ -175,9 +178,12 @@ def edit_formatted_file(
             updated_contents = b"".join(m3.merge_lines())
         else:
             updated_contents = "".join(m3.merge_lines())
-    mode = "w" + ("b" if isinstance(updated_contents, bytes) else "")
-    with open(path, mode) as f:
-        f.write(updated_contents)
+    if isinstance(updated_contents, bytes):
+        with open(path, "wb") as f:
+            f.write(updated_contents)
+    else:
+        with open(path, "w", encoding=encoding) as f:
+            f.write(updated_contents)
     return True
 
 
@@ -197,6 +203,7 @@ class Editor(Generic[T, P]):
         mode: str = "",
         allow_generated: bool = False,
         allow_reformatting: Optional[bool] = None,
+        encoding: str = DEFAULT_ENCODING,
     ) -> None:
         self.path = path
         self.mode = mode
@@ -205,6 +212,7 @@ class Editor(Generic[T, P]):
         if allow_reformatting is None:
             allow_reformatting = os.environ.get("REFORMATTING", "disallow") == "allow"
         self.allow_reformatting = allow_reformatting
+        self.encoding = encoding
 
     def _nonexistent(self) -> T:
         raise
@@ -218,8 +226,11 @@ class Editor(Generic[T, P]):
         raise NotImplementedError(self._format)
 
     def __enter__(self):
+        kwargs = {}
+        if "b" not in self.mode:
+            kwargs["encoding"] = self.encoding
         try:
-            with open(self.path, "r" + self.mode) as f:
+            with open(self.path, "r" + self.mode, **kwargs) as f:  # type: ignore
                 self._orig_content = f.read()
         except FileNotFoundError:
             self._orig_content = None
@@ -258,8 +269,9 @@ class Editor(Generic[T, P]):
                 self._orig_content,
                 self._rewritten_content,
                 updated_content,
-                self.allow_generated,
-                self.allow_reformatting,
+                allow_generated=self.allow_generated,
+                allow_reformatting=self.allow_reformatting,
+                encoding=self.encoding,
             )
             if self.changed:
                 self.changed_files = [self.path]

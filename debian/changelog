@@ -1,3 +1,9 @@
+debmutate (0.72) UNRELEASED; urgency=medium
+
+  * Explicitly specify encoding when opening files. Closes: #1095315
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 28 Feb 2025 14:07:59 +0000
+
 debmutate (0.71) unstable; urgency=medium
 
   * Fix argument order for watch entries. Closes: #1090859
