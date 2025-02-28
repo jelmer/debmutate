@@ -43,13 +43,13 @@ class SplitVcsUrlTests(TestCase):
         self.assertEqual(
             VcsUrl("https://github.com/jelmer/example", "master", "path/to/packaging"),
             split_vcs_url(
-                "https://github.com/jelmer/example [path/to/packaging] " "-b master"
+                "https://github.com/jelmer/example [path/to/packaging] -b master"
             ),
         )
         self.assertEqual(
             VcsUrl("https://github.com/jelmer/example", "master", "path/to/packaging"),
             split_vcs_url(
-                "https://github.com/jelmer/example -b master " "[path/to/packaging]"
+                "https://github.com/jelmer/example -b master [path/to/packaging]"
             ),
         )
         self.assertEqual(
@@ -73,7 +73,7 @@ class UnsplitVcsUrlTests(TestCase):
 
     def test_branch(self):
         self.assertEqual(
-            "https://github.com/jelmer/example -b master " "[path/to/packaging]",
+            "https://github.com/jelmer/example -b master [path/to/packaging]",
             unsplit_vcs_url(
                 "https://github.com/jelmer/example", "master", "path/to/packaging"
             ),

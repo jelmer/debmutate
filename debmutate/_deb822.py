@@ -113,7 +113,7 @@ class PkgRelation:
                 return PkgRelation(**d)
 
             logging.debug(
-                "cannot parse package" f' relationship "{raw}", returning it raw'
+                f'cannot parse package relationship "{raw}", returning it raw'
             )
             return PkgRelation(name=raw, version=None, arch=None)
 
