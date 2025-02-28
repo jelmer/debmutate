@@ -1,3 +1,9 @@
+debmutate (0.73) UNRELEASED; urgency=medium
+
+  * Add drop-mia-uploaders.1 manpage.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 28 Feb 2025 11:01:14 +0000
+
 debmutate (0.72) unstable; urgency=medium
 
   * Explicitly specify encoding when opening files. Closes: #1095315

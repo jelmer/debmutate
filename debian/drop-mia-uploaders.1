@@ -1,0 +1,15 @@
+.TH DROP-MIA-UPLOADERS "1" "February 2025" "drop-mia-uploaders 0.72" "User Commands"
+.SH NAME
+drop-mia-uploaders \- remove MIA uploaders from the Maintainer field and Uploaders field
+.SH DESCRIPTION
+Update the Maintainer and Uploaders fields in a Debian control file to remove any MIA uploaders.
+.PP
+The list of MIA uploaders is retrieved from the MIA component in the Debian BTS.
+.SH OPTIONS
+usage: drop\-mia\-uploaders [\-h]
+.SS "options:"
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.SH AUTHOR
+Jelmer Vernooĳ <jelmer@jelmer.uk>
