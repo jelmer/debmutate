@@ -1,6 +1,7 @@
 debmutate (0.73) UNRELEASED; urgency=medium
 
   * Add drop-mia-uploaders.1 manpage.
+  * Fixes version tuple. Closes: #1101771
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 28 Feb 2025 11:01:14 +0000
 
