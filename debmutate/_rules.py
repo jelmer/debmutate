@@ -392,8 +392,8 @@ class RulesEditor(MakefileEditor):
                     if drop_related_comments:
                         while (
                             newcontents
-                            and newcontents[-1].startswith(b"#")
-                            and not newcontents[-1].startswith(b"#!")
+                            and newcontents[-1].startswith(b"#")  # type: ignore
+                            and not newcontents[-1].startswith(b"#!")  # type: ignore
                         ):
                             del newcontents[-1]
                     if newcontents and not newcontents[-1]:

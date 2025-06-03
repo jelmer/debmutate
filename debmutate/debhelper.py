@@ -102,6 +102,20 @@ def read_debhelper_compat_file(path: str) -> int:
 
 
 def get_debhelper_compat_level_from_control(control) -> Optional[int]:
+    """Get the debhelper compat level from a Deb822 control file.
+
+    Args:
+        control: A Deb822 object representing the control file
+    Returns:
+        The debhelper compat level, or None if not found
+    """
+    x_dh_compat = control.get("X-DH-Compat", "")
+    if x_dh_compat:
+        try:
+            return int(x_dh_compat)
+        except ValueError:
+            raise ValueError(f"Invalid X-DH-Compat value: {x_dh_compat}")
+
     try:
         offset, [relation] = get_relation(
             control.get("Build-Depends", ""), "debhelper-compat"

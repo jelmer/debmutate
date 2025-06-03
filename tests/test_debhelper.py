@@ -24,6 +24,7 @@ from debmutate.debhelper import (
     MaintscriptEditor,
     MaintscriptMoveConffile,
     ensure_minimum_debhelper_version,
+    get_debhelper_compat_level_from_control,
 )
 
 from . import TestCase, TestCaseInTempDir
@@ -127,3 +128,17 @@ mv_conffile /etc/iptotal/apache.conf /etc/apache2/conf-available/iptotal.conf \
             self.assertRaises(IndexError, e.__delitem__, 0)
         with open("debian/maintscript") as f:
             self.assertEqual("# I am a comment\n", f.read())
+
+
+class TestDebhelperCompatFromControl(TestCase):
+    def test_x_dh_compat(self):
+        d = {
+            "X-DH-Compat": "10",
+        }
+        self.assertEqual(get_debhelper_compat_level_from_control(d), 10)
+
+    def test_build_depends(self):
+        d = {
+            "Build-Depends": "debhelper-compat (= 10)",
+        }
+        self.assertEqual(get_debhelper_compat_level_from_control(d), 10)
