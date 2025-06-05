@@ -19,9 +19,9 @@
 
 import logging
 import sys
-from http.client import HTTPResponse
 from io import StringIO
 from typing import (
+    BinaryIO,
     Callable,
     Iterable,
     Iterator,
@@ -277,7 +277,7 @@ searchers = {
 
 def search(
     searchmode: str,
-    resp: HTTPResponse,
+    resp: BinaryIO,
     *,
     matching_pattern: str,
     package: Union[str, Callable[[], str]],

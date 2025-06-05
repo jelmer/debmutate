@@ -59,6 +59,7 @@ class CopyrightEditor(Editor[Copyright, str]):
     @property
     def copyright(self) -> Copyright:
         """The actual copyright file."""
+        assert self._parsed is not None, "Copyright file not parsed"
         return self._parsed
 
     @property

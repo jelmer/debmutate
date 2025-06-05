@@ -27,7 +27,17 @@ __all__ = [
 import logging
 import os
 from types import TracebackType
-from typing import Generic, Iterator, List, Literal, Optional, Type, TypeVar, Union
+from typing import (
+    Generic,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Self,
+    Type,
+    TypeVar,
+    Union,
+)
 
 DEFAULT_ENCODING = "utf-8"
 
@@ -250,7 +260,7 @@ class Editor(Generic[T, P]):
         self.allow_reformatting = allow_reformatting
         self.encoding = encoding
 
-    def _nonexistent(self) -> T:
+    def _nonexistent(self) -> Optional[T]:
         raise
 
     def _parse(self, content: P) -> T:
@@ -261,7 +271,7 @@ class Editor(Generic[T, P]):
         """Serialize the parsed object."""
         raise NotImplementedError(self._format)
 
-    def __enter__(self) -> "Editor[T, P]":
+    def __enter__(self) -> Self:
         kwargs = {}
         if "b" not in self.mode:
             kwargs["encoding"] = self.encoding

@@ -94,6 +94,7 @@ class ChangelogEditor(Editor[Changelog, str]):
 
     @property
     def changelog(self) -> Changelog:
+        assert self._parsed is not None, "Changelog not parsed"
         return self._parsed
 
     def __getitem__(self, i: int) -> ChangeBlock:
@@ -609,7 +610,7 @@ def take_uploadership(
 def release(
     cl: Changelog,
     distribution: Optional[str] = None,
-    timestamp: Optional[datetime] = None,
+    timestamp: Optional[float] = None,
     localtime: bool = True,
     maintainer: Optional[Tuple[str, str]] = None,
 ) -> None:
@@ -623,7 +624,7 @@ def release(
         take_uploadership(cl[0], maintainer)
         cl[0].distributions = distribution
         cl[0].date = format_date(
-            timestamp=timestamp.timestamp() if timestamp is not None else None,
+            timestamp=timestamp,
             localtime=localtime,
         )
 

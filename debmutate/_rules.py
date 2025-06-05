@@ -333,6 +333,7 @@ class MakefileEditor(Editor[Makefile, bytes]):
 
     @property
     def makefile(self) -> Makefile:
+        assert self._parsed is not None, "Makefile not parsed yet"
         return self._parsed
 
 

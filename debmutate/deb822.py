@@ -186,7 +186,7 @@ class Deb822Editor(Editor[Deb822File, bytes]):
 
     @property
     def paragraphs(self) -> List[Deb822Paragraph]:
-        return list(self._parsed)
+        return self._parsed  # type: ignore
 
     def _format(self, paragraphs: Deb822File) -> bytes:
         return dump_paragraphs(paragraphs)

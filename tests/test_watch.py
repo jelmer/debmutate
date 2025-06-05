@@ -20,7 +20,7 @@
 import os
 import shutil
 import tempfile
-from io import StringIO
+from io import BytesIO, StringIO
 from unittest import TestCase
 
 from debmutate.watch import (
@@ -540,7 +540,7 @@ class SearchTests(TestCase):
             list(
                 search(
                     "html",
-                    StringIO(body.decode()),
+                    BytesIO(body),
                     matching_pattern="/foo-(\\d+\\.\\d+)\\.tar\\.gz",
                     url="https://example.com/",
                     package="foo",

@@ -51,7 +51,7 @@ Copyright: 2012...
             )
 
         with CopyrightEditor() as updater:
-            updater.copyright.header.upstream_name = "llintian-brush"
+            updater.copyright.header.upstream_name = "llintian-brush"  # type: ignore
 
     def test_old_style(self):
         with open("debian/copyright", "w") as f:
@@ -173,7 +173,7 @@ License: Blah
         with CopyrightEditor() as updater:
             license_para = list(updater.copyright.all_license_paragraphs())[0]
             self.assertEqual("License: Blah\n blah\n .\n", license_para.dump())
-            self.assertEqual("blah\n", license_para.license.text)
+            self.assertEqual("blah\n", license_para.license.text)  # type: ignore
 
     def test_remove_paragraph(self):
         with open("debian/copyright", "w") as f:

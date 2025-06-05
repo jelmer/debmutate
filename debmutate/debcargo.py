@@ -75,18 +75,23 @@ class TomlEditor(Editor[Dict[str, Any], str]):
         return dumps(parsed)
 
     def __contains__(self, key: str) -> bool:
+        assert self._parsed is not None, "Editor must be opened before use"
         return key in self._parsed
 
     def __getitem__(self, key: str) -> TomlValue:
+        assert self._parsed is not None, "Editor must be opened before use"
         return self._parsed[key]
 
     def __delitem__(self, key: str) -> None:
+        assert self._parsed is not None, "Editor must be opened before use"
         del self._parsed[key]
 
     def __setitem__(self, key: str, value: TomlValue) -> None:
+        assert self._parsed is not None, "Editor must be opened before use"
         self._parsed[key] = value
 
     def get(self, key: str, default: Optional[TomlValue] = None) -> Optional[TomlValue]:
+        assert self._parsed is not None, "Editor must be opened before use"
         return self._parsed.get(key, default)
 
 
@@ -448,6 +453,9 @@ class DebcargoControlShimEditor:
 
     @property
     def source(self) -> DebcargoSourceShimEditor:
+        assert self.debcargo_editor._parsed is not None, (
+            "Editor must be opened before use"
+        )
         return DebcargoSourceShimEditor(
             self.debcargo_editor._parsed,
             crate_name=self.crate_name,
@@ -534,6 +542,9 @@ class DebcargoControlShimEditor:
 
     @property
     def binaries(self) -> List[DebcargoBinaryShimEditor]:
+        assert self.debcargo_editor._parsed is not None, (
+            "Editor must be opened before use"
+        )
         semver_suffix = self.debcargo_editor.get("semver_suffix", False)
         ret = [
             DebcargoBinaryShimEditor(
@@ -564,6 +575,9 @@ class DebcargoControlShimEditor:
                 raise ValueError(
                     f"bin_name must be a string, got {type(bin_name).__name__}"
                 )
+            assert self.debcargo_editor._parsed is not None, (
+                "Editor must be opened before use"
+            )
             ret.append(
                 DebcargoBinaryShimEditor(
                     self.crate_name,

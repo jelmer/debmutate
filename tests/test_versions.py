@@ -81,7 +81,7 @@ class TestPackageVersion(TestCase):
 
     def test_ubuntu_with_epoch(self):
         self.assertEqual(
-            Version("3:1.2-1-0ubuntu1"), new_package_version("1.2-1", "ubuntu", "3")
+            Version("3:1.2-1-0ubuntu1"), new_package_version("1.2-1", "ubuntu", 3)
         )
 
 

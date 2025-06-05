@@ -103,8 +103,8 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
     def _parse(self, content: bytes) -> List[QuiltSeriesEntry]:
         return list(read_quilt_series(iter(content.splitlines(True))))
 
-    def _nonexistent(self) -> List[QuiltSeriesEntry]:
-        return []
+    def _nonexistent(self) -> Optional[List[QuiltSeriesEntry]]:
+        return None
 
     def _format(self, parsed: Optional[List[QuiltSeriesEntry]]) -> Optional[bytes]:
         if parsed is None:
@@ -127,6 +127,8 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
                 yield entry.name
 
     def remove(self, name: str) -> None:
+        if self._parsed is None:
+            raise KeyError(name)
         for i, entry in enumerate(self._parsed):
             if entry.name == name:
                 del self._parsed[i]
