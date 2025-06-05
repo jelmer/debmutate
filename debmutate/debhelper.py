@@ -26,9 +26,9 @@ __all__ = [
 
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Union, cast
 
-from debian.changelog import Version
+from debian.changelog import Version  # type: ignore[attr-defined]
 from debian.deb822 import Deb822
 
 from .control import (
@@ -77,6 +77,8 @@ def ensure_minimum_debhelper_version(
     else:
         if len(debhelper_compat) > 1:
             raise Exception("Complex rule for debhelper-compat, aborting")
+        if debhelper_compat[0].version is None:
+            raise Exception("debhelper-compat without version, aborting")
         if debhelper_compat[0].version[0] != "=":
             raise Exception("Complex rule for debhelper-compat, aborting")
         if Version(debhelper_compat[0].version[1]) >= minimum_version:
@@ -101,7 +103,9 @@ def read_debhelper_compat_file(path: str) -> int:
         return int(line.strip())
 
 
-def get_debhelper_compat_level_from_control(control) -> Optional[int]:
+def get_debhelper_compat_level_from_control(
+    control: Union[Deb822, Dict[str, str]],
+) -> Optional[int]:
     """Get the debhelper compat level from a Deb822 control file.
 
     Args:
@@ -123,6 +127,8 @@ def get_debhelper_compat_level_from_control(control) -> Optional[int]:
     except (IndexError, KeyError):
         return None
     else:
+        if relation.version is None:
+            return None
         return int(str(relation.version[1]))
 
 
@@ -145,7 +151,7 @@ def get_debhelper_compat_level(path: str = ".") -> Optional[int]:
 class MaintscriptSupports:
     command: str
 
-    def args(self):
+    def args(self) -> List[str]:
         return ["supports", self.command]
 
 
@@ -155,7 +161,7 @@ class MaintscriptRemoveConffile:
     prior_version: Optional[Version] = None
     package: Optional[str] = None
 
-    def args(self):
+    def args(self) -> List[str]:
         ret = ["rm_conffile", self.conffile]
         if self.prior_version:
             ret.append(str(self.prior_version))
@@ -171,7 +177,7 @@ class MaintscriptMoveConffile:
     prior_version: Optional[Version] = None
     package: Optional[str] = None
 
-    def args(self):
+    def args(self) -> List[str]:
         ret = ["mv_conffile", self.old_conffile, self.new_conffile]
         if self.prior_version:
             ret.append(str(self.prior_version))
@@ -187,7 +193,7 @@ class MaintscriptSymlinkToDir:
     prior_version: Optional[Version] = None
     package: Optional[str] = None
 
-    def args(self):
+    def args(self) -> List[str]:
         ret = ["symlink_to_dir", self.pathname, self.old_target]
         if self.prior_version:
             ret.append(str(self.prior_version))
@@ -203,7 +209,7 @@ class MaintscriptDirToSymlink:
     prior_version: Optional[Version] = None
     package: Optional[str] = None
 
-    def args(self):
+    def args(self) -> List[str]:
         ret = ["dir_to_symlink", self.pathname, self.new_target]
         if self.prior_version:
             ret.append(str(self.prior_version))
@@ -212,17 +218,7 @@ class MaintscriptDirToSymlink:
         return ret
 
 
-def parse_maintscript_line(line):
-    args = line.split()
-    return {
-        "supports": MaintscriptSupports,
-        "rm_conffile": MaintscriptRemoveConffile,
-        "mv_conffile": MaintscriptMoveConffile,
-        "symlink_to_dir": MaintscriptSymlinkToDir,
-        "dir_to_symlink": MaintscriptDirToSymlink,
-    }.get(args[0], list)(*args[1:])
-
-
+# Type alias for maintscript entries
 MaintscriptEntry = Union[
     MaintscriptSupports,
     MaintscriptRemoveConffile,
@@ -232,7 +228,22 @@ MaintscriptEntry = Union[
 ]
 
 
-def serialize_maintscript_line(args):
+def parse_maintscript_line(line: str) -> Union[str, MaintscriptEntry]:
+    args = line.split()
+    constructors = {
+        "supports": MaintscriptSupports,
+        "rm_conffile": MaintscriptRemoveConffile,
+        "mv_conffile": MaintscriptMoveConffile,
+        "symlink_to_dir": MaintscriptSymlinkToDir,
+        "dir_to_symlink": MaintscriptDirToSymlink,
+    }
+    if args[0] in constructors:
+        return cast(MaintscriptEntry, constructors[args[0]](*args[1:]))
+    else:
+        return line.strip()
+
+
+def serialize_maintscript_line(args: List[str]) -> str:
     return " ".join(args)
 
 
@@ -244,12 +255,12 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
     ):
         super().__init__(path=path, allow_reformatting=allow_reformatting)
 
-    def _nonexistent(self):
-        return None
+    def _nonexistent(self) -> List[Union[str, MaintscriptEntry]]:
+        return []
 
-    def _parse(self, content):
+    def _parse(self, content: str) -> List[Union[str, MaintscriptEntry]]:
         """Parse the specified bytestring and returned parsed object."""
-        ret = []
+        ret: List[Union[str, MaintscriptEntry]] = []
         for line in content.splitlines(True):
             if line.startswith("#") or not line.strip():
                 ret.append(line.rstrip("\n"))
@@ -258,16 +269,16 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
         return ret
 
     @property
-    def lines(self):
+    def lines(self) -> List[Union[str, MaintscriptEntry]]:
         if self._parsed is None:
             return []
         return self._parsed
 
     @property
-    def entries(self):
+    def entries(self) -> List[MaintscriptEntry]:
         return [entry for entry in self.lines if not isinstance(entry, str)]
 
-    def __delitem__(self, req):
+    def __delitem__(self, req: int) -> None:
         ei = 0
         # TODO(jelmer): Also remove preceding comments?
         for i, e in enumerate(self.lines):
@@ -278,19 +289,21 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
                 ei += 1
         raise IndexError(req)
 
-    def __getitem__(self, req):
+    def __getitem__(self, req: int) -> MaintscriptEntry:
         return self.entries[req]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.entries)
 
-    def append(self, entry):
+    def append(self, entry: MaintscriptEntry) -> None:
         if self._parsed is None:
             self._parsed = [entry]
         else:
             self._parsed.extend([entry])
 
-    def _format(self, parsed):
+    def _format(
+        self, parsed: Optional[List[Union[str, MaintscriptEntry]]]
+    ) -> Optional[str]:
         """Serialize the parsed object."""
         if self._parsed is None:
             return None
@@ -305,7 +318,9 @@ class MaintscriptEditor(Editor[List[Union[str, MaintscriptEntry]], str]):
         return None
 
 
-def get_sequences(debian_path="debian", control_editor=None):
+def get_sequences(
+    debian_path: str = "debian", control_editor: Optional[ControlEditor] = None
+) -> Iterator[str]:
     if control_editor is None:
         control_editor = ControlEditor(os.path.join(debian_path, "control"))
     with control_editor:

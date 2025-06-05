@@ -29,7 +29,7 @@ DEFAULT_DEBIAN_PATCHES_DIR = "debian/patches"
 QuiltSeriesEntry = namedtuple("QuiltSeriesEntry", ["name", "quoted", "options"])
 
 
-def parse_quilt_series_line(line: bytes):
+def parse_quilt_series_line(line: bytes) -> Optional[QuiltSeriesEntry]:
     if line.startswith(b"#"):
         quoted = True
         line = line.split(b"#")[1].strip()
@@ -76,7 +76,7 @@ def find_common_patch_suffix(names: List[str], default: str = ".patch") -> str:
     return max(suffix_count.items(), key=lambda v: v[1])[0]
 
 
-def write_quilt_series(entries):
+def write_quilt_series(entries: List[QuiltSeriesEntry]) -> Iterator[bytes]:
     for entry in entries:
         args = []
         if entry.name is not None:
@@ -97,36 +97,36 @@ class QuiltSeriesEditor(Editor[List[QuiltSeriesEntry], bytes]):
         self,
         path: str = "debian/patches/series",
         allow_reformatting: Optional[bool] = None,
-    ):
+    ) -> None:
         super().__init__(path, mode="b", allow_reformatting=allow_reformatting)
 
-    def _parse(self, content):
-        return list(read_quilt_series(content.splitlines(True)))
+    def _parse(self, content: bytes) -> List[QuiltSeriesEntry]:
+        return list(read_quilt_series(iter(content.splitlines(True))))
 
-    def _nonexistent(self):
-        return None
+    def _nonexistent(self) -> List[QuiltSeriesEntry]:
+        return []
 
-    def _format(self, parsed):
+    def _format(self, parsed: Optional[List[QuiltSeriesEntry]]) -> Optional[bytes]:
         if parsed is None:
             return None
         # TODO(jelmer): Support formatting comments and options
         return b"".join(write_quilt_series(parsed))
 
-    def append(self, name, options=None):
+    def append(self, name: str, options: Optional[List[str]] = None) -> None:
         if options is None:
             options = []
         if self._parsed is None:
             self._parsed = []
         self._parsed.append(QuiltSeriesEntry(name, False, options))
 
-    def patches(self):
+    def patches(self) -> Iterator[str]:
         if self._parsed is None:
             return
         for entry in self._parsed:
             if not entry.quoted:
                 yield entry.name
 
-    def remove(self, name):
+    def remove(self, name: str) -> None:
         for i, entry in enumerate(self._parsed):
             if entry.name == name:
                 del self._parsed[i]

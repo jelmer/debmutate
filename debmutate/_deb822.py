@@ -24,9 +24,11 @@
 
 # TODO(jelmer): Contribute improvements back to python-debian
 
+import builtins
 import collections
 import logging
 import re
+from typing import Any, List, Optional, Tuple
 
 
 class PkgRelation:
@@ -52,7 +54,7 @@ class PkgRelation:
     )
 
     @classmethod
-    def parse(cls, text):
+    def parse(cls, text: str) -> List["PkgRelation"]:
         def parse_archs(raw):
             # type: (str) -> list[PkgRelation.ArchRestriction]
             # assumption: no space between '!' and architecture name
@@ -93,7 +95,7 @@ class PkgRelation:
                 restrictions.append(group)
             return restrictions
 
-        def parse_rel(raw):
+        def parse_rel(raw: str) -> Optional["PkgRelation"]:
             match = cls.__dep_RE.match(raw)
             if match:
                 parts = match.groupdict()
@@ -110,7 +112,15 @@ class PkgRelation:
                     d["arch"] = parse_archs(parts["archs"])
                 if parts["restrictions"]:
                     d["restrictions"] = parse_restrictions(parts["restrictions"])
-                return PkgRelation(**d)
+                return PkgRelation(
+                    name=d["name"] or "",
+                    version=d["version"] if isinstance(d["version"], tuple) else None,
+                    arch=d["arch"] if isinstance(d["arch"], list) else None,
+                    archqual=d["archqual"],
+                    restrictions=d["restrictions"]
+                    if isinstance(d["restrictions"], list)
+                    else None,
+                )
 
             logging.debug(
                 f'cannot parse package relationship "{raw}", returning it raw'
@@ -120,25 +130,35 @@ class PkgRelation:
         if text == "":
             return []
         or_deps = cls.__pipe_sep_RE.split(text)
-        return [parse_rel(or_dep) for or_dep in or_deps]
+        return [
+            rel for rel in [parse_rel(or_dep) for or_dep in or_deps] if rel is not None
+        ]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.version!r}, {self.arch!r}, {self.archqual!r}, {self.restrictions!r})"
 
-    def __tuple__(self):
+    def __tuple__(
+        self,
+    ) -> Tuple[
+        str,
+        Optional[Tuple[str, str]],
+        Optional[List[Any]],
+        Optional[str],
+        Optional[List[List[Any]]],
+    ]:
         return (self.name, self.version, self.arch, self.archqual, self.restrictions)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PkgRelation):
             return False
         return self.__tuple__() == other.__tuple__()
 
-    def __lt__(self, other):
+    def __lt__(self, other: "PkgRelation") -> bool:
         if not isinstance(other, PkgRelation):
             raise TypeError
         return self.__tuple__() < other.__tuple__()
 
-    def str(self):
+    def str(self) -> str:
         """Format to string structured inter-package relationships.
 
         Perform the inverse operation of parse_relations, returning a string
@@ -160,6 +180,7 @@ class PkgRelation:
             return "<{}>".format(" ".join(s))
 
         s = self.name
+        assert s is not None  # name should never be None
         if self.archqual is not None:
             s += f":{self.archqual}"
         if self.version is not None:
@@ -170,7 +191,14 @@ class PkgRelation:
             s += " {}".format(" ".join(map(pp_restrictions, self.restrictions)))
         return s
 
-    def __init__(self, name, version=None, arch=None, archqual=None, restrictions=None):
+    def __init__(
+        self,
+        name: builtins.str,
+        version: Optional[Tuple[builtins.str, builtins.str]] = None,
+        arch: Optional[List[Any]] = None,
+        archqual: Optional[builtins.str] = None,
+        restrictions: Optional[List[List[Any]]] = None,
+    ) -> None:
         self.name = name
         self.version = version
         self.arch = arch

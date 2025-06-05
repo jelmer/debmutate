@@ -19,11 +19,23 @@
 """Ben file parsing."""
 
 import re
+from typing import Any, Dict, List, Pattern, TextIO, Tuple, Union
 
 SUPPORTED_KEYS = ["title", "notes", "is_affected", "is_good", "is_bad", "export"]
 
+BenItem = Union[
+    bool,
+    int,
+    str,
+    List[Union[bool, int, str]],
+    List[Tuple[str, Pattern[str]]],
+    Any,  # this should actually be recursive, but older versions of Python don't support that
+]
 
-def _parse_benitem(v):
+
+def _parse_benitem(
+    v: str,
+) -> BenItem:
     if v == "false":
         return False
     elif v == "true":
@@ -41,14 +53,22 @@ def _parse_benitem(v):
                 field, expr = o.split("~", 1)
             except ValueError:
                 raise ValueError(f"expected ~: {o!r}")
-            expr = re.compile(_parse_benitem(expr.strip()))
-            regex.append((field.strip(), expr))
+            parsed = _parse_benitem(expr.strip())
+            if not isinstance(parsed, str):
+                raise ValueError(f"expected string after ~: {expr!r}")
+            expr_pattern = re.compile(parsed)
+            regex.append((field.strip(), expr_pattern))
         return regex
     else:
         return v
 
 
-def parse_ben(f):
+def parse_ben(
+    f: TextIO,
+) -> Dict[
+    str,
+    Union[bool, int, str, List[Union[bool, int, str]], List[Tuple[str, Pattern[str]]]],
+]:
     ret = {}
     assignment = {}
     lastk = None

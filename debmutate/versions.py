@@ -21,7 +21,7 @@ import re
 from datetime import datetime
 from typing import Optional, Tuple, Union
 
-from debian.changelog import Version
+from debian.changelog import Version  # type: ignore[attr-defined]
 
 __all__ = [
     "git_snapshot_data_from_version",
@@ -81,20 +81,24 @@ def mangle_version_for_git(version: Union[Version, str]) -> str:
     return manipulated
 
 
-def initial_debian_revision(distribution_name):
+def initial_debian_revision(distribution_name: str) -> str:
     if distribution_name == "ubuntu":
         return "0ubuntu1"
     else:
         return "1"
 
 
-def new_upstream_package_version(upstream_version, debian_revision, epoch=None):
+def new_upstream_package_version(
+    upstream_version: str, debian_revision: str, epoch: Optional[int] = None
+) -> Version:
     ret = Version(f"{upstream_version}-{debian_revision}")
-    ret.epoch = epoch
+    ret.epoch = str(epoch) if epoch is not None else None
     return ret
 
 
-def new_package_version(upstream_version, distribution_name, epoch=None):
+def new_package_version(
+    upstream_version: str, distribution_name: str, epoch: Optional[int] = None
+) -> Version:
     """Determine the package version for a new upstream.
 
     Args:
@@ -106,7 +110,7 @@ def new_package_version(upstream_version, distribution_name, epoch=None):
     return new_upstream_package_version(upstream_version, debian_revision, epoch=epoch)
 
 
-def get_snapshot_revision(upstream_version):
+def get_snapshot_revision(upstream_version: str) -> Optional[Tuple[str, str]]:
     """Return the upstream revision specifier if specified in the upstream
     version.
 
@@ -147,7 +151,7 @@ def upstream_version_add_revision(
     gitdate: Optional[datetime] = None,
     bzr_revno: Optional[str] = None,
     svn_revno: Optional[int] = None,
-):
+) -> str:
     """Update the revision in a upstream version string.
 
     Args:

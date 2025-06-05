@@ -46,7 +46,7 @@ from datetime import datetime
 from email.utils import format_datetime, parseaddr
 from typing import Iterator, List, Optional, Tuple
 
-from debian.changelog import (
+from debian.changelog import (  # type: ignore[attr-defined]
     ChangeBlock,
     Changelog,
     ChangelogCreateError,
@@ -79,36 +79,73 @@ class ChangelogEditor(Editor[Changelog, str]):
         self.allow_missing = allow_missing
 
     @classmethod
-    def create(cls, path: str = "debian/changelog"):
+    def create(cls, path: str = "debian/changelog") -> "ChangelogEditor":
         return cls(path, allow_reformatting=True, allow_missing=True)
 
-    def _parse(self, content):
+    def _parse(self, content: str) -> Changelog:
         cl = Changelog()
         cl.parse_changelog(
             content, max_blocks=None, allow_empty_author=True, strict=False
         )
         return cl
 
-    def _format(self, parsed):
+    def _format(self, parsed: Changelog) -> str:
         return parsed._format(allow_missing_author=True)
 
     @property
-    def changelog(self):
+    def changelog(self) -> Changelog:
         return self._parsed
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int) -> ChangeBlock:
         return self.changelog[i]
 
-    def _nonexistent(self):
+    def _nonexistent(self) -> Changelog:
         if self.allow_missing:
             return Changelog()
         raise
 
-    def new_block(self, *args, **kwargs):
-        return self.changelog.new_block(*args, **kwargs)
+    def new_block(
+        self,
+        package: Optional[str] = None,
+        version: Optional[Version] = None,
+        distributions: Optional[str] = None,
+        urgency: Optional[str] = None,
+        urgency_comment: Optional[str] = None,
+        changes: Optional[List[str]] = None,
+        author: Optional[str] = None,
+        date: Optional[str] = None,
+        other_pairs: Optional[List[Tuple[str, str]]] = None,
+        encoding: Optional[str] = None,
+    ) -> None:
+        return self.changelog.new_block(
+            package=package,
+            version=version,
+            distributions=distributions,
+            urgency=urgency,
+            urgency_comment=urgency_comment,
+            changes=changes,
+            author=author,
+            date=date,
+            other_pairs=dict(other_pairs) if other_pairs else None,
+            encoding=encoding,
+        )
 
-    def auto_version(self, version, **kwargs):
-        return changelog_auto_version(self.changelog, version=version, **kwargs)
+    def auto_version(
+        self,
+        version: Version,
+        maintainer: Optional[Tuple[str, str]] = None,
+        timestamp: Optional[datetime] = None,
+        package: Optional[str] = None,
+        urgency: str = "low",
+    ) -> None:
+        return changelog_auto_version(
+            self.changelog,
+            version=version,
+            maintainer=maintainer,
+            timestamp=timestamp,
+            package=package,
+            urgency=urgency,
+        )
 
     def add_entry(
         self,
@@ -133,7 +170,7 @@ def changelog_auto_version(
     timestamp: Optional[datetime] = None,
     package: Optional[str] = None,
     urgency: str = "low",
-):
+) -> None:
     """Update current changelog entry to version or create a new one."""
     if maintainer is None:
         maintainer_name, maintainer_email = get_maintainer()
@@ -228,7 +265,7 @@ class TextWrapper(textwrap.TextWrapper):
     whitespace = r"[{}]".format(re.escape("\t\n\x0b\x0c\r "))
     wordsep_simple_re = re.compile(rf"({whitespace}+)")
 
-    def __init__(self, initial_indent=INITIAL_INDENT):
+    def __init__(self, initial_indent: str = INITIAL_INDENT) -> None:
         super().__init__(
             width=WIDTH,
             initial_indent=initial_indent,
@@ -237,7 +274,7 @@ class TextWrapper(textwrap.TextWrapper):
             break_on_hyphens=False,
         )
 
-    def _split(self, text):
+    def _split(self, text: str) -> List[str]:
         chunks = [c for c in self.wordsep_simple_re.split(text) if c]
         ret = []
         i = 0
@@ -258,7 +295,7 @@ class TextWrapper(textwrap.TextWrapper):
 _initial_re = re.compile(r"^[  ]+[\+\-\*] ")
 
 
-def _can_join(line1, line2):
+def _can_join(line1: str, line2: str) -> bool:
     if line1.endswith(":"):
         return False
     if line2 and line2[:1].isupper():
@@ -408,7 +445,7 @@ def changelog_add_entry(
     changeblock_add_line(cl[0], summary)
 
 
-def changeblock_add_line(block, lines):
+def changeblock_add_line(block: ChangeBlock, lines: List[str]) -> None:
     wrapper = TextWrapper(INITIAL_INDENT)
     block._changes.extend(wrapper.wrap(lines[0]))
     for line in lines[1:]:
@@ -505,13 +542,15 @@ def all_sha_prefixed(cb: ChangeBlock) -> bool:
     return sha_prefixed > 0
 
 
-def distribution_is_unreleased(distribution):
+def distribution_is_unreleased(distribution: Optional[str]) -> bool:
+    if distribution is None:
+        return False
     return distribution == "UNRELEASED" or distribution.startswith("UNRELEASED-")
 
 
 def changeblock_ensure_first_line(
-    block, line, maintainer: Optional[Tuple[str, str]] = None
-):
+    block: ChangeBlock, line: str, maintainer: Optional[Tuple[str, str]] = None
+) -> None:
     """Ensure that the first line matches the specified line.
 
     Args:
@@ -533,13 +572,15 @@ def changeblock_ensure_first_line(
     block._changes.insert(1, line)
     if block._changes[2].startswith("  ["):
         block._changes.insert(2, "")
-    elif parseaddr(block.author)[0] != maintainer_name:
+    elif block.author is not None and parseaddr(block.author)[0] != maintainer_name:
         block._changes.insert(2, f"  [ {parseaddr(block.author)[0]} ]")
         block._changes.insert(2, "")
         block.author = f"{maintainer_name} <{maintainer_email}>"
 
 
-def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> None:
+def take_uploadership(
+    block: ChangeBlock, maintainer: Optional[Tuple[str, str]] = None
+) -> None:
     """Take uploaderhsip of a changelog entry, but attribute contributors.
 
     Args:
@@ -566,12 +607,12 @@ def take_uploadership(block, maintainer: Optional[Tuple[str, str]] = None) -> No
 
 
 def release(
-    cl,
+    cl: Changelog,
     distribution: Optional[str] = None,
-    timestamp=None,
+    timestamp: Optional[datetime] = None,
     localtime: bool = True,
     maintainer: Optional[Tuple[str, str]] = None,
-):
+) -> None:
     """Create a release for a changelog file."""
     if distribution is None:
         try:
@@ -581,10 +622,13 @@ def release(
     if distribution_is_unreleased(cl[0].distributions):
         take_uploadership(cl[0], maintainer)
         cl[0].distributions = distribution
-        cl[0].date = format_date(timestamp=timestamp, localtime=localtime)
+        cl[0].date = format_date(
+            timestamp=timestamp.timestamp() if timestamp is not None else None,
+            localtime=localtime,
+        )
 
 
-def find_last_distribution(changelog):
+def find_last_distribution(changelog: Changelog) -> Optional[str]:
     """Find the last changelog that was used in a changelog.
 
     This will skip stanzas with the 'UNRELEASED' distribution.
@@ -593,13 +637,14 @@ def find_last_distribution(changelog):
       changelog: Changelog to analyze
     """
     for block in changelog._blocks:
-        distribution = block.distributions.split(" ")[0]
-        if not distribution_is_unreleased(distribution):
-            return distribution
+        if block.distributions is not None:
+            distribution = block.distributions.split(" ")[0]
+            if not distribution_is_unreleased(distribution):
+                return distribution
     return None
 
 
-def find_extra_authors(changes):
+def find_extra_authors(changes: List[str]) -> List[str]:
     """Find additional authors from a changelog entry.
 
     :return: List of fullnames of additional authors, without e-mail address.
@@ -618,7 +663,7 @@ def find_extra_authors(changes):
     return authors
 
 
-def find_thanks(changes):
+def find_thanks(changes: List[str]) -> List[str]:
     """Find all people thanked in a changelog entry.
 
     :param changes: String with the contents of the changelog entry

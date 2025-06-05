@@ -24,10 +24,13 @@ __all__ = [
     "upstream_fields_in_copyright",
 ]
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
+from debian._deb822_repro.parsing import Deb822FileElement
 from debian.copyright import (
     Copyright,
+    FilesParagraph,
+    LicenseParagraph,
     MachineReadableFormatError,
     NotMachineReadableError,
 )
@@ -44,14 +47,14 @@ class CopyrightEditor(Editor[Copyright, str]):
     ) -> None:
         super().__init__(path, allow_reformatting=allow_reformatting)
 
-    def _parse(self, content):
+    def _parse(self, content: str) -> Copyright:
         try:
-            return Copyright(content, strict=False)
+            return Copyright(content.splitlines(), strict=False)
         except ValueError as e:
             raise NotMachineReadableError(str(e))
 
-    def _format(self, parsed):
-        return parsed.dump()
+    def _format(self, parsed: Copyright) -> str:
+        return parsed.dump() or ""
 
     @property
     def copyright(self) -> Copyright:
@@ -59,24 +62,26 @@ class CopyrightEditor(Editor[Copyright, str]):
         return self._parsed
 
     @property
-    def _deb822(self):
+    def _deb822(self) -> Deb822FileElement:
         return self._parsed._Copyright__file  # type: ignore
 
-    def remove(self, paragraph):
+    def remove(self, paragraph: Union[FilesParagraph, LicenseParagraph]) -> None:
         self._parsed._Copyright__paragraphs.remove(paragraph)  # type: ignore
-        self._deb822.remove(paragraph._underlying_paragraph)  # type: ignore
+        self._deb822.remove(paragraph._underlying_paragraph)
 
-    def append(self, paragraph):
+    def append(self, paragraph: Union[FilesParagraph, LicenseParagraph]) -> None:
         self._parsed._Copyright__paragraphs.append(paragraph)  # type: ignore
-        self._deb822.append(paragraph._underlying_paragraph)  # type: ignore
+        self._deb822.append(paragraph._underlying_paragraph)
 
-    def insert(self, idx, paragraph):
+    def insert(
+        self, idx: int, paragraph: Union[FilesParagraph, LicenseParagraph]
+    ) -> None:
         self._parsed._Copyright__paragraphs.insert(  # type: ignore
             idx, paragraph
         )
         self._deb822.insert(idx + 1, paragraph._underlying_paragraph)
 
-    def pop(self, idx):
+    def pop(self, idx: int) -> Union[FilesParagraph, LicenseParagraph]:
         p = self._parsed._Copyright__paragraphs[idx]  # type: ignore
         self.remove(p)
         return p

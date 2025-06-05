@@ -26,7 +26,8 @@ __all__ = [
 
 import logging
 import os
-from typing import Generic, List, Optional, TypeVar, Union
+from types import TracebackType
+from typing import Generic, Iterator, List, Literal, Optional, Type, TypeVar, Union
 
 DEFAULT_ENCODING = "utf-8"
 
@@ -34,7 +35,12 @@ DEFAULT_ENCODING = "utf-8"
 class GeneratedFile(Exception):
     """The specified file is generated."""
 
-    def __init__(self, path: str, template_path=None, template_type=None):
+    def __init__(
+        self,
+        path: str,
+        template_path: Optional[str] = None,
+        template_type: Optional[str] = None,
+    ) -> None:
         self.path = path
         self.template_path = template_path
         self.template_type = template_type
@@ -43,21 +49,51 @@ class GeneratedFile(Exception):
 class FormattingUnpreservable(Exception):
     """The file is unpreservable."""
 
-    def __init__(self, path, original_contents, rewritten_contents):
+    def __init__(
+        self,
+        path: str,
+        original_contents: Union[str, bytes],
+        rewritten_contents: Union[str, bytes],
+    ) -> None:
         super().__init__(path)
         self.path = path
         self.original_contents = original_contents
         self.rewritten_contents = rewritten_contents
 
-    def diff(self):
+    def diff(self) -> Iterator[str]:
         from difflib import unified_diff
 
-        return unified_diff(
-            self.original_contents.splitlines(True),
-            self.rewritten_contents.splitlines(True),
-            fromfile="original",
-            tofile="rewritten",
-        )
+        if isinstance(self.original_contents, bytes) and isinstance(
+            self.rewritten_contents, bytes
+        ):
+            return unified_diff(
+                self.original_contents.decode("utf-8", errors="replace").splitlines(
+                    True
+                ),
+                self.rewritten_contents.decode("utf-8", errors="replace").splitlines(
+                    True
+                ),
+                fromfile="original",
+                tofile="rewritten",
+            )
+        else:
+            # Convert to strings if they aren't already
+            orig_str = (
+                self.original_contents
+                if isinstance(self.original_contents, str)
+                else self.original_contents.decode("utf-8", errors="replace")
+            )
+            rewritten_str = (
+                self.rewritten_contents
+                if isinstance(self.rewritten_contents, str)
+                else self.rewritten_contents.decode("utf-8", errors="replace")
+            )
+            return unified_diff(
+                orig_str.splitlines(True),
+                rewritten_str.splitlines(True),
+                fromfile="original",
+                tofile="rewritten",
+            )
 
 
 def check_preserve_formatting(
@@ -65,7 +101,7 @@ def check_preserve_formatting(
     text: Union[str, bytes],
     path: str,
     allow_reformatting: bool = False,
-):
+) -> None:
     """Check that formatting can be preserved.
 
     Args:
@@ -225,7 +261,7 @@ class Editor(Generic[T, P]):
         """Serialize the parsed object."""
         raise NotImplementedError(self._format)
 
-    def __enter__(self):
+    def __enter__(self) -> "Editor[T, P]":
         kwargs = {}
         if "b" not in self.mode:
             kwargs["encoding"] = self.encoding
@@ -256,7 +292,12 @@ class Editor(Generic[T, P]):
             self._orig_content,
         )
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Literal[False]:
         updated_content = self._updated_content()
 
         if updated_content is None:

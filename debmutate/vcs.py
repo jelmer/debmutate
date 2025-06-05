@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 import re
-from typing import NamedTuple, Optional, Tuple
+from typing import Any, Dict, NamedTuple, Optional, Tuple
 
 
 class VcsUrl(NamedTuple):
@@ -82,7 +82,9 @@ def unsplit_vcs_url(
     return url
 
 
-def get_vcs_info(control) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def get_vcs_info(
+    control: Dict[str, Any],
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     if "Vcs-Git" in control:
         repo_url, branch, subpath = split_vcs_url(control["Vcs-Git"])
         return ("Git", repo_url, subpath)
@@ -116,7 +118,7 @@ def mangle_version_for_git(version: str) -> str:
     return manipulated
 
 
-def source_package_vcs(control) -> Tuple[str, str]:
+def source_package_vcs(control: Dict[str, Any]) -> Tuple[str, str]:
     """Extract the Vcs URL from a source package.
 
     Args:
@@ -139,7 +141,7 @@ def source_package_vcs(control) -> Tuple[str, str]:
 class GbpTagFormatError(Exception):
     """Unknown variable in gbp tag name."""
 
-    def __init__(self, tag_name, variable):
+    def __init__(self, tag_name: str, variable: str) -> None:
         super().__init__(tag_name, variable)
         self.variable = variable
         self.tag_name = tag_name

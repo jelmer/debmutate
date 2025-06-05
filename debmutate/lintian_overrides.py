@@ -19,7 +19,7 @@
 
 import fnmatch
 import re
-from typing import List, Optional, Union
+from typing import Callable, Iterator, List, Optional, TextIO, Union
 
 from .reformatting import Editor
 
@@ -31,7 +31,7 @@ from .reformatting import Editor
 VALID_TYPES = ["udeb", "source", "binary"]
 
 
-def _create_matcher(value):
+def _create_matcher(value: Optional[str]) -> Callable[[str], bool]:
     if value:
         p = re.compile(fnmatch.translate(value))
         return lambda x: bool(p.match(x))
@@ -44,10 +44,10 @@ class LintianOverride:
         self,
         package: Optional[str] = None,
         archlist: Optional[List[str]] = None,
-        type=None,
-        tag=None,
-        info=None,
-    ):
+        type: Optional[str] = None,
+        tag: Optional[str] = None,
+        info: Optional[str] = None,
+    ) -> None:
         self.package = package
         self.archlist = archlist
         if type is not None and type not in VALID_TYPES:
@@ -58,7 +58,7 @@ class LintianOverride:
         self.info = info
         self._info_match = _create_matcher(self.info)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(package={self.package!r}, archlist={self.archlist!r}, type={self.type!r}, tag={self.tag!r}, info={self.info!r})"
 
     def matches(
@@ -82,7 +82,7 @@ class LintianOverride:
             return False
         return True
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, type(self))
             and self.package == other.package
@@ -94,9 +94,9 @@ class LintianOverride:
 
 
 class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
-    def _parse(self, content):
+    def _parse(self, content: str) -> List[Union[str, LintianOverride]]:
         """Parse the specified bytestring and returned parsed object."""
-        ret = []
+        ret: List[Union[str, LintianOverride]] = []
         for line in content.splitlines(True):
             if line.startswith("#") or not line.strip():
                 ret.append(line)
@@ -105,17 +105,19 @@ class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
         return ret
 
     @property
-    def lines(self):
+    def lines(self) -> List[Union[str, LintianOverride]]:
         return self._parsed or []
 
     @property
-    def overrides(self):
+    def overrides(self) -> List[LintianOverride]:
         return [entry for entry in self.lines if isinstance(entry, LintianOverride)]
 
-    def _nonexistent(self):
-        return None
+    def _nonexistent(self) -> List[Union[str, LintianOverride]]:
+        return []
 
-    def override_exists(self, tag, info=None, package=None):
+    def override_exists(
+        self, tag: str, info: Optional[str] = None, package: Optional[str] = None
+    ) -> bool:
         """Check if a particular override exists.
 
         Args:
@@ -128,7 +130,9 @@ class LintianOverridesEditor(Editor[List[Union[str, LintianOverride]], str]):
                 return True
         return False
 
-    def _format(self, parsed):
+    def _format(
+        self, parsed: Optional[List[Union[str, LintianOverride]]]
+    ) -> Optional[str]:
         """Serialize the parsed object."""
         if self._parsed is None:
             return None
@@ -185,7 +189,7 @@ def parse_override(line: str) -> LintianOverride:
     )
 
 
-def serialize_override(override):
+def serialize_override(override: LintianOverride) -> str:
     """Serialize an override.
 
     Args:
@@ -201,15 +205,15 @@ def serialize_override(override):
     if override.type:
         origin.append(override.type)
     if origin:
-        line = " ".join(origin) + ": " + override.tag
+        line = " ".join(origin) + ": " + (override.tag or "")
     else:
-        line = override.tag
+        line = override.tag or ""
     if override.info:
         line += " " + override.info
     return line + "\n"
 
 
-def iter_overrides(f):
+def iter_overrides(f: TextIO) -> Iterator[LintianOverride]:
     """Iterate over overrides in a file."""
     for line in f.readlines():
         if line.startswith("#") or not line.strip():

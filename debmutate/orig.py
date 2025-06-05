@@ -18,11 +18,14 @@
 """Handling of orig tarballs."""
 
 import os
+from typing import Optional
 
 SUPPORTED_SUFFIXES = [".tar.gz", ".tar.bz2", ".tar.lzma", ".tar.xz"]
 
 
-def component_from_orig_tarball(tarball_filename, package, version):
+def component_from_orig_tarball(
+    tarball_filename: str, package: str, version: str
+) -> Optional[str]:
     tarball_filename = os.path.basename(tarball_filename)
     prefix = f"{package}_{version}.orig"
     if not tarball_filename.startswith(prefix):

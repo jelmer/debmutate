@@ -49,22 +49,46 @@ import subprocess
 import time
 import warnings
 from itertools import takewhile
+from types import TracebackType
 from typing import (
+    Any,
     Callable,
     ContextManager,
     Dict,
     Iterable,
+    Iterator,
     List,
+    Literal,
     Optional,
+    Protocol,
     Tuple,
+    Type,
     Union,
 )
 
-from debian.changelog import Version
+from debian.changelog import Version  # type: ignore[attr-defined]
 
 from ._deb822 import PkgRelation
-from .deb822 import ChangeConflict, Deb822Editor, Deb822Paragraph, parse_deb822_file
+from .deb822 import (
+    ChangeConflict,
+    Deb822Editor,
+    Deb822File,
+    Deb822Paragraph,
+    parse_deb822_file,
+)
 from .reformatting import GeneratedFile
+
+# Type alias for changes dictionary
+ChangesDict = Dict[Tuple[str, str], List[Tuple[str, Optional[str], Optional[str]]]]
+
+
+class TreeLike(Protocol):
+    """Protocol for tree-like objects that have an abspath method."""
+
+    def abspath(self, path: str) -> str:
+        """Return absolute path for the given relative path."""
+        ...
+
 
 # TODO(jelmer): dedupe with scripts/wrap-and-sort in devscripts
 CONTROL_LIST_FIELDS = (
@@ -93,19 +117,19 @@ class MissingSourceParagraph(Exception):
 
 
 class TemplateExpansionFailed(Exception):
-    def __init__(self, command, stderr):
+    def __init__(self, command: str, stderr: str) -> None:
         self.command = command
         self.stderr = stderr
         super().__init__(f"Template expansion ({command!r}) failed: {stderr}")
 
 
 class TemplateExpandCommandMissing(Exception):
-    def __init__(self, command):
+    def __init__(self, command: str) -> None:
         self.command = command
         super().__init__(f"Command for expanding template file missing: {command}")
 
 
-def parse_relation(t: str):
+def parse_relation(t: str) -> List[PkgRelation]:
     with warnings.catch_warnings():
         suppress_substvar_warnings()
         return PkgRelation.parse(t)
@@ -116,13 +140,18 @@ def parse_relation(t: str):
 #               2010, Stefano Rivera <stefanor@ubuntu.com>
 
 
-def _sort_packages_key(package):
+def _sort_packages_key(package: str) -> Tuple[int, str]:
     # Sort dependencies starting with a "real" package name before ones
     # starting with a substvar
     return 0 if re.match("[a-z0-9]", package) else 1, package
 
 
-def _wrap_field(control, entry, sort, formatter):
+def _wrap_field(
+    control: Deb822Paragraph,
+    entry: str,
+    sort: bool,
+    formatter: Optional[Callable[..., Any]],
+) -> None:
     from debian._deb822_repro import LIST_COMMA_SEPARATED_INTERPRETATION
 
     view = control.as_interpreted_dict_view(LIST_COMMA_SEPARATED_INTERPRETATION)
@@ -271,7 +300,7 @@ def _cdbs_resolve_conflict(
     )
 
 
-def _expand_control_template(template_path: str, path: str, template_type: str):
+def _expand_control_template(template_path: str, path: str, template_type: str) -> None:
     package_root = os.path.dirname(os.path.dirname(path)) or "."
     if template_type == "rules":
         try:
@@ -288,7 +317,7 @@ def _expand_control_template(template_path: str, path: str, template_type: str):
                 cwd=package_root,
             )
         except subprocess.CalledProcessError as e:
-            raise TemplateExpansionFailed(["./debian/rules"], e.stderr.decode())
+            raise TemplateExpansionFailed("./debian/rules", e.stderr.decode())
     elif template_type == "gnome":
         dh_gnome_clean(package_root)
     elif template_type == "postgresql":
@@ -300,8 +329,8 @@ def _expand_control_template(template_path: str, path: str, template_type: str):
 
 
 def _update_control_template(
-    template_path: str, path: str, changes, expand_template=True
-):
+    template_path: str, path: str, changes: ChangesDict, expand_template: bool = True
+) -> bool:
     template_type = guess_template_type(
         template_path, debian_path=os.path.dirname(path)
     )
@@ -321,7 +350,8 @@ def _update_control_template(
             resolve_conflict = _cdbs_resolve_conflict
         else:
             resolve_conflict = None
-        updater.apply_changes(changes, resolve_conflict=resolve_conflict)
+        # Type assertion needed because mypy doesn't recognize Deb822Editor has apply_changes
+        updater.apply_changes(changes, resolve_conflict=resolve_conflict)  # type: ignore[attr-defined]
     if not updater.changed:
         # A bit odd, since there were changes to the output file. Anyway.
         return False
@@ -329,14 +359,16 @@ def _update_control_template(
     if expand_template:
         if template_type == "cdbs":
             with Deb822Editor(path, allow_generated=True) as updater:
-                updater.apply_changes(changes)
+                updater.apply_changes(changes)  # type: ignore[attr-defined]
         else:
             _expand_control_template(template_path, path, template_type)
     return True
 
 
 @contextlib.contextmanager
-def _preserve_field_order_preferences(paragraphs):
+def _preserve_field_order_preferences(
+    paragraphs: List[Deb822Paragraph],
+) -> Iterator[None]:
     description_is_not_last = set()
     for para in paragraphs:
         if "Package" not in para:
@@ -356,9 +388,11 @@ def _preserve_field_order_preferences(paragraphs):
 
 
 def update_control(
-    path="debian/control", source_package_cb=None, binary_package_cb=None
-):
-    def paragraph_cb(paragraph):
+    path: str = "debian/control",
+    source_package_cb: Optional[Callable[[Deb822Paragraph], None]] = None,
+    binary_package_cb: Optional[Callable[[Deb822Paragraph], None]] = None,
+) -> bool:
+    def paragraph_cb(paragraph: Deb822Paragraph) -> None:
         if paragraph.get("Source"):
             if source_package_cb is not None:
                 source_package_cb(paragraph)
@@ -372,7 +406,7 @@ def update_control(
     return updater.changed
 
 
-def _find_template_path(path):
+def _find_template_path(path: str) -> Optional[str]:
     for template_path in [path + ".in", path + ".m4"]:
         if os.path.exists(template_path):
             return template_path
@@ -380,15 +414,12 @@ def _find_template_path(path):
         return None
 
 
-ChangesDict = Dict[Tuple[str, str], List[Tuple[str, Optional[str], Optional[str]]]]
-
-
 class ControlEditor:
     """Edit a control file."""
 
     changed: bool
     changed_files: List[str]
-    _field_order_preserver: ContextManager
+    _field_order_preserver: ContextManager[Any]
 
     def __init__(
         self,
@@ -403,14 +434,16 @@ class ControlEditor:
         self._template_only = False
 
     @classmethod
-    def create(cls, path: str = "debian/control"):
+    def create(cls, path: str = "debian/control") -> "ControlEditor":
         return cls(path, allow_reformatting=True, allow_missing=True)
 
     @classmethod
-    def from_tree(cls, tree, subpath=None):
+    def from_tree(
+        cls, tree: "TreeLike", subpath: Optional[str] = None
+    ) -> "ControlEditor":
         relpath = "debian/control"
         if subpath not in (None, ".", ""):
-            relpath = os.path.join(subpath, relpath)
+            relpath = os.path.join(subpath or "", relpath)
         return cls(tree.abspath(relpath))
 
     @property
@@ -437,7 +470,7 @@ class ControlEditor:
             if entry.get("Package"):
                 yield entry
 
-    def changes(self):
+    def changes(self) -> ChangesDict:
         """Return a dictionary describing the changes since the base.
 
         Returns:
@@ -447,7 +480,9 @@ class ControlEditor:
         orig = self._primary._parse(self._primary._orig_content)
         changes: ChangesDict = {}
 
-        def by_key(ps):
+        def by_key(
+            ps: Union[Deb822File, list[Deb822Paragraph]],
+        ) -> Dict[Tuple[str, str], Deb822Paragraph]:
             ret = {}
             for p in ps:
                 if not p:
@@ -461,8 +496,8 @@ class ControlEditor:
         orig_by_key = by_key(orig)
         new_by_key = by_key(self.paragraphs)
         for key in set(orig_by_key).union(set(new_by_key)):
-            old = orig_by_key.get(key, {})
-            new = new_by_key.get(key, {})
+            old: Deb822Paragraph = orig_by_key.get(key, {})  # type: ignore[arg-type]
+            new: Deb822Paragraph = new_by_key.get(key, {})  # type: ignore[arg-type]
             if old == new:
                 continue
             fields = list(old)
@@ -470,11 +505,11 @@ class ControlEditor:
             for field in fields:
                 if old.get(field) != new.get(field):
                     changes.setdefault(key, []).append(
-                        (field, old.get(field), new.get(field))
+                        (str(field), old.get(field), new.get(field))
                     )
         return changes
 
-    def __enter__(self):
+    def __enter__(self) -> "ControlEditor":
         try:
             self._primary.__enter__()
         except FileNotFoundError:
@@ -496,7 +531,12 @@ class ControlEditor:
         self._field_order_preserver.__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Literal[False]:
         self._field_order_preserver.__exit__(exc_type, exc_val, exc_tb)
         try:
             if self._template_only:
@@ -571,14 +611,14 @@ class ControlEditor:
                 archs = sorted(archs, key=lambda x: ("any" not in x, x))
                 paragraph["Architecture"] = " ".join(archs)
 
-    def add_binary(self, contents):
+    def add_binary(self, contents: Union[Dict[str, str], Deb822Paragraph]) -> None:
         if isinstance(contents, dict):
             para = Deb822Paragraph.from_dict(contents)
         else:
             para = contents
         return self._primary.paragraphs.append(para)
 
-    def remove(self, para):
+    def remove(self, para: Deb822Paragraph) -> None:
         self._primary.paragraphs.remove(para)
 
 
@@ -674,7 +714,9 @@ def iter_relations(
     return _iter_relations(relations, package)
 
 
-def _iter_relations(relations, package):
+def _iter_relations(
+    relations: List[Tuple[str, List[PkgRelation], str]], package: str
+) -> Iterator[Tuple[int, List[PkgRelation]]]:
     for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(relations):
         if isinstance(relation, str):  # formatting
             continue
@@ -697,13 +739,15 @@ def ensure_minimum_version(
       updated relation string
     """
 
-    def is_obsolete(relation):
+    def is_obsolete(relation: List[PkgRelation]) -> bool:
         for r in relation:
             if r.name != package:
                 continue
-            if r.version[0] == ">>" and r.version[1] < minimum_version:
+            if r.version is None:
+                continue
+            if r.version[0] == ">>" and Version(r.version[1]) < minimum_version:
                 return True
-            if r.version[0] == ">=" and r.version[1] <= minimum_version:
+            if r.version[0] == ">=" and Version(r.version[1]) <= minimum_version:
                 return True
         return False
 
@@ -725,12 +769,12 @@ def ensure_minimum_version(
             relation[0].version is None
             or Version(relation[0].version[1]) < minimum_version
         ):
-            relation[0].version = (">=", minimum_version)
+            relation[0].version = (">=", str(minimum_version))
             changed = True
     if not found:
         changed = True
         _add_relation(
-            relations, [PkgRelation(name=package, version=(">=", minimum_version))]
+            relations, [PkgRelation(name=package, version=(">=", str(minimum_version)))]
         )
     for i in reversed(obsolete_relations):
         del relations[i]
@@ -773,13 +817,13 @@ def ensure_exact_version(
             relation[0].version[0],
             Version(relation[0].version[1]),
         ) != ("=", version):
-            relation[0].version = ("=", version)
+            relation[0].version = ("=", str(version))
             changed = True
     if not found:
         changed = True
         _add_relation(
             relations,
-            [PkgRelation(name=package, version=("=", version))],
+            [PkgRelation(name=package, version=("=", str(version)))],
             position=position,
         )
     if changed:
@@ -889,7 +933,11 @@ def _add_relation(
         relations.append(pointless_tail)
 
 
-def add_dependency(relationstr, relation, position=None):
+def add_dependency(
+    relationstr: str,
+    relation: Union[str, List[PkgRelation]],
+    position: Optional[int] = None,
+) -> str:
     """Add a dependency to a depends line.
 
     Args:
@@ -971,7 +1019,7 @@ def drop_dependency(relationstr: str, package: str) -> str:
     """
     relations = parse_relations(relationstr)
 
-    def keep(relation):
+    def keep(relation: List[PkgRelation]) -> bool:
         names = [r.name for r in relation]
         return set(names) != {package}
 
@@ -1101,7 +1149,7 @@ def parse_standards_version(v: str) -> Tuple[int, ...]:
     return tuple([int(k) for k in v.split(".")])
 
 
-def suppress_substvar_warnings():
+def suppress_substvar_warnings() -> None:
     import warnings
 
     warnings.filterwarnings(
@@ -1118,12 +1166,12 @@ class PkgRelationFieldEditor:
 
     _parsed: Optional[List[Tuple[str, List[PkgRelation], str]]]
 
-    def __init__(self, paragraph, name):
+    def __init__(self, paragraph: Deb822Paragraph, name: str) -> None:
         self.paragraph = paragraph
         self.name = name
         self._parsed = None
 
-    def __enter__(self):
+    def __enter__(self) -> "PkgRelationFieldEditor":
         v = self.paragraph.get(self.name)
         if v is not None:
             self._parsed = parse_relations(v)
@@ -1132,16 +1180,16 @@ class PkgRelationFieldEditor:
 
         return self
 
-    def drop_relation(self, package):
+    def drop_relation(self, package: str) -> bool:
         """Drop a relation.
 
         Args:
           package: package name
         """
         if self._parsed is None:
-            return
+            return False
 
-        def keep(relation):
+        def keep(relation: List[PkgRelation]) -> bool:
             names = [r.name for r in relation]
             return set(names) != {package}
 
@@ -1150,10 +1198,12 @@ class PkgRelationFieldEditor:
         self._parsed = new_parsed
         return ret
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self._parsed is not None
 
-    def add_relation(self, relation, position=None):
+    def add_relation(
+        self, relation: Union[str, List[PkgRelation]], position: Optional[int] = None
+    ) -> None:
         """Add a relation.
 
         Args:
@@ -1166,7 +1216,9 @@ class PkgRelationFieldEditor:
             self._parsed = []
         return _add_relation(self._parsed, relation, position=position)
 
-    def iter_relations(self, package):
+    def iter_relations(
+        self, package: str
+    ) -> Optional[Iterator[Tuple[int, List[PkgRelation]]]]:
         """Iterate over all relations with a particular package.
 
         Args:
@@ -1175,10 +1227,10 @@ class PkgRelationFieldEditor:
           Tuples with offset and relation objects
         """
         if self._parsed is None:
-            return
+            return None
         return _iter_relations(self._parsed, package)
 
-    def get_relation(self, package):
+    def get_relation(self, package: str) -> Tuple[int, List[PkgRelation]]:
         """Retrieve the relation for a particular package.
 
         Args:
@@ -1189,7 +1241,10 @@ class PkgRelationFieldEditor:
         Returns:
           Tuple with offset and relation object
         """
-        for offset, relation in self.iter_relations(package):
+        iter_result = self.iter_relations(package)
+        if iter_result is None:
+            raise KeyError(package)
+        for offset, relation in iter_result:
             names = [r.name for r in relation]
             if len(names) > 1 and package in names:
                 raise ValueError(f"Complex rule for {package} , aborting")
@@ -1198,7 +1253,7 @@ class PkgRelationFieldEditor:
             return offset, relation
         raise KeyError(package)
 
-    def has_relation(self, package):
+    def has_relation(self, package: str) -> bool:
         """Check whether there is a relation with specified package.
 
         Args:
@@ -1212,7 +1267,12 @@ class PkgRelationFieldEditor:
         else:
             return True
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Literal[False]:
         if exc_type is None:
             if self._parsed is None:
                 try:
@@ -1224,6 +1284,6 @@ class PkgRelationFieldEditor:
         return False
 
 
-def format_description(summary, long_description):
+def format_description(summary: str, long_description: List[str]) -> str:
     """Format a description based on summary and long description lines."""
     return summary + "\n" + "".join([f" {line}\n" for line in long_description])

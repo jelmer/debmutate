@@ -37,4 +37,4 @@ def get_vendor_name() -> str:
         return os.environ["DEB_VENDOR"]
 
     vendor = _load_vendor_file("default")
-    return vendor["Vendor"]
+    return str(vendor["Vendor"])

@@ -19,13 +19,24 @@
 
 import logging
 import sys
+from http.client import HTTPResponse
 from io import StringIO
-from typing import Callable, Iterable, Iterator, List, Optional, TextIO, Tuple, Union
+from typing import (
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    Union,
+    cast,
+)
 from urllib.parse import urljoin
 
 import pcre2
 
-from debian.changelog import Version
+from debian.changelog import Version  # type: ignore[attr-defined]
 
 from . import __version__
 from .reformatting import Editor
@@ -71,7 +82,7 @@ class WatchFile:
             options = []
         self.options = options
 
-    def get_option(self, name):
+    def get_option(self, name: str) -> Optional[str]:
         for option in self.options:
             try:
                 key, value = option.split("=", 1)
@@ -82,7 +93,7 @@ class WatchFile:
                 return value
         raise KeyError(name)
 
-    def set_option(self, name, newvalue=None):
+    def set_option(self, name: str, newvalue: Optional[str] = None) -> None:
         if newvalue is None:
             nv = name
         else:
@@ -98,7 +109,7 @@ class WatchFile:
                 return
         self.options.append(nv)
 
-    def del_option(self, name):
+    def del_option(self, name: str) -> None:
         for i, option in enumerate(self.options):
             try:
                 key, value = option.split("=", 1)
@@ -146,7 +157,7 @@ class WatchFile:
             f.write("\n")
 
 
-def parse_sed_expr(vm):
+def parse_sed_expr(vm: str) -> Tuple[str, Tuple[str, str, Optional[str]]]:
     if vm.startswith("s"):
         return ("s", parse_subst_expr(vm))
     if vm.startswith("tr"):
@@ -196,15 +207,15 @@ def apply_sed_expr(vm: str, orig: str) -> str:
     (kind, (pattern, replacement, flags)) = parse_sed_expr(vm)
     if kind == "s":
         # TODO(jelmer): Handle flags
-        return pcre2.substitute(pattern, replacement, orig)
+        return cast(str, pcre2.substitute(pattern, replacement, orig))
     elif kind == "tr":
         from tr import tr
 
-        return tr(pattern, replacement, orig, flags or "")
+        return cast(str, tr(pattern, replacement, orig, flags or ""))
     elif kind == "y":
         from tr import tr
 
-        return tr(pattern, replacement, orig, flags or "")
+        return cast(str, tr(pattern, replacement, orig, flags or ""))
     else:
         raise ValueError(kind)
 
@@ -216,21 +227,23 @@ def apply_url_mangle(expr: str, orig: str) -> str:
 class Release:
     """A discovered release."""
 
-    def __init__(self, version, url, pgpsigurl=None):
+    def __init__(self, version: str, url: str, pgpsigurl: Optional[str] = None) -> None:
         self.version = version
         self.url = url
         self.pgpsigurl = pgpsigurl
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Release") -> bool:
         if type(self) is not type(other):
             raise TypeError(other)
         return Version(self.version) < Version(other.version)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}({self.version!r}, {self.url!r}, pgpsigurl={self.pgpsigurl!r})"
 
 
-def html_search(body: bytes, matching_pattern, base_url):
+def html_search(
+    body: bytes, matching_pattern: str, base_url: str
+) -> Iterator[Tuple[str, str]]:
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(body, "html.parser")
@@ -249,7 +262,9 @@ def html_search(body: bytes, matching_pattern, base_url):
             logging.debug("Did not match pattern %r to %r", matching_pattern, href)
 
 
-def plain_search(body: bytes, matching_pattern, base_url) -> Iterator[Tuple[str, str]]:
+def plain_search(
+    body: bytes, matching_pattern: str, base_url: str
+) -> Iterator[Tuple[str, str]]:
     for m in pcre2.scan(matching_pattern.encode(), body):
         yield (m.substring(1).decode(), urljoin(base_url, m.substring(0).decode()))
 
@@ -260,7 +275,14 @@ searchers = {
 }
 
 
-def search(searchmode, resp, *, matching_pattern, package, url):
+def search(
+    searchmode: str,
+    resp: HTTPResponse,
+    *,
+    matching_pattern: str,
+    package: Union[str, Callable[[], str]],
+    url: str,
+) -> Iterator[Tuple[str, str]]:
     """Search for versions in a response.
 
     Args:
@@ -272,7 +294,7 @@ def search(searchmode, resp, *, matching_pattern, package, url):
     )
 
 
-def _subst(text: str, package: Union[str, Callable[[], str]]):
+def _subst(text: str, package: Union[str, Callable[[], str]]) -> str:
     substs = dict(SUBSTITUTIONS)
     if "@PACKAGE@" in text:
         if callable(package):
@@ -300,17 +322,19 @@ class Watch:
             opts = []
         self.options = opts
 
-    def uversionmangle(self, version):
+    def uversionmangle(self, version: str) -> str:
         try:
             vm = self.get_option("uversionmangle")
         except KeyError:
+            return version
+        if vm is None:
             return version
         try:
             return apply_sed_expr(vm, version)
         except pcre2.exceptions.LibraryError as e:
             raise WatchSyntaxError(f"invalid uversionmangle {vm!r}: {e}") from e
 
-    def get_option(self, name):
+    def get_option(self, name: str) -> Optional[str]:
         for option in self.options:
             try:
                 key, value = option.split("=", 1)
@@ -321,14 +345,14 @@ class Watch:
                 return value
         raise KeyError(name)
 
-    def has_option(self, name):
+    def has_option(self, name: str) -> bool:
         try:
             self.get_option(name)
         except KeyError:
             return False
         return True
 
-    def set_option(self, name, newvalue=None):
+    def set_option(self, name: str, newvalue: Optional[str] = None) -> None:
         if newvalue is None:
             nv = name
         else:
@@ -344,7 +368,7 @@ class Watch:
                 return
         self.options.append(nv)
 
-    def del_option(self, name):
+    def del_option(self, name: str) -> None:
         for i, option in enumerate(self.options):
             try:
                 key, _value = option.split("=", 1)
@@ -375,7 +399,7 @@ class Watch:
     def format_url(self, package: Union[str, Callable[[], str]]) -> str:
         return _subst(self.url, package)
 
-    def discover(self, package) -> Iterator[Release]:
+    def discover(self, package: Union[str, Callable[[], str]]) -> Iterator[Release]:
         from urllib.request import Request, urlopen
 
         url = self.format_url(package)
@@ -387,13 +411,16 @@ class Watch:
             searchmode = self.get_option("searchmode")
         except KeyError:
             searchmode = "html"
+        if searchmode is None:
+            searchmode = "html"
         logging.debug("Fetching url %s; searchmode=%s", url, searchmode)
         headers = {}
         if user_agent:
             headers["User-Agent"] = user_agent
         req = Request(url, headers=headers)
         resp = urlopen(req)
-        assert self.matching_pattern
+        if self.matching_pattern is None:
+            raise ValueError("matching_pattern is required")
 
         for version, full_url in search(
             searchmode,
@@ -519,7 +546,7 @@ class WatchEditor(Editor[WatchFile, str]):
     def watch_file(self) -> WatchFile:
         return self._parsed
 
-    def _nonexistent(self):
+    def _nonexistent(self) -> WatchFile:
         if self.allow_missing:
             return WatchFile([])
         raise
@@ -538,14 +565,14 @@ class WatchEditor(Editor[WatchFile, str]):
         return nf.getvalue()
 
 
-def uscan(wf, package):
+def uscan(wf: WatchFile, package: str) -> None:
     for entry in wf.entries:
         logging.info(f"entry: {entry}")
         for d in entry.discover(package):
             logging.info(f"  {d}")
 
 
-def main(argv):
+def main(argv: List[str]) -> None:
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -557,6 +584,9 @@ def main(argv):
         logging.basicConfig(level=logging.INFO, format="%(message)s")
     with open("debian/watch") as f:
         wf = parse_watch_file(f)
+    if wf is None:
+        print("No watch file found")
+        return
     from debian.deb822 import Deb822
 
     with open("debian/control") as f:
@@ -565,4 +595,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    main(sys.argv)

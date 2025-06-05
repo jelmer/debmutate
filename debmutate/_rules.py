@@ -19,12 +19,12 @@
 
 import os
 import re
-from typing import Iterator, List, Optional, Union
+from typing import Callable, Iterator, List, Optional, Union
 
 from .reformatting import Editor
 
 
-def wildcard_to_re(wildcard: str):
+def wildcard_to_re(wildcard: str) -> re.Pattern[str]:
     wc = []
     for c in wildcard:
         if c == "%":
@@ -78,7 +78,7 @@ class Rule:
         self.components = self._component_str.split()
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__}({self.target!r})>"
 
     @property
@@ -129,7 +129,7 @@ class Rule:
         for line in self.lines:
             yield line + b"\n"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         return list(self.dump_lines()) == list(other.dump_lines())
@@ -141,14 +141,14 @@ class Rule:
         self.precomment = []
         self.lines = []
 
-    def _finish(self):
+    def _finish(self) -> List[Union[bytes, "Rule"]]:
         rest: List[Union[bytes, Rule]] = [self]
         while self.lines and (not self.lines[-1] or self.lines[-1].startswith(b"#")):
             rest.insert(1, self.lines.pop(-1))
         return rest
 
 
-def _is_conditional(line):
+def _is_conditional(line: bytes) -> bool:
     line = line.lstrip(b" ")
     return (
         line.startswith(b"ifeq")
@@ -160,7 +160,7 @@ def _is_conditional(line):
     )
 
 
-def _is_rule(line):
+def _is_rule(line: bytes) -> bool:
     before, sep, after = line.partition(b":")
     if sep != b":":
         return False
@@ -205,7 +205,7 @@ class Makefile:
         raise KeyError(desired_key)
 
     @classmethod
-    def from_bytes(cls, contents):
+    def from_bytes(cls, contents: bytes) -> "Makefile":
         mf = cls()
         keep = b""
         rule = None
@@ -257,7 +257,7 @@ class Makefile:
 
         return mf
 
-    def dump_lines(self):
+    def dump_lines(self) -> List[bytes]:
         lines: List[bytes] = []
         contents = self.contents[:]
         while contents and contents[-1] == b"":
@@ -273,10 +273,15 @@ class Makefile:
                 lines.append(entry + b"\n")
         return lines
 
-    def dump(self):
+    def dump(self) -> bytes:
         return b"".join(self.dump_lines())
 
-    def add_rule(self, target, components=None, precomment=None) -> Rule:
+    def add_rule(
+        self,
+        target: Union[bytes, List[bytes]],
+        components: Optional[List[bytes]] = None,
+        precomment: Optional[List[bytes]] = None,
+    ) -> Rule:
         if self.contents:
             if isinstance(self.contents[-1], Rule):
                 self.contents.append(b"")
@@ -289,7 +294,7 @@ class Makefile:
         self.contents.append(rule)
         return rule
 
-    def mark_phony(self, rule):
+    def mark_phony(self, rule: bytes) -> None:
         for r in self.iter_rules(b".PHONY"):
             if rule in r.components:
                 return
@@ -300,7 +305,7 @@ class Makefile:
         else:
             phony_rule.append_component(rule)
 
-    def add_phony(self, rule):
+    def add_phony(self, rule: bytes) -> None:
         try:
             phony_rule = list(self.iter_rules(b".PHONY"))[-1]
         except IndexError:
@@ -308,7 +313,7 @@ class Makefile:
 
         phony_rule.append_component(rule)
 
-    def drop_phony(self, rule):
+    def drop_phony(self, rule: bytes) -> None:
         for r in self.iter_rules(b".PHONY"):
             if rule in r.components:
                 r.remove_component(rule)
@@ -317,32 +322,39 @@ class Makefile:
 
 
 class MakefileEditor(Editor[Makefile, bytes]):
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         super().__init__(path, mode="b")
 
-    def _parse(self, content):
+    def _parse(self, content: bytes) -> Makefile:
         return Makefile.from_bytes(content)
 
-    def _format(self, parsed):
+    def _format(self, parsed: Makefile) -> bytes:
         return parsed.dump()
 
     @property
-    def makefile(self):
+    def makefile(self) -> Makefile:
         return self._parsed
 
 
 class RulesEditor(MakefileEditor):
-    def __init__(self, path="debian/rules"):
+    def __init__(self, path: str = "debian/rules") -> None:
         super().__init__(path)
 
     def legacy_update(
         self,
-        command_line_cb=None,
-        global_line_cb=None,
-        rule_cb=None,
-        makefile_cb=None,
-        drop_related_comments=False,
-    ):
+        command_line_cb: Optional[
+            Union[
+                Callable[[bytes, Optional[bytes]], Union[bytes, List[bytes]]],
+                List[Callable[[bytes, Optional[bytes]], Union[bytes, List[bytes]]]],
+            ]
+        ] = None,
+        global_line_cb: Optional[
+            Callable[[bytes], Optional[Union[bytes, List[bytes]]]]
+        ] = None,
+        rule_cb: Optional[Callable[[Rule], None]] = None,
+        makefile_cb: Optional[Callable[[Makefile], None]] = None,
+        drop_related_comments: bool = False,
+    ) -> bool:
         """Update a debian/rules file.
 
         Args:
@@ -359,12 +371,26 @@ class RulesEditor(MakefileEditor):
                 newlines = []
                 for line in list(rule.lines[1:]):
                     if line.startswith(b"\t"):
-                        ret = line[1:]
+                        current_bytes = line[1:]
                         if callable(command_line_cb):
-                            ret = command_line_cb(ret, rule.target)
+                            ret = command_line_cb(current_bytes, rule.target)
                         elif isinstance(command_line_cb, list):
+                            ret = current_bytes
                             for fn in command_line_cb:
-                                ret = fn(ret, rule.target)
+                                if isinstance(ret, bytes):
+                                    ret = fn(ret, rule.target)
+                                elif isinstance(ret, list):
+                                    # ret is a list, process each item
+                                    new_ret = []
+                                    for item in ret:
+                                        item_result = fn(item, rule.target)
+                                        if isinstance(item_result, bytes):
+                                            new_ret.append(item_result)
+                                        elif isinstance(item_result, list):
+                                            new_ret.extend(item_result)
+                                    ret = new_ret
+                        else:
+                            ret = current_bytes
                         if isinstance(ret, bytes):
                             newlines.append(b"\t" + ret)
                         elif isinstance(ret, list):
@@ -385,10 +411,11 @@ class RulesEditor(MakefileEditor):
                     if newcontents and newcontents[-1] == b"":
                         newcontents.pop(-1)
             else:
-                line = entry
                 if global_line_cb:
-                    line = global_line_cb(line)
-                if line is None:
+                    entry_line = global_line_cb(entry)
+                else:
+                    entry_line = entry
+                if entry_line is None:
                     if drop_related_comments:
                         while (
                             newcontents
@@ -400,12 +427,12 @@ class RulesEditor(MakefileEditor):
                         del newcontents[-1]
                     # TODO(jelmer): If there is no preceding whitespace, drop
                     # next line if it's empty?
-                elif isinstance(line, list):
-                    newcontents.extend(line)
-                elif isinstance(line, bytes):
-                    newcontents.append(line)
+                elif isinstance(entry_line, list):
+                    newcontents.extend(entry_line)
+                elif isinstance(entry_line, bytes):
+                    newcontents.append(entry_line)
                 else:
-                    raise TypeError(line)
+                    raise TypeError(entry_line)
 
         self.makefile.contents = newcontents
         if makefile_cb:
@@ -417,13 +444,17 @@ class RulesEditor(MakefileEditor):
             return False
 
 
-def discard_pointless_overrides(makefile, ignore_comments=False):
+def discard_pointless_overrides(
+    makefile: Makefile, ignore_comments: bool = False
+) -> None:
     for rule in makefile.iter_all_rules():
         discard_pointless_override(makefile, rule, ignore_comments=ignore_comments)
 
 
-def discard_pointless_override(makefile, rule, ignore_comments=False):
-    if not rule.target.startswith(b"override_"):
+def discard_pointless_override(
+    makefile: Makefile, rule: Rule, ignore_comments: bool = False
+) -> None:
+    if rule.target is None or not rule.target.startswith(b"override_"):
         return
     command = rule.target[len(b"override_") :]
     if ignore_comments:
@@ -437,17 +468,25 @@ def discard_pointless_override(makefile, rule, ignore_comments=False):
     if rule.components:
         return
     rule.clear()
-    makefile.drop_phony(rule.target)
+    if rule.target is not None:
+        makefile.drop_phony(rule.target)
 
 
 def update_rules(
-    command_line_cb=None,
-    global_line_cb=None,
-    rule_cb=None,
-    makefile_cb=None,
-    path="debian/rules",
-    drop_related_comments=False,
-):
+    command_line_cb: Optional[
+        Union[
+            Callable[[bytes, Optional[bytes]], Union[bytes, List[bytes]]],
+            List[Callable[[bytes, Optional[bytes]], Union[bytes, List[bytes]]]],
+        ]
+    ] = None,
+    global_line_cb: Optional[
+        Callable[[bytes], Optional[Union[bytes, List[bytes]]]]
+    ] = None,
+    rule_cb: Optional[Callable[[Rule], None]] = None,
+    makefile_cb: Optional[Callable[[Makefile], None]] = None,
+    path: str = "debian/rules",
+    drop_related_comments: bool = False,
+) -> bool:
     """Update a debian/rules file.
 
     Args:
@@ -460,18 +499,19 @@ def update_rules(
     """
     if not os.path.exists(path):
         return False
-    with RulesEditor(path) as updater:
-        updater.legacy_update(
+    updater = RulesEditor(path)
+    with updater:
+        changed = updater.legacy_update(
             command_line_cb=command_line_cb,
             global_line_cb=global_line_cb,
             rule_cb=rule_cb,
             makefile_cb=makefile_cb,
             drop_related_comments=drop_related_comments,
         )
-    return updater.changed
+    return changed
 
 
-def dh_invoke_add_with(line, with_argument):
+def dh_invoke_add_with(line: bytes, with_argument: bytes) -> bytes:
     """Add a particular value to a with argument."""
     if with_argument in line:
         return line
@@ -489,7 +529,7 @@ def dh_invoke_get_with(line: bytes) -> List[str]:
     return ret
 
 
-def dh_invoke_drop_with(line, with_argument):
+def dh_invoke_drop_with(line: bytes, with_argument: bytes) -> bytes:
     """Drop a particular value from a with argument."""
     if with_argument not in line:
         return line
@@ -510,7 +550,7 @@ def dh_invoke_drop_with(line, with_argument):
     return line
 
 
-def dh_invoke_drop_argument(line, argument):
+def dh_invoke_drop_argument(line: bytes, argument: bytes) -> bytes:
     """Drop a particular argument from a dh invocation."""
     if argument not in line:
         return line
@@ -519,7 +559,7 @@ def dh_invoke_drop_argument(line, argument):
     return line
 
 
-def dh_invoke_replace_argument(line, old, new):
+def dh_invoke_replace_argument(line: bytes, old: bytes, new: bytes) -> bytes:
     if old not in line:
         return line
     line = re.sub(b"([ \t])" + old + b"$", b"\\1" + new, line)
@@ -527,7 +567,7 @@ def dh_invoke_replace_argument(line, old, new):
     return line
 
 
-def check_cdbs(path="debian/rules"):
+def check_cdbs(path: str = "debian/rules") -> bool:
     if not os.path.exists(path):
         return False
     with open(path, "rb") as f:
