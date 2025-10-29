@@ -34,8 +34,8 @@ Homepage = "https://salsa.debian.org/jelmer/debmutate"
 Repository = "https://salsa.debian.org/jelmer/debmutate.git"
 
 [project.optional-dependencies]
-debcargo = ["tomlkit"]
-watch = ["pcre2"]
+debcargo = ["tomlkit", "semver"]
+watch = ["pcre2", "beautifulsoup4"]
 dev = [
     "ruff==0.14.2"
 ]
