@@ -241,6 +241,14 @@ def edit_formatted_file(
                 raise
             with open(path, "w", encoding=encoding) as f:
                 f.writelines(m3_str.merge_lines())
+    else:
+        # Formatting can be preserved or is allowed to change - write the updated content
+        if isinstance(updated_contents, bytes):
+            with open(path, "wb") as f:
+                f.write(updated_contents)
+        else:
+            with open(path, "w", encoding=encoding) as f:
+                f.write(updated_contents)
     return True
 
 
