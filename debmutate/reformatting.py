@@ -38,10 +38,6 @@ from typing import (
     Union,
 )
 
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
 
 DEFAULT_ENCODING = "utf-8"
 
@@ -290,7 +286,7 @@ class Editor(Generic[T, P]):
         """Serialize the parsed object."""
         raise NotImplementedError(self._format)
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> "Editor[T, P]":
         kwargs = {}
         if "b" not in self.mode:
             kwargs["encoding"] = self.encoding
