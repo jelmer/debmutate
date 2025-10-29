@@ -38,9 +38,8 @@ from typing import (
     Union,
 )
 
-from tomlkit import dumps, load, loads
-
 from debian.changelog import Changelog
+from tomlkit import dumps, load, loads
 
 from .reformatting import Editor
 
