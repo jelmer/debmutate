@@ -33,11 +33,15 @@ from typing import (
     List,
     Literal,
     Optional,
-    Self,
     Type,
     TypeVar,
     Union,
 )
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 DEFAULT_ENCODING = "utf-8"
 
@@ -213,23 +217,30 @@ def edit_formatted_file(
             raise e
         if isinstance(rewritten_contents, bytes) and merge3.__version__ < (0, 0, 7):
             raise e
-        m3 = merge3.Merge3(
-            rewritten_contents.splitlines(True),
-            original_contents.splitlines(True),
-            updated_contents.splitlines(True),
-        )
-        if any([y[0] == "conflict" for y in m3.merge_regions()]):
-            raise
         if isinstance(updated_contents, bytes):
-            updated_contents = b"".join(m3.merge_lines())
+            assert isinstance(rewritten_contents, bytes)
+            assert isinstance(original_contents, bytes)
+            m3: merge3.Merge3[bytes] = merge3.Merge3(
+                rewritten_contents.splitlines(True),
+                original_contents.splitlines(True),
+                updated_contents.splitlines(True),
+            )
+            if any([y[0] == "conflict" for y in m3.merge_regions()]):
+                raise
+            with open(path, "wb") as f:
+                f.writelines(m3.merge_lines())
         else:
-            updated_contents = "".join(m3.merge_lines())
-    if isinstance(updated_contents, bytes):
-        with open(path, "wb") as f:
-            f.write(updated_contents)
-    else:
-        with open(path, "w", encoding=encoding) as f:
-            f.write(updated_contents)
+            assert isinstance(rewritten_contents, str)
+            assert isinstance(original_contents, str)
+            m3_str: merge3.Merge3[str] = merge3.Merge3(
+                rewritten_contents.splitlines(True),
+                original_contents.splitlines(True),
+                updated_contents.splitlines(True),
+            )
+            if any([y[0] == "conflict" for y in m3_str.merge_regions()]):
+                raise
+            with open(path, "w", encoding=encoding) as f:
+                f.writelines(m3_str.merge_lines())
     return True
 
 
