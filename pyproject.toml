@@ -44,6 +44,7 @@ dev = [
 script-files = [
     "scripts/deb-enable-rrr",
     "scripts/drop-mia-uploaders",
+    "scripts/update-rust-deps",
 ]
 include-package-data = false
 

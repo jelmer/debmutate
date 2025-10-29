@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+"""Update debian/control build dependencies from debcargo output."""
+
+import argparse
+import json
+import logging
+import subprocess
+import sys
+from pathlib import Path
+from typing import List, Set
+
+from debian.deb822 import PkgRelation
+from debmutate.control import ControlEditor, PkgRelationFieldEditor, ensure_relation
+
+
+def discover_workspace_crates() -> List[Path]:
+    """Discover all Cargo.toml files for workspace crates.
+
+    Uses `cargo metadata` to find all workspace member crates.
+
+    Returns:
+        List of paths to Cargo.toml files for workspace crates
+
+    Raises:
+        subprocess.CalledProcessError: If cargo metadata command fails
+    """
+    result = subprocess.run(
+        ["cargo", "metadata", "--no-deps", "--format-version", "1"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    metadata = json.loads(result.stdout)
+
+    # Get workspace member IDs
+    workspace_member_ids = set(metadata["workspace_members"])
+
+    # Find the manifest paths for workspace members
+    manifest_paths = []
+    for package in metadata["packages"]:
+        if package["id"] in workspace_member_ids:
+            manifest_path = Path(package["manifest_path"])
+            manifest_paths.append(manifest_path)
+
+    return manifest_paths
+
+
+def get_debcargo_dependencies(cargo_toml_path: Path) -> List[str]:
+    """Run debcargo deb-dependencies and parse the output.
+
+    Args:
+        cargo_toml_path: Path to the Cargo.toml file
+
+    Returns:
+        List of dependency strings
+
+    Raises:
+        subprocess.CalledProcessError: If debcargo command fails
+    """
+    result = subprocess.run(
+        ["debcargo", "deb-dependencies", str(cargo_toml_path)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # The output is comma-separated dependencies
+    deps = [dep.strip() for dep in result.stdout.strip().split(",")]
+    return [dep for dep in deps if dep]
+
+
+def update_build_dependencies(
+    control_path: str, new_deps: List[str], drop_unreferenced: bool = False
+) -> None:
+    """Update Build-Depends field in debian/control.
+
+    Args:
+        control_path: Path to the debian/control file
+        new_deps: List of new dependency strings to add/update
+        drop_unreferenced: If True, remove librust-*-dev dependencies not in new_deps
+    """
+    with ControlEditor(control_path) as editor:
+        source = editor.source
+
+        # Get package names from new_deps for comparison
+        new_pkg_names = set()
+        for dep in new_deps:
+            parsed = PkgRelation.parse_relations(dep)
+            for alternatives in parsed:
+                for rel in alternatives:
+                    new_pkg_names.add(rel["name"])
+
+        # If dropping unreferenced, remove librust-*-dev packages not in new_deps
+        dropped_count = 0
+        if drop_unreferenced:
+            # Get existing Build-Depends
+            existing_deps = source.get("Build-Depends", "")
+            parsed_existing = (
+                PkgRelation.parse_relations(existing_deps) if existing_deps else []
+            )
+
+            # Find librust-*-dev packages to drop
+            packages_to_drop = []
+            for alternatives in parsed_existing:
+                for rel in alternatives:
+                    pkg_name = rel["name"]
+                    # Check if it's a librust-*-dev package not in new dependencies
+                    if pkg_name.startswith("librust-") and pkg_name.endswith("-dev"):
+                        if pkg_name not in new_pkg_names:
+                            packages_to_drop.append(pkg_name)
+
+            # Drop unreferenced packages using PkgRelationFieldEditor
+            if packages_to_drop:
+                with PkgRelationFieldEditor(source, "Build-Depends") as build_deps:
+                    for pkg_name in packages_to_drop:
+                        build_deps.drop_relation(pkg_name)
+                        dropped_count += 1
+                        logging.info(f"  Dropping: {pkg_name}")
+
+        # Get existing Build-Depends (after potential drops)
+        existing_deps = source.get("Build-Depends", "")
+        updated_deps = existing_deps
+
+        # Use ensure_relation for each dependency
+        added_count = 0
+        for dep in new_deps:
+            # Store the original to detect changes
+            before = updated_deps
+            updated_deps = ensure_relation(updated_deps, dep)
+
+            # Check if the relation was added
+            if updated_deps != before:
+                added_count += 1
+                logging.info(f"  Adding: {dep}")
+
+        # Update the Build-Depends field
+        source["Build-Depends"] = updated_deps
+
+        if dropped_count > 0:
+            logging.info(f"\nDropped {dropped_count} unreferenced librust-*-dev dependencies")
+        logging.info(f"Added {added_count} new build dependencies")
+
+
+def main() -> int:
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Update debian/control build dependencies from debcargo output."
+    )
+    parser.add_argument(
+        "--drop-unreferenced",
+        action="store_true",
+        help="Drop librust-*-dev dependencies that are not referenced by any workspace crate",
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    control_path = "debian/control"
+
+    # Discover all workspace crates
+    logging.info("Discovering workspace crates...")
+    crate_manifests = discover_workspace_crates()
+    logging.info(f"Found {len(crate_manifests)} workspace crates:")
+    for manifest in crate_manifests:
+        logging.info(f"  - {manifest}")
+
+    # Collect all dependencies from all crates
+    all_deps: Set[str] = set()
+    for manifest in crate_manifests:
+        logging.info(
+            f"\nRunning debcargo deb-dependencies on {manifest.relative_to(Path.cwd())}..."
+        )
+        deps = get_debcargo_dependencies(manifest)
+        logging.info(f"  Found {len(deps)} dependencies")
+        all_deps.update(deps)
+
+    logging.info(f"\nTotal unique dependencies across all crates: {len(all_deps)}")
+
+    # Update debian/control with all dependencies
+    logging.info(f"\nUpdating {control_path}...")
+    update_build_dependencies(
+        control_path, sorted(all_deps), drop_unreferenced=args.drop_unreferenced
+    )
+
+    logging.info("\nDone!")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
