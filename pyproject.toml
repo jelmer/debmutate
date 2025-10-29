@@ -20,7 +20,7 @@ name = "debmutate"
 authors = [{name = "Jelmer Vernooĳ", email = "jelmer@debian.org"}]
 description = "manipulation of Debian package control files"
 readme = "README.md"
-license = "GPL-v2-or-later"
+license = "GPL-2.0-or-later"
 requires-python = ">=3.8"
 dependencies = [
     "python_debian>=0.1.44",
@@ -34,10 +34,10 @@ Homepage = "https://salsa.debian.org/jelmer/debmutate"
 Repository = "https://salsa.debian.org/jelmer/debmutate.git"
 
 [project.optional-dependencies]
-debcargo = ["tomlkit"]
-watch = ["pcre2"]
+debcargo = ["tomlkit", "semver"]
+watch = ["pcre2==0.4", "beautifulsoup4"]
 dev = [
-    "ruff==0.11.0"
+    "ruff==0.14.2"
 ]
 
 [tool.setuptools]

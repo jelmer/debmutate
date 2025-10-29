@@ -250,7 +250,7 @@ def html_search(
         matching_pattern = urljoin(base_url.rstrip("/") + "/", matching_pattern)
     for a in soup.find_all("a"):
         href = a.attrs.get("href")
-        if not href:
+        if not href or not isinstance(href, str):
             continue
         href = urljoin(base_url.rstrip("/") + "/", href)
         try:
