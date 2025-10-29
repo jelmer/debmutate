@@ -20,6 +20,7 @@ name = "debmutate"
 authors = [{name = "Jelmer Vernooĳ", email = "jelmer@debian.org"}]
 description = "manipulation of Debian package control files"
 readme = "README.md"
+license = "GPL-v2-or-later"
 requires-python = ">=3.8"
 dependencies = [
     "python_debian>=0.1.44",

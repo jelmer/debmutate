@@ -35,7 +35,6 @@ from typing import (
 from urllib.parse import urljoin
 
 import pcre2
-
 from debian.changelog import Version  # type: ignore[attr-defined]
 
 from . import __version__

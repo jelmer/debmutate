@@ -21,6 +21,7 @@ from datetime import datetime
 from unittest import TestCase
 
 from debian.changelog import Version
+
 from debmutate.versions import (
     add_dfsg_suffix,
     debianize_upstream_version,

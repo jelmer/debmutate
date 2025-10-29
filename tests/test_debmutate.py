@@ -21,6 +21,7 @@ import os
 from unittest import TestCase
 
 from debian.changelog import Changelog
+
 from debmutate import version_string
 
 
