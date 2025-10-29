@@ -7,19 +7,23 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Set
+from typing import List, Set, Tuple
 
 from debian.deb822 import PkgRelation
+
 from debmutate.control import ControlEditor, PkgRelationFieldEditor, ensure_relation
+from debmutate.debcargo import debcargo_binary_name
 
 
-def discover_workspace_crates() -> List[Path]:
+def discover_workspace_crates() -> Tuple[List[Path], Set[str]]:
     """Discover all Cargo.toml files for workspace crates.
 
     Uses `cargo metadata` to find all workspace member crates.
 
     Returns:
-        List of paths to Cargo.toml files for workspace crates
+        Tuple of:
+            - List of paths to Cargo.toml files for workspace crates
+            - Set of crate names in the workspace
 
     Raises:
         subprocess.CalledProcessError: If cargo metadata command fails
@@ -36,14 +40,16 @@ def discover_workspace_crates() -> List[Path]:
     # Get workspace member IDs
     workspace_member_ids = set(metadata["workspace_members"])
 
-    # Find the manifest paths for workspace members
+    # Find the manifest paths and crate names for workspace members
     manifest_paths = []
+    crate_names = set()
     for package in metadata["packages"]:
         if package["id"] in workspace_member_ids:
             manifest_path = Path(package["manifest_path"])
             manifest_paths.append(manifest_path)
+            crate_names.add(package["name"])
 
-    return manifest_paths
+    return manifest_paths, crate_names
 
 
 def get_debcargo_dependencies(cargo_toml_path: Path) -> List[str]:
@@ -68,6 +74,59 @@ def get_debcargo_dependencies(cargo_toml_path: Path) -> List[str]:
     # The output is comma-separated dependencies
     deps = [dep.strip() for dep in result.stdout.strip().split(",")]
     return [dep for dep in deps if dep]
+
+
+def filter_local_crate_dependencies(
+    deps: List[str], local_crate_names: Set[str]
+) -> List[str]:
+    """Filter out dependencies that correspond to local workspace crates.
+
+    Args:
+        deps: List of dependency strings
+        local_crate_names: Set of crate names that are workspace members
+
+    Returns:
+        Filtered list of dependencies with local crates excluded
+    """
+    # Convert local crate names to their Debian package name prefixes
+    # We check prefixes because feature variants have the form:
+    # librust-foo-dev (base) or librust-foo+feature-dev (with features)
+    local_package_prefixes = {
+        debcargo_binary_name(name)[:-4]  # Remove "-dev" suffix to get prefix
+        for name in local_crate_names
+    }
+
+    filtered_deps = []
+    for dep in deps:
+        # Parse the dependency to get the package name
+        parsed = PkgRelation.parse_relations(dep)
+        # Check if any of the alternatives is a local package or feature variant
+        is_local = False
+        for alternatives in parsed:
+            for rel in alternatives:
+                pkg_name = rel["name"]
+                # Check if package name starts with any local package prefix
+                # and ends with "-dev" (to avoid false positives)
+                if pkg_name.endswith("-dev"):
+                    pkg_prefix = pkg_name[:-4]  # Remove "-dev"
+                    # Check if it matches a local crate (base or with features)
+                    # Format: librust-cratename or librust-cratename+feature
+                    for local_prefix in local_package_prefixes:
+                        if pkg_prefix == local_prefix or pkg_prefix.startswith(
+                            local_prefix + "+"
+                        ):
+                            is_local = True
+                            logging.info(f"  Excluding local crate: {pkg_name}")
+                            break
+                if is_local:
+                    break
+            if is_local:
+                break
+
+        if not is_local:
+            filtered_deps.append(dep)
+
+    return filtered_deps
 
 
 def update_build_dependencies(
@@ -138,7 +197,9 @@ def update_build_dependencies(
         source["Build-Depends"] = updated_deps
 
         if dropped_count > 0:
-            logging.info(f"\nDropped {dropped_count} unreferenced librust-*-dev dependencies")
+            logging.info(
+                f"\nDropped {dropped_count} unreferenced librust-*-dev dependencies"
+            )
         logging.info(f"Added {added_count} new build dependencies")
 
 
@@ -152,6 +213,11 @@ def main() -> int:
         action="store_true",
         help="Drop librust-*-dev dependencies that are not referenced by any workspace crate",
     )
+    parser.add_argument(
+        "--exclude-local-crates",
+        action="store_true",
+        help="Exclude dependencies for crates that are present as workspace members",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -160,7 +226,7 @@ def main() -> int:
 
     # Discover all workspace crates
     logging.info("Discovering workspace crates...")
-    crate_manifests = discover_workspace_crates()
+    crate_manifests, crate_names = discover_workspace_crates()
     logging.info(f"Found {len(crate_manifests)} workspace crates:")
     for manifest in crate_manifests:
         logging.info(f"  - {manifest}")
@@ -177,10 +243,17 @@ def main() -> int:
 
     logging.info(f"\nTotal unique dependencies across all crates: {len(all_deps)}")
 
+    # Filter out local crate dependencies if requested
+    deps_to_add = sorted(all_deps)
+    if args.exclude_local_crates:
+        logging.info("\nFiltering out local workspace crates...")
+        deps_to_add = filter_local_crate_dependencies(deps_to_add, crate_names)
+        logging.info(f"Remaining dependencies after filtering: {len(deps_to_add)}")
+
     # Update debian/control with all dependencies
     logging.info(f"\nUpdating {control_path}...")
     update_build_dependencies(
-        control_path, sorted(all_deps), drop_unreferenced=args.drop_unreferenced
+        control_path, deps_to_add, drop_unreferenced=args.drop_unreferenced
     )
 
     logging.info("\nDone!")
