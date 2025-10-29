@@ -52,11 +52,21 @@ def discover_workspace_crates() -> Tuple[List[Path], Set[str]]:
     return manifest_paths, crate_names
 
 
-def get_debcargo_dependencies(cargo_toml_path: Path) -> List[str]:
+def get_debcargo_dependencies(
+    cargo_toml_path: Path,
+    features: List[str] | None = None,
+    all_features: bool = False,
+    no_default_features: bool = False,
+    allow_prerelease_deps: bool = False,
+) -> List[str]:
     """Run debcargo deb-dependencies and parse the output.
 
     Args:
         cargo_toml_path: Path to the Cargo.toml file
+        features: Features to include in dependencies
+        all_features: Include all features in dependencies
+        no_default_features: Do not include default feature in dependencies
+        allow_prerelease_deps: Allow prerelease versions of dependencies
 
     Returns:
         List of dependency strings
@@ -64,8 +74,22 @@ def get_debcargo_dependencies(cargo_toml_path: Path) -> List[str]:
     Raises:
         subprocess.CalledProcessError: If debcargo command fails
     """
+    cmd = ["debcargo", "deb-dependencies"]
+
+    if features:
+        for feature in features:
+            cmd.extend(["--features", feature])
+    if all_features:
+        cmd.append("--all-features")
+    if no_default_features:
+        cmd.append("--no-default-features")
+    if allow_prerelease_deps:
+        cmd.append("--allow-prerelease-deps")
+
+    cmd.append(str(cargo_toml_path))
+
     result = subprocess.run(
-        ["debcargo", "deb-dependencies", str(cargo_toml_path)],
+        cmd,
         capture_output=True,
         text=True,
         check=True,
@@ -218,6 +242,26 @@ def main() -> int:
         action="store_true",
         help="Exclude dependencies for crates that are present as workspace members",
     )
+    parser.add_argument(
+        "--features",
+        action="append",
+        help="Features to include in dependencies (can be specified multiple times)",
+    )
+    parser.add_argument(
+        "--all-features",
+        action="store_true",
+        help="Include all features in dependencies",
+    )
+    parser.add_argument(
+        "--no-default-features",
+        action="store_true",
+        help="Do not include default feature in dependencies",
+    )
+    parser.add_argument(
+        "--allow-prerelease-deps",
+        action="store_true",
+        help="Allow prerelease versions of dependencies",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -237,7 +281,13 @@ def main() -> int:
         logging.info(
             f"\nRunning debcargo deb-dependencies on {manifest.relative_to(Path.cwd())}..."
         )
-        deps = get_debcargo_dependencies(manifest)
+        deps = get_debcargo_dependencies(
+            manifest,
+            features=args.features,
+            all_features=args.all_features,
+            no_default_features=args.no_default_features,
+            allow_prerelease_deps=args.allow_prerelease_deps,
+        )
         logging.info(f"  Found {len(deps)} dependencies")
         all_deps.update(deps)
 
