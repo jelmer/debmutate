@@ -38,7 +38,6 @@ from typing import (
     Union,
 )
 
-
 DEFAULT_ENCODING = "utf-8"
 
 
