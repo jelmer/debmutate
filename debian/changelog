@@ -1,7 +1,16 @@
-debmutate (0.74) UNRELEASED; urgency=medium
+debmutate (0.76) UNRELEASED; urgency=medium
+
+  * Add --exclude-local-crates flag to update-rust-deps script to avoid updating
+    dependencies on local path crates.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 29 Oct 2025 14:04:31 +0000
+
+debmutate (0.75) unstable; urgency=medium
 
   * Add support for X-DH-Compat control field, used in newer versions of
     debhelper.
+  * Add update-rust-deps script for updating Rust dependencies in
+    debian/control files based on what's in Cargo.toml files.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 05 Jun 2025 11:22:01 +0100
 
