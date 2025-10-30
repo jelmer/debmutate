@@ -26,6 +26,7 @@ dependencies = [
     "python_debian>=0.1.44",
     "python-tr",
     "merge3",
+    "typing_extensions; python_version < '3.11'",
 ]
 dynamic = ["version"]
 
