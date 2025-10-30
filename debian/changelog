@@ -1,4 +1,4 @@
-debmutate (0.76) UNRELEASED; urgency=medium
+debmutate (0.76) unstable; urgency=medium
 
   * Add --exclude-local-crates flag to update-rust-deps script to avoid updating
     dependencies on local path crates.
