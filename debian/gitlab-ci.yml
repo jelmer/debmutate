@@ -15,7 +15,27 @@ ruff:
   image: python:latest
   script:
     - pip install ruff
-    - ruff
+    - ruff check .
+  cache:
+    paths:
+      - ~/.cache/pip
+
+mypy:
+  stage: lint
+  image: python:latest
+  script:
+    - pip install mypy
+    - mypy .
+  cache:
+    paths:
+      - ~/.cache/pip
+
+ruff-format:
+  stage: lint
+  image: python:latest
+  script:
+    - pip install ruff
+    - ruff format --check .
   cache:
     paths:
       - ~/.cache/pip
