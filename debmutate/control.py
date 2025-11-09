@@ -726,24 +726,87 @@ def _iter_relations(
         yield i, relation
 
 
+def _relation_is_special(name: str) -> bool:
+    """Check if a package name should be ignored for sorting purposes.
+
+    Args:
+      name: Package name to check
+    Returns:
+        True if should be ignored (e.g., template variables, substitution variables)
+    """
+    # Ignore substitution variables like ${misc:Depends}
+    if name.startswith("${") and name.endswith("}"):
+        return True
+    # Ignore template variables like @cdbs@
+    if name.startswith("@") and name.endswith("@"):
+        return True
+    return False
+
+
+class SortingOrder:
+    """Protocol for sorting order."""
+
+    def lt(self, name1: str, name2: str) -> bool:
+        raise NotImplementedError
+
+    def ignore(self, name: str) -> bool:
+        raise NotImplementedError
+
+
+class DefaultSortingOrder(SortingOrder):
+    """Default sorting order (lexicographical)."""
+
+    def lt(self, name1: str, name2: str) -> bool:
+        """Compare two package names for sorting purposes.
+
+        Args:
+          name1: First package name
+          name2: Second package name
+        Returns:
+            True if name1 < name2, False otherwise
+        """
+        # Items to ignore for sorting always come last
+        ignore1 = _relation_is_special(name1)
+        ignore2 = _relation_is_special(name2)
+
+        if ignore1 and not ignore2:
+            return True
+        if not ignore1 and ignore2:
+            return False
+        if ignore1 and ignore2:
+            return True
+
+        # Both are regular packages, use alphabetical order
+        return name1 < name2
+
+    def ignore(self, name: str) -> bool:
+        return _relation_is_special(name)
+
+
 def relations_are_sorted(
     relations: Union[str, List[Tuple[str, List[PkgRelation], str]]],
+    sorting_order: SortingOrder,
 ) -> bool:
     """Check whether a list of relations is sorted.
 
     Args:
       relations: List of relations or string to parse
     Returns:
-        True if sorted, False otherwise
+        True if sorted, False otherwise (ignoring special items like ${...} and @...@)
     """
     if isinstance(relations, str):
         relations = parse_relations(relations)
-    last_name = ""
+    last_name: Optional[str] = None
     for _head_whitespace, relation, _tail_whitespace in relations:
         if isinstance(relation, str):  # formatting
             continue
+        if not relation:  # empty relation
+            continue
         name = relation[0].name
-        if name < last_name:
+        # Ignore special items when checking sort order
+        if _relation_is_special(name):
+            continue
+        if last_name is not None and sorting_order.lt(name, last_name):
             return False
         last_name = name
     return True
@@ -795,32 +858,14 @@ def ensure_minimum_version(
             relation[0].version = (">=", str(minimum_version))
             changed = True
     if not found:
+        _add_relation(
+            relations,
+            [PkgRelation(name=package, version=(">=", str(minimum_version)))],
+        )
         changed = True
-        # If the relations list is sorted, insert in the right place
-        if relations_are_sorted(relations):
-            position = 0
-            for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(
-                relations
-            ):
-                if isinstance(relation, str):  # formatting
-                    continue
-                if relation[0].name > package:
-                    break
-                position = i + 1
-            _add_relation(
-                relations,
-                [PkgRelation(name=package, version=(">=", str(minimum_version)))],
-                position=position,
-            )
-        else:
-            # Just add to the end
-            _add_relation(
-                relations,
-                [PkgRelation(name=package, version=(">=", str(minimum_version)))],
-            )
     for i in reversed(obsolete_relations):
         del relations[i]
-    if changed:
+    if changed or obsolete_relations:
         return format_relations(relations)
     # Just return the original; we don't preserve all formatting yet.
     return relationstr
@@ -912,6 +957,47 @@ def ensure_relation(
     return format_relations(relations)
 
 
+def _find_add_position(
+    relations: List[Tuple[str, List[PkgRelation], str]],
+    relation: List[PkgRelation],
+) -> int:
+    """Find position to add a relation in sort order.
+
+    Args:
+        relations: existing list of relations
+        relation: New relation
+    Returns:
+        position to insert the new relation
+    """
+    # If adding a special item, just append at the end
+    if _relation_is_special(relation[0].name):
+        return len(relations)
+    for sort_order in [DefaultSortingOrder()]:
+        if relations_are_sorted(relations, sort_order):
+            break
+    else:
+        return len(relations)
+    # Insert in sorted order among regular items
+    position = 0
+    for i, rel_tuple in enumerate(relations):
+        _hw, rel, _tw = rel_tuple
+        if isinstance(rel, str):  # formatting
+            continue
+        if not rel:  # empty relation
+            continue
+        # rel is now guaranteed to be a non-empty list of PkgRelation
+        assert isinstance(rel, list) and len(rel) > 0
+        # Skip special items when finding insertion position
+        if sort_order.ignore(rel[0].name):
+            position += 1
+            continue
+        # Compare with regular items only
+        if sort_order.lt(relation[0].name, rel[0].name):
+            break
+        position += 1
+    return position
+
+
 def _add_relation(
     relations: List[Tuple[str, List[PkgRelation], str]],
     relation: List[PkgRelation],
@@ -954,7 +1040,7 @@ def _add_relation(
             tail_whitespace = relations[0][2]  # Best guess
 
     if position is None:
-        position = len(relations)
+        position = _find_add_position(relations, relation)
 
     if position < 0 or position > len(relations):
         raise IndexError(f"position out of bounds: {position!r}")

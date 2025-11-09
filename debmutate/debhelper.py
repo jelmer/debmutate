@@ -86,7 +86,7 @@ def ensure_minimum_debhelper_version(
     new_build_depends = ensure_minimum_version(
         build_depends, "debhelper", minimum_version
     )
-    if new_build_depends != source.get("Build-Depends"):
+    if new_build_depends != source.get("Build-Depends", ""):
         source["Build-Depends"] = new_build_depends
         return True
     return False

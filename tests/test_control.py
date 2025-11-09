@@ -22,6 +22,7 @@ import os
 
 from debmutate.control import (
     ControlEditor,
+    DefaultSortingOrder,
     MissingSourceParagraph,
     PkgRelation,
     _cdbs_resolve_conflict,
@@ -819,7 +820,7 @@ class EnsureRelationTests(TestCase):
 
     def test_bug(self):
         self.assertEqual(
-            "python3-setuptools (>= 46.4),,python3-pytest,",
+            "python3-pytest,python3-setuptools (>= 46.4),,",
             ensure_relation("python3-setuptools (>= 46.4),,\n", "python3-pytest"),
         )
 
@@ -918,7 +919,7 @@ class AddDependencyTests(TestCase):
             add_dependency("debhelper (>= 9)", "${misc:Depends}"),
         )
         self.assertEqual(
-            "debhelper (>= 9), blah,", add_dependency("debhelper (>= 9),", "blah")
+            "blah, debhelper (>= 9),", add_dependency("debhelper (>= 9),", "blah")
         )
 
     def test_indentation(self):
@@ -1221,7 +1222,7 @@ class CdbsResolverConflictTests(TestCase):
             "@cdbs@, foo",
             "debhelper (>= 10), foo",
         )
-        self.assertEqual(val, "@cdbs@, foo, debhelper (>= 10)")
+        self.assertEqual(val, "@cdbs@, debhelper (>= 10), foo")
         val = _cdbs_resolve_conflict(
             ("Source", "libnetsds-perl"),
             "Build-Depends",
@@ -1369,11 +1370,17 @@ Build-Depends: bar
 
 class RelationsAreSortedTests(TestCase):
     def test_sorted(self):
-        self.assertTrue(relations_are_sorted("a, b, c"))
-        self.assertTrue(relations_are_sorted("a (>= 1), b (>= 2), c (>= 3)"))
-        self.assertTrue(relations_are_sorted("a, a (>= 1), b, b (>= 2), c"))
+        self.assertTrue(relations_are_sorted("a, b, c", DefaultSortingOrder()))
+        self.assertTrue(
+            relations_are_sorted("a (>= 1), b (>= 2), c (>= 3)", DefaultSortingOrder())
+        )
+        self.assertTrue(
+            relations_are_sorted("a, a (>= 1), b, b (>= 2), c", DefaultSortingOrder())
+        )
 
     def test_not_sorted(self):
-        self.assertFalse(relations_are_sorted("b, a, c"))
-        self.assertFalse(relations_are_sorted("a (>= 2), a (>= 1), b, c"))
-        self.assertFalse(relations_are_sorted("a, c, b"))
+        self.assertFalse(relations_are_sorted("b, a, c", DefaultSortingOrder()))
+        self.assertFalse(
+            relations_are_sorted("a (>= 2), a (>= 1), b, c", DefaultSortingOrder())
+        )
+        self.assertFalse(relations_are_sorted("a, c, b", DefaultSortingOrder()))
