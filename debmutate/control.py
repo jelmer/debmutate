@@ -726,6 +726,29 @@ def _iter_relations(
         yield i, relation
 
 
+def relations_are_sorted(
+    relations: Union[str, List[Tuple[str, List[PkgRelation], str]]],
+) -> bool:
+    """Check whether a list of relations is sorted.
+
+    Args:
+      relations: List of relations or string to parse
+    Returns:
+        True if sorted, False otherwise
+    """
+    if isinstance(relations, str):
+        relations = parse_relations(relations)
+    last_name = ""
+    for _head_whitespace, relation, _tail_whitespace in relations:
+        if isinstance(relation, str):  # formatting
+            continue
+        name = relation[0].name
+        if name < last_name:
+            return False
+        last_name = name
+    return True
+
+
 def ensure_minimum_version(
     relationstr: str, package: str, minimum_version: Union[str, Version]
 ) -> str:
@@ -773,9 +796,28 @@ def ensure_minimum_version(
             changed = True
     if not found:
         changed = True
-        _add_relation(
-            relations, [PkgRelation(name=package, version=(">=", str(minimum_version)))]
-        )
+        # If the relations list is sorted, insert in the right place
+        if relations_are_sorted(relations):
+            position = 0
+            for i, (_head_whitespace, relation, _tail_whitespace) in enumerate(
+                relations
+            ):
+                if isinstance(relation, str):  # formatting
+                    continue
+                if relation[0].name > package:
+                    break
+                position = i + 1
+            _add_relation(
+                relations,
+                [PkgRelation(name=package, version=(">=", str(minimum_version)))],
+                position=position,
+            )
+        else:
+            # Just add to the end
+            _add_relation(
+                relations,
+                [PkgRelation(name=package, version=(">=", str(minimum_version)))],
+            )
     for i in reversed(obsolete_relations):
         del relations[i]
     if changed:

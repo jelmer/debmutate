@@ -63,11 +63,11 @@ class EnsureMinimumDebhelperVersionTests(TestCase):
         }
         self.assertTrue(ensure_minimum_debhelper_version(d, "11"))
         self.assertEqual(
-            d, {"Build-Depends": "debhelper-compat (= 10), debhelper (>= 11)"}
+            d, {"Build-Depends": "debhelper (>= 11), debhelper-compat (= 10)"}
         )
         self.assertTrue(ensure_minimum_debhelper_version(d, "11.1"))
         self.assertEqual(
-            d, {"Build-Depends": "debhelper-compat (= 10), debhelper (>= 11.1)"}
+            d, {"Build-Depends": "debhelper (>= 11.1), debhelper-compat (= 10)"}
         )
 
     def test_not_set(self):

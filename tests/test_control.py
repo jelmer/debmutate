@@ -40,6 +40,7 @@ from debmutate.control import (
     iter_relations,
     parse_relations,
     parse_standards_version,
+    relations_are_sorted,
     update_control,
 )
 from debmutate.reformatting import FormattingUnpreservable, GeneratedFile
@@ -1364,3 +1365,15 @@ Build-Depends: bar
         with open("debian/debcargo.toml", "w") as f:
             f.write("maintainer = Joe Example <joe@example.com>\n")
         self.assertEqual("debcargo", guess_template_type("debian/control.in", "debian"))
+
+
+class RelationsAreSortedTests(TestCase):
+    def test_sorted(self):
+        self.assertTrue(relations_are_sorted("a, b, c"))
+        self.assertTrue(relations_are_sorted("a (>= 1), b (>= 2), c (>= 3)"))
+        self.assertTrue(relations_are_sorted("a, a (>= 1), b, b (>= 2), c"))
+
+    def test_not_sorted(self):
+        self.assertFalse(relations_are_sorted("b, a, c"))
+        self.assertFalse(relations_are_sorted("a (>= 2), a (>= 1), b, c"))
+        self.assertFalse(relations_are_sorted("a, c, b"))
