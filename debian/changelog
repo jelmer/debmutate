@@ -1,3 +1,9 @@
+debmutate (0.78) UNRELEASED; urgency=medium
+
+  *
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 10 Nov 2025 00:22:32 +0000
+
 debmutate (0.77) unstable; urgency=medium
 
   * When updating relations fields, preserve sorting if possible. Closes: #1120441
