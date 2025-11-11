@@ -5,3 +5,4 @@ debmutate.egg-info
 dist
 .eggs
 build/
+.testrepository/
