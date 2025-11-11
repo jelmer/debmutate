@@ -240,7 +240,14 @@ def main() -> int:
     parser.add_argument(
         "--exclude-local-crates",
         action="store_true",
-        help="Exclude dependencies for crates that are present as workspace members",
+        default=True,
+        help="Exclude dependencies for crates that are present as workspace members (default)",
+    )
+    parser.add_argument(
+        "--include-local-crates",
+        action="store_false",
+        dest="exclude_local_crates",
+        help="Include dependencies for crates that are present as workspace members",
     )
     parser.add_argument(
         "--features",
