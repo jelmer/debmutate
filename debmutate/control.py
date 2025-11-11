@@ -38,6 +38,9 @@ __all__ = [
     "is_relation_implied",
     "parse_standards_version",
     "PkgRelationFieldEditor",
+    "SortingOrder",
+    "DefaultSortingOrder",
+    "WrapAndSortOrder",
 ]
 
 import collections
@@ -783,6 +786,76 @@ class DefaultSortingOrder(SortingOrder):
         return _relation_is_special(name)
 
 
+class WrapAndSortOrder(SortingOrder):
+    """Sorting order matching wrap-and-sort -av behavior.
+
+    This sorting order matches the behavior of the devscripts wrap-and-sort tool.
+    It sorts packages into three groups:
+    1. Build-system packages (debhelper-compat, cdbs, etc.) - sorted first
+    2. Regular packages starting with [a-z0-9] - sorted in the middle
+    3. Substvars and other special packages - sorted last
+
+    Within each group, packages are sorted lexicographically.
+    """
+
+    # Build systems that should be sorted first, matching wrap-and-sort
+    BUILD_SYSTEMS = (
+        "cdbs",
+        "debhelper-compat",
+        "debhelper",
+        "debputy",
+        "dh-.*",
+        "dpkg-build-api",
+        "dpkg-dev",
+    )
+    BUILD_SYSTEMS_RE = re.compile("(" + "|".join(BUILD_SYSTEMS) + ")")
+
+    def _get_sort_key(self, name: str) -> tuple:
+        """Get the sort key for a package name.
+
+        Args:
+          name: Package name
+        Returns:
+            Tuple of (group_order, name) for sorting
+        """
+        if re.match(self.BUILD_SYSTEMS_RE, name):
+            # Sort build-system related packages first
+            group_order = -1
+        elif not re.match(r"[a-z0-9]", name):
+            # Sort dependencies without a "real" package name (e.g. substvars) last
+            group_order = 1
+        else:
+            # Regular packages
+            group_order = 0
+
+        return (group_order, name)
+
+    def lt(self, name1: str, name2: str) -> bool:
+        """Compare two package names for sorting purposes.
+
+        Args:
+          name1: First package name
+          name2: Second package name
+        Returns:
+            True if name1 < name2, False otherwise
+        """
+        return self._get_sort_key(name1) < self._get_sort_key(name2)
+
+    def ignore(self, name: str) -> bool:
+        """Check if a package name should be ignored for sorting purposes.
+
+        Args:
+          name: Package name to check
+        Returns:
+            True if should be ignored (wrap-and-sort doesn't ignore any packages)
+        """
+        # wrap-and-sort doesn't ignore any packages - it sorts everything
+        return False
+
+
+DEFAULT_SORTING_ORDER = WrapAndSortOrder
+
+
 def relations_are_sorted(
     relations: Union[str, List[Tuple[str, List[PkgRelation], str]]],
     sorting_order: SortingOrder,
@@ -791,8 +864,9 @@ def relations_are_sorted(
 
     Args:
       relations: List of relations or string to parse
+      sorting_order: The sorting order to use for comparison
     Returns:
-        True if sorted, False otherwise (ignoring special items like ${...} and @...@)
+        True if sorted according to the given sorting order, False otherwise
     """
     if isinstance(relations, str):
         relations = parse_relations(relations)
@@ -803,8 +877,8 @@ def relations_are_sorted(
         if not relation:  # empty relation
             continue
         name = relation[0].name
-        # Ignore special items when checking sort order
-        if _relation_is_special(name):
+        # Let the sorting order decide which items to ignore
+        if sorting_order.ignore(name):
             continue
         if last_name is not None and sorting_order.lt(name, last_name):
             return False
@@ -969,14 +1043,31 @@ def _find_add_position(
     Returns:
         position to insert the new relation
     """
-    # If adding a special item, just append at the end
-    if _relation_is_special(relation[0].name):
-        return len(relations)
-    for sort_order in [DefaultSortingOrder()]:
-        if relations_are_sorted(relations, sort_order):
-            break
+    # Count non-formatting, non-empty relations
+    count = sum(1 for _hw, rel, _tw in relations if not isinstance(rel, str) and rel)
+
+    # If there are less than 2 items, default to WrapAndSortOrder
+    sort_order: SortingOrder
+    if count < 2:
+        sort_order = DEFAULT_SORTING_ORDER()
     else:
+        # Try to detect which sorting order is being used
+        # Try WrapAndSortOrder first (matches wrap-and-sort -av), then DefaultSortingOrder
+        sort_order_found: Optional[SortingOrder] = None
+        for candidate_order in [WrapAndSortOrder(), DefaultSortingOrder()]:
+            if relations_are_sorted(relations, candidate_order):
+                sort_order_found = candidate_order
+                break
+
+        # If no sorting order detected, just append at the end
+        if sort_order_found is None:
+            return len(relations)
+        sort_order = sort_order_found
+
+    # If adding a special item that should be ignored by this sort order, append at the end
+    if sort_order.ignore(relation[0].name):
         return len(relations)
+
     # Insert in sorted order among regular items
     position = 0
     for i, rel_tuple in enumerate(relations):

@@ -2,6 +2,7 @@ debmutate (0.78) UNRELEASED; urgency=medium
 
   *
   * update-rust-deps: Make --exclude-local-crates the default behavior.
+  * Support wrap-and-sort-like sorting order in dependency fields.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 10 Nov 2025 00:22:32 +0000
 

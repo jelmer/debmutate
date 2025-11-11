@@ -25,6 +25,7 @@ from debmutate.control import (
     DefaultSortingOrder,
     MissingSourceParagraph,
     PkgRelation,
+    WrapAndSortOrder,
     _cdbs_resolve_conflict,
     add_dependency,
     delete_from_list,
@@ -725,8 +726,9 @@ class EnsureMinimumVersionTests(TestCase):
         self.assertEqual(
             "debhelper (>= 9)", ensure_minimum_version("", "debhelper", "9")
         )
+        # debhelper is a build system, so it should come before "blah" (wrap-and-sort order)
         self.assertEqual(
-            "blah, debhelper (>= 9)", ensure_minimum_version("blah", "debhelper", "9")
+            "debhelper (>= 9), blah", ensure_minimum_version("blah", "debhelper", "9")
         )
 
     def test_unchanged(self):
@@ -776,8 +778,9 @@ class EnsureMinimumVersionTests(TestCase):
 class EnsureRelationTests(TestCase):
     def test_added(self):
         self.assertEqual("debhelper (>= 9)", ensure_relation("", "debhelper (>= 9)"))
+        # debhelper is a build system, so it should come before "blah" (wrap-and-sort order)
         self.assertEqual(
-            "blah, debhelper (>= 9)", ensure_relation("blah", "debhelper (>= 9)")
+            "debhelper (>= 9), blah", ensure_relation("blah", "debhelper (>= 9)")
         )
 
     def test_unchanged(self):
@@ -828,7 +831,8 @@ class EnsureRelationTests(TestCase):
 class EnsureSomeVersionTests(TestCase):
     def test_added(self):
         self.assertEqual("debhelper", ensure_some_version("", "debhelper"))
-        self.assertEqual("blah, debhelper", ensure_some_version("blah", "debhelper"))
+        # debhelper is a build system, so it should come before "blah" (wrap-and-sort order)
+        self.assertEqual("debhelper, blah", ensure_some_version("blah", "debhelper"))
 
     def test_unchanged(self):
         self.assertEqual(
@@ -846,8 +850,9 @@ class EnsureSomeVersionTests(TestCase):
 class EnsureExactVersionTests(TestCase):
     def test_added(self):
         self.assertEqual("debhelper (= 9)", ensure_exact_version("", "debhelper", "9"))
+        # debhelper is a build system, so it should come before "blah" (wrap-and-sort order)
         self.assertEqual(
-            "blah, debhelper (= 9)", ensure_exact_version("blah", "debhelper", "9")
+            "debhelper (= 9), blah", ensure_exact_version("blah", "debhelper", "9")
         )
 
     def test_unchanged(self):
@@ -918,8 +923,9 @@ class AddDependencyTests(TestCase):
             "debhelper (>= 9), ${misc:Depends}",
             add_dependency("debhelper (>= 9)", "${misc:Depends}"),
         )
+        # debhelper is a build system, so it should come before "blah" (wrap-and-sort order)
         self.assertEqual(
-            "blah, debhelper (>= 9),", add_dependency("debhelper (>= 9),", "blah")
+            "debhelper (>= 9), blah,", add_dependency("debhelper (>= 9),", "blah")
         )
 
     def test_indentation(self):
@@ -1214,7 +1220,8 @@ class CdbsResolverConflictTests(TestCase):
             "@cdbs@",
             "debhelper (>= 10), foo",
         )
-        self.assertEqual(val, "@cdbs@, debhelper (>= 10)")
+        # debhelper is a build system, so it comes before @cdbs@ template var (wrap-and-sort order)
+        self.assertEqual(val, "debhelper (>= 10), @cdbs@")
         val = _cdbs_resolve_conflict(
             ("Source", "libnetsds-perl"),
             "Build-Depends",
@@ -1384,3 +1391,139 @@ class RelationsAreSortedTests(TestCase):
             relations_are_sorted("a (>= 2), a (>= 1), b, c", DefaultSortingOrder())
         )
         self.assertFalse(relations_are_sorted("a, c, b", DefaultSortingOrder()))
+
+
+class WrapAndSortOrderTests(TestCase):
+    def test_build_systems_sorted_first(self):
+        """Test that build system packages are sorted before regular packages."""
+        order = WrapAndSortOrder()
+        self.assertTrue(order.lt("debhelper-compat", "python3"))
+        self.assertTrue(order.lt("cdbs", "zlib1g-dev"))
+        self.assertTrue(order.lt("dpkg-dev", "apt"))
+
+    def test_substvars_sorted_last(self):
+        """Test that substvars are sorted after regular packages."""
+        order = WrapAndSortOrder()
+        self.assertTrue(order.lt("python3", "${misc:Depends}"))
+        self.assertTrue(order.lt("zlib1g-dev", "${shlibs:Depends}"))
+        self.assertFalse(order.lt("${misc:Depends}", "python3"))
+
+    def test_regular_packages_sorted_alphabetically(self):
+        """Test that regular packages are sorted alphabetically."""
+        order = WrapAndSortOrder()
+        self.assertTrue(order.lt("aaa", "bbb"))
+        self.assertTrue(order.lt("python3", "zlib1g-dev"))
+        self.assertFalse(order.lt("zlib1g-dev", "python3"))
+
+    def test_build_systems_sorted_alphabetically_within_group(self):
+        """Test that build system packages are sorted alphabetically within their group."""
+        order = WrapAndSortOrder()
+        self.assertTrue(order.lt("cdbs", "debhelper-compat"))
+        self.assertTrue(order.lt("debhelper", "dpkg-dev"))
+
+    def test_substvars_sorted_alphabetically_within_group(self):
+        """Test that substvars are sorted alphabetically within their group."""
+        order = WrapAndSortOrder()
+        self.assertTrue(order.lt("${misc:Depends}", "${shlibs:Depends}"))
+        self.assertFalse(order.lt("${shlibs:Depends}", "${misc:Depends}"))
+
+    def test_three_group_sorting(self):
+        """Test the complete three-group sorting order."""
+        order = WrapAndSortOrder()
+        # Build system < Regular < Substvar
+        self.assertTrue(order.lt("debhelper-compat", "python3"))
+        self.assertTrue(order.lt("python3", "${misc:Depends}"))
+        self.assertTrue(order.lt("debhelper-compat", "${misc:Depends}"))
+
+    def test_relations_are_sorted_with_wrap_and_sort_order(self):
+        """Test relations_are_sorted with WrapAndSortOrder."""
+        order = WrapAndSortOrder()
+        # Properly sorted: build systems, then regular packages, then substvars
+        self.assertTrue(
+            relations_are_sorted(
+                "debhelper-compat (= 13), python3, zlib1g-dev, ${misc:Depends}",
+                order,
+            )
+        )
+        self.assertTrue(
+            relations_are_sorted(
+                "cdbs, debhelper, apt, python3, ${shlibs:Depends}", order
+            )
+        )
+
+    def test_relations_not_sorted_with_wrap_and_sort_order(self):
+        """Test detection of unsorted relations with WrapAndSortOrder."""
+        order = WrapAndSortOrder()
+        # Regular package before build system - not sorted
+        self.assertFalse(relations_are_sorted("python3, debhelper-compat", order))
+        # Substvar before regular package - not sorted
+        self.assertFalse(relations_are_sorted("${misc:Depends}, python3", order))
+        # Wrong alphabetical order within regular packages
+        self.assertFalse(relations_are_sorted("zlib1g-dev, python3", order))
+
+    def test_no_packages_ignored(self):
+        """Test that WrapAndSortOrder doesn't ignore any packages."""
+        order = WrapAndSortOrder()
+        self.assertFalse(order.ignore("python3"))
+        self.assertFalse(order.ignore("${misc:Depends}"))
+        self.assertFalse(order.ignore("debhelper-compat"))
+        self.assertFalse(order.ignore("@cdbs@"))
+
+
+class AddDependencyWithWrapAndSortOrderTests(TestCase):
+    def test_add_build_system_to_wrap_and_sort_sorted_list(self):
+        """Test adding a build system package maintains wrap-and-sort order."""
+        # List sorted with wrap-and-sort order: build systems first
+        result = add_dependency(
+            "debhelper-compat (= 13), python3-dev, zlib1g-dev",
+            "cdbs",
+        )
+        # cdbs should be inserted before debhelper-compat (alphabetically within build systems)
+        self.assertEqual(
+            "cdbs, debhelper-compat (= 13), python3-dev, zlib1g-dev", result
+        )
+
+    def test_add_regular_package_to_wrap_and_sort_sorted_list(self):
+        """Test adding a regular package maintains wrap-and-sort order."""
+        # List sorted with wrap-and-sort order
+        result = add_dependency(
+            "debhelper-compat (= 13), apt, zlib1g-dev, ${misc:Depends}",
+            "python3-dev",
+        )
+        # python3-dev should be inserted in alphabetical order after apt but before zlib1g-dev
+        self.assertEqual(
+            "debhelper-compat (= 13), apt, python3-dev, zlib1g-dev, ${misc:Depends}",
+            result,
+        )
+
+    def test_add_substvar_to_wrap_and_sort_sorted_list(self):
+        """Test adding a substvar maintains wrap-and-sort order."""
+        result = add_dependency(
+            "debhelper-compat (= 13), python3-dev, ${misc:Depends}",
+            "${shlibs:Depends}",
+        )
+        # ${shlibs:Depends} should be added at the end (after ${misc:Depends})
+        self.assertEqual(
+            "debhelper-compat (= 13), python3-dev, ${misc:Depends}, ${shlibs:Depends}",
+            result,
+        )
+
+    def test_add_to_default_sorted_list_still_works(self):
+        """Test that DefaultSortingOrder still works for simple alphabetical lists."""
+        # Simple alphabetical list (no build systems or substvars)
+        result = add_dependency("aaa, ccc", "bbb")
+        # bbb should be inserted between aaa and ccc
+        self.assertEqual("aaa, bbb, ccc", result)
+
+    def test_add_to_unsorted_list_appends(self):
+        """Test that adding to an unsorted list just appends."""
+        result = add_dependency("zlib1g-dev, python3-dev", "apt")
+        # Unsorted list, so just append
+        self.assertEqual("zlib1g-dev, python3-dev, apt", result)
+
+    def test_add_build_system_before_regular_packages(self):
+        """Test adding build system to list with only regular packages."""
+        # Regular packages only
+        result = add_dependency("python3-dev, zlib1g-dev", "debhelper-compat")
+        # debhelper-compat should go first (build system before regular)
+        self.assertEqual("debhelper-compat, python3-dev, zlib1g-dev", result)
