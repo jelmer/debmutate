@@ -26,6 +26,7 @@ __all__ = [
 
 import logging
 import os
+import sys
 from types import TracebackType
 from typing import (
     Generic,
@@ -38,10 +39,10 @@ from typing import (
     Union,
 )
 
-try:
-    from typing import Self
-except ImportError:
+if sys.version_info < (3, 11):
     from typing_extensions import Self
+else:
+    from typing import Self
 
 DEFAULT_ENCODING = "utf-8"
 
