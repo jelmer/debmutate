@@ -20,6 +20,12 @@ Code style can be checked by running ``ruff``:
 ruff check debmutate tests
 ```
 
+To format the code, run ruff format:
+
+```shell
+ruff format debmutate tests
+```
+
 Tests
 -----
 
