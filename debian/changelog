@@ -1,3 +1,9 @@
+debmutate (0.79) UNRELEASED; urgency=medium
+
+  * update-rust-deps: Expose --include-dev-dependencies.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 16 Nov 2025 12:57:23 +0000
+
 debmutate (0.78) unstable; urgency=medium
 
   * update-rust-deps: Make --exclude-local-crates the default behavior.

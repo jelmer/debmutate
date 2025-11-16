@@ -58,6 +58,7 @@ def get_debcargo_dependencies(
     all_features: bool = False,
     no_default_features: bool = False,
     allow_prerelease_deps: bool = False,
+    include_dev_dependencies: bool = False,
 ) -> List[str]:
     """Run debcargo deb-dependencies and parse the output.
 
@@ -67,6 +68,7 @@ def get_debcargo_dependencies(
         all_features: Include all features in dependencies
         no_default_features: Do not include default feature in dependencies
         allow_prerelease_deps: Allow prerelease versions of dependencies
+        include_dev_dependencies: Include dev dependencies
 
     Returns:
         List of dependency strings
@@ -85,6 +87,8 @@ def get_debcargo_dependencies(
         cmd.append("--no-default-features")
     if allow_prerelease_deps:
         cmd.append("--allow-prerelease-deps")
+    if include_dev_dependencies:
+        cmd.append("--include-dev-dependencies")
 
     cmd.append(str(cargo_toml_path))
 
@@ -269,6 +273,11 @@ def main() -> int:
         action="store_true",
         help="Allow prerelease versions of dependencies",
     )
+    parser.add_argument(
+        "--include-dev-dependencies",
+        action="store_true",
+        help="Include dev dependencies",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -294,6 +303,7 @@ def main() -> int:
             all_features=args.all_features,
             no_default_features=args.no_default_features,
             allow_prerelease_deps=args.allow_prerelease_deps,
+            include_dev_dependencies=args.include_dev_dependencies,
         )
         logging.info(f"  Found {len(deps)} dependencies")
         all_deps.update(deps)
