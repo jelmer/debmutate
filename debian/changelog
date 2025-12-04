@@ -1,4 +1,4 @@
-debmutate (0.79) UNRELEASED; urgency=medium
+debmutate (0.79) unstable; urgency=medium
 
   * update-rust-deps: Expose --include-dev-dependencies.
 
