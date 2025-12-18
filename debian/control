@@ -32,8 +32,7 @@ Recommends: devscripts (>= 2.22.2),
             python3-semver,
             python3-tomlkit,
             python3-tr
-Suggests: gnome-pkg-tools,
-          postgresql-common
+Suggests: postgresql-common
 Description: Format-preserving manipulation of Debian control files in Python
  Debmutate is a set of Python modules for manipulating the control files of
  Debian packages, with the ability to preserve the existing formatting of

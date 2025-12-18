@@ -19,7 +19,6 @@
 """Utility functions for dealing with control files."""
 
 __all__ = [
-    "dh_gnome_clean",
     "pg_buildext_updatecontrol",
     "guess_template_type",
     "ControlEditor",
@@ -178,29 +177,6 @@ def _wrap_field(
 # End import from devscripts
 
 
-def dh_gnome_clean(path: str = ".") -> None:
-    """Run the dh_gnome_clean command.
-
-    This needs to do some post-hoc cleaning, since dh_gnome_clean
-    writes various debhelper log files that should not be checked in.
-
-    Args:
-      path: Path to run dh_gnome_clean in
-    """
-    for n in os.listdir(os.path.join(path, "debian")):
-        if n.endswith(".debhelper.log"):
-            raise AssertionError("pre-existing .debhelper.log files")
-    if not os.path.exists(os.path.join(path, "debian/changelog")):
-        raise AssertionError(f"no changelog file in {path}")
-    try:
-        subprocess.check_call(["dh_gnome_clean"], cwd=path)
-    except FileNotFoundError as e:
-        raise TemplateExpandCommandMissing("dh_gnome_clean") from e
-    for n in os.listdir(os.path.join(path, "debian")):
-        if n.endswith(".debhelper.log"):
-            os.unlink(os.path.join(path, "debian", n))
-
-
 def pg_buildext_updatecontrol(path: str = ".") -> None:
     """Run the 'pg_buildext updatecontrol' command.
 
@@ -240,9 +216,7 @@ def guess_template_type(
     try:
         with open(template_path, "rb") as f:
             template = f.read()
-            if b"@GNOME_TEAM@" in template:
-                return "gnome"
-            elif b"@cdbs@" in template:
+            if b"@cdbs@" in template:
                 return "cdbs"
             elif b"PGVERSION" in template:
                 return "postgresql"
@@ -260,8 +234,6 @@ def guess_template_type(
                     build_depends = ""
                 else:
                     build_depends = deb822.get("Build-Depends", "")
-                if any(iter_relations(build_depends, "gnome-pkg-tools")):
-                    return "gnome"
                 if any(iter_relations(build_depends, "cdbs")):
                     return "cdbs"
     except IsADirectoryError:
@@ -321,8 +293,6 @@ def _expand_control_template(template_path: str, path: str, template_type: str) 
             )
         except subprocess.CalledProcessError as e:
             raise TemplateExpansionFailed("./debian/rules", e.stderr.decode())
-    elif template_type == "gnome":
-        dh_gnome_clean(package_root)
     elif template_type == "postgresql":
         pg_buildext_updatecontrol(package_root)
     elif template_type == "directory":

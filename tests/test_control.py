@@ -1317,25 +1317,6 @@ Package: bar
             )
         self.assertIs(None, guess_template_type("debian/control.in", "debian"))
 
-    def test_gnome(self):
-        with open("debian/control.in", "w") as f:
-            f.write(
-                """\
-Foo @GNOME_TEAM@
-"""
-            )
-        self.assertEqual("gnome", guess_template_type("debian/control.in"))
-
-    def test_gnome_build_depends(self):
-        with open("debian/control.in", "w") as f:
-            f.write(
-                """\
-Source: blah
-Build-Depends: gnome-pkg-tools, libc6-dev
-"""
-            )
-        self.assertEqual("gnome", guess_template_type("debian/control.in"))
-
     def test_cdbs(self):
         with open("debian/control.in", "w") as f:
             f.write(
