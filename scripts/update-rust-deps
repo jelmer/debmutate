@@ -137,11 +137,14 @@ def filter_local_crate_dependencies(
                 # and ends with "-dev" (to avoid false positives)
                 if pkg_name.endswith("-dev"):
                     pkg_prefix = pkg_name[:-4]  # Remove "-dev"
-                    # Check if it matches a local crate (base or with features)
-                    # Format: librust-cratename or librust-cratename+feature
+                    # Check if it matches a local crate (base, with features, or with version)
+                    # Format: librust-cratename, librust-cratename+feature,
+                    # librust-cratename-0.1, librust-cratename-0.1+feature, etc.
                     for local_prefix in local_package_prefixes:
-                        if pkg_prefix == local_prefix or pkg_prefix.startswith(
-                            local_prefix + "+"
+                        if (
+                            pkg_prefix == local_prefix
+                            or pkg_prefix.startswith(local_prefix + "+")
+                            or pkg_prefix.startswith(local_prefix + "-")
                         ):
                             is_local = True
                             logging.info(f"  Excluding local crate: {pkg_name}")

@@ -1,3 +1,10 @@
+debmutate (0.80) UNRELEASED; urgency=medium
+
+  * update-rust-deps: Fix filtering of local workspace crates with
+    version suffixes.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 18 Dec 2025 10:17:33 +0000
+
 debmutate (0.79) unstable; urgency=medium
 
   * update-rust-deps: Expose --include-dev-dependencies.
