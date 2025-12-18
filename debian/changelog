@@ -1,4 +1,4 @@
-debmutate (0.80) UNRELEASED; urgency=medium
+debmutate (0.80) unstable; urgency=medium
 
   * update-rust-deps: Fix filtering of local workspace crates with
     version suffixes.
