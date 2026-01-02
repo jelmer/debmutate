@@ -285,6 +285,11 @@ def main() -> int:
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
+    logging.warning(
+        "update-rust-deps is deprecated. "
+        'Please use "debcargo update-dependencies" instead.'
+    )
+
     control_path = "debian/control"
 
     # Discover all workspace crates
