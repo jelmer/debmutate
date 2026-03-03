@@ -206,7 +206,7 @@ def apply_sed_expr(vm: str, orig: str) -> str:
     (kind, (pattern, replacement, flags)) = parse_sed_expr(vm)
     if kind == "s":
         # TODO(jelmer): Handle flags
-        return cast(str, pcre2.substitute(pattern, replacement, orig))
+        return cast(str, pcre2.sub(pattern, replacement, orig))
     elif kind == "tr":
         from tr import tr
 
@@ -253,19 +253,19 @@ def html_search(
         if not href or not isinstance(href, str):
             continue
         href = urljoin(base_url.rstrip("/") + "/", href)
-        try:
-            m = pcre2.match(matching_pattern, href)
+        m = pcre2.search(matching_pattern, href)
+        if m:
             logging.debug("Matched pattern %r to %r", matching_pattern, href)
-            yield (m.substring(1), urljoin(base_url, m.substring(0)))
-        except pcre2.exceptions.MatchError:
+            yield (m.group(1), urljoin(base_url, m.group(0)))
+        else:
             logging.debug("Did not match pattern %r to %r", matching_pattern, href)
 
 
 def plain_search(
     body: bytes, matching_pattern: str, base_url: str
 ) -> Iterator[Tuple[str, str]]:
-    for m in pcre2.scan(matching_pattern.encode(), body):
-        yield (m.substring(1).decode(), urljoin(base_url, m.substring(0).decode()))
+    for m in pcre2.finditer(matching_pattern.encode(), body):
+        yield (m.group(1).decode(), urljoin(base_url, m.group(0).decode()))
 
 
 searchers = {
@@ -330,7 +330,7 @@ class Watch:
             return version
         try:
             return apply_sed_expr(vm, version)
-        except pcre2.exceptions.LibraryError as e:
+        except pcre2.LibraryError as e:
             raise WatchSyntaxError(f"invalid uversionmangle {vm!r}: {e}") from e
 
     def get_option(self, name: str) -> Optional[str]:
