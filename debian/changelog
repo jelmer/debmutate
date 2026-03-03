@@ -2,6 +2,8 @@ debmutate (0.81) UNRELEASED; urgency=medium
 
   * Mark update-rust-deps as deprecated, suggesting users use 'debcargo
     update-dependencies' instead.
+  * Update watch file support for compatibility with pcre2 >= 0.6.0.
+    Closes: #1129108
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 02 Jan 2026 13:52:53 +0000
 
