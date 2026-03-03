@@ -1,4 +1,4 @@
-debmutate (0.81) UNRELEASED; urgency=medium
+debmutate (0.81) unstable; urgency=medium
 
   * Mark update-rust-deps as deprecated, suggesting users use 'debcargo
     update-dependencies' instead.
