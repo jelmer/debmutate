@@ -105,6 +105,12 @@ _DEB822_CANONICAL_NAMES: Dict[str, str] = {
     "gitmode": "Git-Mode",
     "gitmodules": "Git-Modules",
     "template": "Template",
+    "dist": "Dist",
+    "owner": "Owner",
+    "project": "Project",
+    "package": "Package",
+    "releaseonly": "Release-Only",
+    "versiontype": "Version-Type",
 }
 
 
@@ -193,6 +199,11 @@ class WatchFile:
         if self.version >= 5:
             self._dump_deb822(f)
         else:
+            # Templates are a v5-only feature; expand them before
+            # writing to a legacy format.
+            for entry in self.entries:
+                if entry.has_option("template"):
+                    expand_template(entry)
             self._dump_legacy(f)
 
     def _dump_legacy(self, f: TextIO) -> None:
@@ -528,6 +539,232 @@ class Watch:
             yield Release(version, full_url, pgpsigurl=pgpsigurl)
 
 
+class UnknownTemplate(ValueError):
+    """Unknown watch file template."""
+
+
+def _get_template_option(entry: Watch, name: str) -> Optional[str]:
+    """Get and remove a template-specific option from a Watch entry."""
+    try:
+        value = entry.get_option(name)
+    except KeyError:
+        return None
+    entry.del_option(name)
+    return value
+
+
+def _set_default_option(entry: Watch, name: str, value: str) -> None:
+    """Set an option only if it is not already present."""
+    if not entry.has_option(name):
+        entry.set_option(name, value)
+
+
+def _expand_template_github(entry: Watch) -> None:
+    owner = _get_template_option(entry, "owner")
+    project = _get_template_option(entry, "project")
+    dist = _get_template_option(entry, "dist")
+    release_only = _get_template_option(entry, "releaseonly")
+    version_type = _get_template_option(entry, "versiontype") or "@ANY_VERSION@"
+
+    if not dist and not (owner and project):
+        raise WatchSyntaxError("GitHub template requires Dist or Owner/Project")
+    if dist:
+        dist = re.sub(r"^.*?github\.com", "https://api.github.com/repos", dist)
+        dist = re.sub(r"\.git$", "", dist)
+    else:
+        dist = f"https://api.github.com/repos/{owner}/{project}"
+
+    if not entry.url:
+        ref_type = "release/" if release_only else "tags/"
+        entry.url = f"{dist}/git/matching-refs/{ref_type}"
+    if not entry.matching_pattern:
+        entry.matching_pattern = (
+            "https://api.github.com/repos/[^/]+/[^/]+/git/refs/tags/"
+            r"(?>[^/]+(?<=(?:\D|alpha|beta|rc))\-)?" + version_type + '(?:(?=")|$)'
+        )
+    _set_default_option(
+        entry,
+        "downloadurlmangle",
+        r"s%(api.github.com/repos/[^/]+/[^/]+)/git/refs/%$1/tarball/refs/%g",
+    )
+    try:
+        component = entry.get_option("component")
+    except KeyError:
+        component = None
+    if component:
+        _set_default_option(
+            entry,
+            "filenamemangle",
+            r"s%.*/(?:[^/]+(?<=(?:\D|alpha|beta|rc))\-)?@ANY_VERSION@"
+            r"%@PACKAGE@-@COMPONENT@-$1.tar.gz%",
+        )
+    else:
+        _set_default_option(
+            entry,
+            "filenamemangle",
+            r"s%.*/(?:[^/]+(?<=(?:\D|alpha|beta|rc))\-)?@ANY_VERSION@"
+            r"%@PACKAGE@-$1.tar.gz%",
+        )
+    _set_default_option(entry, "searchmode", "plain")
+    _set_default_option(entry, "pgpmode", "none")
+
+
+def _expand_template_gitlab(entry: Watch) -> None:
+    dist = _get_template_option(entry, "dist")
+    version_type = _get_template_option(entry, "versiontype") or "@ANY_VERSION@"
+
+    if not dist:
+        raise WatchSyntaxError("GitLab template requires Dist")
+    dist = dist.rstrip("/")
+
+    if not entry.url:
+        entry.url = dist
+    if not entry.matching_pattern:
+        entry.matching_pattern = f".*?{version_type}"
+    try:
+        component = entry.get_option("component")
+    except KeyError:
+        component = None
+    if component:
+        _set_default_option(
+            entry,
+            "filenamemangle",
+            f"s%.*?{version_type}$%@PACKAGE@-@COMPONENT@-$1.tar.gz%",
+        )
+    else:
+        _set_default_option(
+            entry,
+            "filenamemangle",
+            f"s%.*?{version_type}$%@PACKAGE@-$1.tar.gz%",
+        )
+    _set_default_option(entry, "uversionmangle", "auto")
+    _set_default_option(entry, "pgpmode", "none")
+    _set_default_option(entry, "mode", "gitlab")
+
+
+def _expand_template_pypi(entry: Watch) -> None:
+    dist = _get_template_option(entry, "dist")
+    if not dist:
+        raise WatchSyntaxError("Pypi template requires Dist")
+
+    if not entry.url:
+        entry.url = f"https://pypi.debian.net/{dist}/"
+    if not entry.matching_pattern:
+        entry.matching_pattern = f"{dist}-@ANY_VERSION@.tar.gz"
+    _set_default_option(entry, "searchmode", "plain")
+    _set_default_option(entry, "pgpmode", "none")
+    if not entry.has_option("uversionmangle"):
+        entry.set_option("uversionmangle", r"s/(rc|a|b|c)/~$1/")
+
+
+def _expand_template_npmregistry(entry: Watch) -> None:
+    dist = _get_template_option(entry, "dist")
+    version_type = _get_template_option(entry, "versiontype") or "@ANY_VERSION@"
+
+    if not dist:
+        raise WatchSyntaxError("Npmregistry template requires Dist")
+    name = dist.rsplit("/", 1)[-1]
+
+    if not entry.url:
+        entry.url = f"https://registry.npmjs.org/{dist}"
+    if not entry.matching_pattern:
+        entry.matching_pattern = (
+            f"https://registry.npmjs.org/{dist}/-/{name}-{version_type}@ARCHIVE_EXT@"
+        )
+    _set_default_option(entry, "uversionmangle", "auto")
+    _set_default_option(entry, "filenamemangle", "auto")
+    _set_default_option(entry, "pgpmode", "none")
+    _set_default_option(entry, "searchmode", "plain")
+
+
+def _expand_template_metacpan(entry: Watch) -> None:
+    dist = _get_template_option(entry, "dist")
+    version_type = _get_template_option(entry, "versiontype") or "@ANY_VERSION@"
+
+    if not dist:
+        raise WatchSyntaxError("Metacpan template requires Dist")
+    dist = dist.replace("::", "-")
+
+    entry.set_option("mode", "metacpan")
+    if not entry.url:
+        entry.url = dist
+    if not entry.matching_pattern:
+        entry.matching_pattern = (
+            f"https://cpan.metacpan.org/.*{dist}-{version_type}@ARCHIVE_EXT@"
+        )
+    _set_default_option(entry, "pgpmode", "none")
+
+
+def _expand_template_cran(entry: Watch) -> None:
+    package = _get_template_option(entry, "package")
+    if not package:
+        raise WatchSyntaxError("CRAN template requires Package")
+
+    if not entry.url:
+        entry.url = f"https://cran.r-project.org/package={package}"
+    if not entry.matching_pattern:
+        entry.matching_pattern = ".*_@ANY_VERSION@.tar.gz"
+    _set_default_option(entry, "compression", "xz")
+    _set_default_option(entry, "dversionmangle", r"s/\+dfsg[0-9]*//g")
+    _set_default_option(
+        entry,
+        "downloadurlmangle",
+        r"s%.*/src/contrib/%https://cran.r-project.org/src/contrib/%",
+    )
+    _set_default_option(entry, "repacksuffix", "+dfsg")
+
+
+def _expand_template_bioconductor(entry: Watch) -> None:
+    package = _get_template_option(entry, "package")
+    if not package:
+        raise WatchSyntaxError("Bioconductor template requires Package")
+
+    if not entry.url:
+        entry.url = f"https://bioconductor.org/packages/{package}"
+    if not entry.matching_pattern:
+        entry.matching_pattern = ".*_@ANY_VERSION@.tar.gz"
+    _set_default_option(entry, "compression", "xz")
+    _set_default_option(entry, "dversionmangle", r"s/\+dfsg[0-9]*//g")
+    _set_default_option(
+        entry,
+        "downloadurlmangle",
+        r"s%.*/src/contrib/%https://bioconductor.org/packages/release/bioc/src/contrib/%",
+    )
+    _set_default_option(entry, "repacksuffix", "+dfsg")
+
+
+_TEMPLATES: Dict[str, Callable[[Watch], None]] = {
+    "github": _expand_template_github,
+    "gitlab": _expand_template_gitlab,
+    "pypi": _expand_template_pypi,
+    "npmregistry": _expand_template_npmregistry,
+    "metacpan": _expand_template_metacpan,
+    "cran": _expand_template_cran,
+    "bioconductor": _expand_template_bioconductor,
+}
+
+
+def expand_template(entry: Watch) -> None:
+    """Expand a template in a Watch entry.
+
+    Resolves the ``template`` option (e.g. ``GitHub``, ``Pypi``) by
+    filling in ``url``, ``matching_pattern``, and default options
+    according to the template's rules.  Template-specific fields
+    (``Dist``, ``Owner``, etc.) are consumed and removed.
+
+    Raises UnknownTemplate if the template name is not recognised.
+    Raises WatchSyntaxError if required template fields are missing.
+    """
+    template_name = _get_template_option(entry, "template")
+    if template_name is None:
+        return
+
+    handler = _TEMPLATES.get(template_name.lower())
+    if handler is None:
+        raise UnknownTemplate(template_name)
+    handler(entry)
+
+
 class MissingVersion(Exception):
     """The version= line is missing."""
 
@@ -551,10 +788,10 @@ def _deb822_para_to_options(
         if normalized in skip_keys:
             continue
         value = para[key]
-        if value in ("yes", ""):
-            options.append(normalized)
-        else:
-            options.append(f"{normalized}={value}")
+        if value == "":
+            # Empty field value is falsy in uscan (Perl), skip it.
+            continue
+        options.append(f"{normalized}={value}")
     return options
 
 
@@ -603,15 +840,14 @@ def parse_watch_file_deb822(f: Iterable[str]) -> Optional[WatchFile]:
         matching_pattern = header.get("Matching-Pattern")
         script = header.get("Update-Script")
         options = _deb822_para_to_options(header, _DEB822_ENTRY_SKIP)
-        if url:
-            entries.append(
-                Watch(
-                    url,
-                    matching_pattern=matching_pattern,
-                    script=script,
-                    opts=options,
-                )
+        entries.append(
+            Watch(
+                url,
+                matching_pattern=matching_pattern,
+                script=script,
+                opts=options,
             )
+        )
     else:
         # Multi-paragraph: header provides defaults, subsequent paragraphs
         # are sources. Global options are non-structural header fields.
@@ -631,15 +867,14 @@ def parse_watch_file_deb822(f: Iterable[str]) -> Optional[WatchFile]:
             matching_pattern = merged.get("Matching-Pattern")
             script = merged.get("Update-Script")
             options = _deb822_para_to_options(merged, _DEB822_ENTRY_SKIP)
-            if url:
-                entries.append(
-                    Watch(
-                        url,
-                        matching_pattern=matching_pattern,
-                        script=script,
-                        opts=options,
-                    )
+            entries.append(
+                Watch(
+                    url,
+                    matching_pattern=matching_pattern,
+                    script=script,
+                    opts=options,
                 )
+            )
 
     return WatchFile(entries=entries, options=global_options, version=version)
 
