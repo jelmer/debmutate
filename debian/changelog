@@ -1,3 +1,9 @@
+debmutate (0.82) UNRELEASED; urgency=medium
+
+  * Add support for watch format v5.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 12 Mar 2026 10:34:26 +0000
+
 debmutate (0.81) unstable; urgency=medium
 
   * Mark update-rust-deps as deprecated, suggesting users use 'debcargo
