@@ -1,4 +1,4 @@
-debmutate (0.82) UNRELEASED; urgency=medium
+debmutate (0.82) unstable; urgency=medium
 
   * Add support for watch format v5.
 
