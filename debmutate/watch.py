@@ -18,11 +18,14 @@
 """Functions for working with watch files."""
 
 import logging
+import re
 import sys
 from io import StringIO
 from typing import (
+    TYPE_CHECKING,
     BinaryIO,
     Callable,
+    Dict,
     Iterable,
     Iterator,
     List,
@@ -36,6 +39,9 @@ from urllib.parse import urljoin
 
 import pcre2
 from debian.changelog import Version  # type: ignore[attr-defined]
+
+if TYPE_CHECKING:
+    from debian.deb822 import Deb822
 
 from . import __version__
 from .reformatting import Editor
@@ -60,6 +66,56 @@ SUBSTITUTIONS = {
     # This is substituted by the typical Debian extension regexp (capturing).
     "@DEB_EXT@": r"[\+~](debian|dfsg|ds|deb)(\.)?(\d+)?$",
 }
+
+
+# Canonical deb822 field names for serialization, keyed by normalized name.
+_DEB822_CANONICAL_NAMES: Dict[str, str] = {
+    "source": "Source",
+    "matchingpattern": "Matching-Pattern",
+    "updatescript": "Update-Script",
+    "pgpmode": "Pgp-Mode",
+    "pgpsigurlmangle": "Pgp-Sig-Url-Mangle",
+    "uversionmangle": "Uversion-Mangle",
+    "dversionmangle": "Dversion-Mangle",
+    "dirversionmangle": "Dirversion-Mangle",
+    "filenamemangle": "Filename-Mangle",
+    "downloadurlmangle": "Download-Url-Mangle",
+    "oversionmangle": "Oversion-Mangle",
+    "pagemangle": "Page-Mangle",
+    "versionmangle": "Version-Mangle",
+    "mode": "Mode",
+    "searchmode": "Search-Mode",
+    "compression": "Compression",
+    "repack": "Repack",
+    "repacksuffix": "Repacksuffix",
+    "component": "Component",
+    "ctype": "Ctype",
+    "versionconstraint": "Version-Constraint",
+    "versionschema": "Version-Schema",
+    "versionseparator": "Version-Separator",
+    "decompress": "Decompress",
+    "bare": "Bare",
+    "versionless": "Versionless",
+    "hrefdecode": "Href-Decode",
+    "useragent": "User-Agent",
+    "unzipopt": "Unzip-Opt",
+    "gitpretty": "Git-Pretty",
+    "gitdate": "Git-Date",
+    "gitexport": "Git-Export",
+    "gitmode": "Git-Mode",
+    "gitmodules": "Git-Modules",
+    "template": "Template",
+}
+
+
+def _normalize_deb822_field_name(name: str) -> str:
+    """Normalize a deb822 field name: lowercase and remove hyphens."""
+    return name.lower().replace("-", "")
+
+
+def _deb822_field_name(normalized: str) -> str:
+    """Convert a normalized field name back to its canonical deb822 form."""
+    return _DEB822_CANONICAL_NAMES.get(normalized, normalized.title())
 
 
 class InvalidUVersionMangle(ValueError):
@@ -134,6 +190,12 @@ class WatchFile:
         )
 
     def dump(self, f: TextIO) -> None:
+        if self.version >= 5:
+            self._dump_deb822(f)
+        else:
+            self._dump_legacy(f)
+
+    def _dump_legacy(self, f: TextIO) -> None:
         def serialize_options(opts: List[str]) -> str:
             s = ",".join(opts)
             if " " in s or "\t" in s:
@@ -154,6 +216,31 @@ class WatchFile:
             if entry.script:
                 f.write(" " + entry.script)
             f.write("\n")
+
+    def _dump_deb822(self, f: TextIO) -> None:
+        # First paragraph: version + global options
+        f.write(f"Version: {self.version}\n")
+        for option in self.options:
+            try:
+                key, value = option.split("=", 1)
+            except ValueError:
+                key = option
+                value = "yes"
+            f.write(f"{_deb822_field_name(key)}: {value}\n")
+        for entry in self.entries:
+            f.write("\n")
+            f.write(f"Source: {entry.url}\n")
+            if entry.matching_pattern:
+                f.write(f"Matching-Pattern: {entry.matching_pattern}\n")
+            if entry.script:
+                f.write(f"Update-Script: {entry.script}\n")
+            for option in entry.options:
+                try:
+                    key, value = option.split("=", 1)
+                except ValueError:
+                    key = option
+                    value = "yes"
+                f.write(f"{_deb822_field_name(key)}: {value}\n")
 
 
 def parse_sed_expr(vm: str) -> Tuple[str, Tuple[str, str, Optional[str]]]:
@@ -449,8 +536,139 @@ class WatchSyntaxError(Exception):
     """Syntax error in watch file."""
 
 
+def _deb822_para_to_options(
+    para: "Deb822",
+    skip_keys: "frozenset[str]",
+) -> List[str]:
+    """Convert deb822 paragraph fields to a list of option strings.
+
+    Fields in skip_keys are excluded. Field names are normalized
+    (lowercased, hyphens removed) to match the legacy opts= format.
+    """
+    options: List[str] = []
+    for key in para:
+        normalized = _normalize_deb822_field_name(key)
+        if normalized in skip_keys:
+            continue
+        value = para[key]
+        if value in ("yes", ""):
+            options.append(normalized)
+        else:
+            options.append(f"{normalized}={value}")
+    return options
+
+
+# Fields that map to Watch/WatchFile attributes rather than options.
+_DEB822_ENTRY_SKIP = frozenset(
+    {"version", "source", "matchingpattern", "updatescript", "untrackable"}
+)
+
+
+def parse_watch_file_deb822(f: Iterable[str]) -> Optional[WatchFile]:
+    """Parse a version 5 (deb822-style) watch file.
+
+    Args:
+      f: watch file lines to parse
+    """
+    from debian.deb822 import Deb822
+
+    lines_list = list(f)
+    # Ensure lines have newline terminators for Deb822 paragraph splitting
+    text = "\n".join(line.rstrip("\n") for line in lines_list) + "\n"
+    if not text.strip():
+        return None
+
+    paragraphs = list(Deb822.iter_paragraphs(text.splitlines(True)))
+    if not paragraphs:
+        return None
+
+    header = paragraphs[0]
+    if "Version" not in header:
+        raise MissingVersion()
+    version = int(header["Version"])
+    if version < 5:
+        raise WatchSyntaxError(
+            f"deb822-style watch files require version >= 5, got {version}"
+        )
+
+    if header.get("Untrackable"):
+        logging.warning("Untrackable project: %s", header["Untrackable"])
+
+    entries: List[Watch] = []
+    global_options: List[str] = []
+
+    if len(paragraphs) == 1 and ("Source" in header or "Template" in header):
+        # Single-paragraph format: header is also the only source
+        url = header.get("Source", "")
+        matching_pattern = header.get("Matching-Pattern")
+        script = header.get("Update-Script")
+        options = _deb822_para_to_options(header, _DEB822_ENTRY_SKIP)
+        if url:
+            entries.append(
+                Watch(
+                    url,
+                    matching_pattern=matching_pattern,
+                    script=script,
+                    opts=options,
+                )
+            )
+    else:
+        # Multi-paragraph: header provides defaults, subsequent paragraphs
+        # are sources. Global options are non-structural header fields.
+        global_options = _deb822_para_to_options(
+            header, frozenset({"version", "untrackable"})
+        )
+
+        for para in paragraphs[1:]:
+            if "Source" not in para and "Template" not in para:
+                logging.warning("Paragraph without Source or Template, skipping")
+                continue
+            # Inherit defaults from header
+            merged = Deb822(header)
+            merged.update(para)
+
+            url = merged.get("Source", "")
+            matching_pattern = merged.get("Matching-Pattern")
+            script = merged.get("Update-Script")
+            options = _deb822_para_to_options(merged, _DEB822_ENTRY_SKIP)
+            if url:
+                entries.append(
+                    Watch(
+                        url,
+                        matching_pattern=matching_pattern,
+                        script=script,
+                        opts=options,
+                    )
+                )
+
+    return WatchFile(entries=entries, options=global_options, version=version)
+
+
 def parse_watch_file(f: Iterable[str]) -> Optional[WatchFile]:
     """Parse a watch file.
+
+    Automatically detects whether the file uses the legacy line-based format
+    (versions 1-4) or the deb822-style format (version 5+).
+
+    Args:
+      f: watch file to parse
+    """
+    lines_list = list(f)
+    # Detect format by looking at the first non-blank, non-comment line.
+    # deb822 format uses "Version: N", legacy uses "version=N".
+    for raw_line in lines_list:
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if re.match(r"^version\s*:\s*\d+\s*$", stripped, re.IGNORECASE):
+            return parse_watch_file_deb822(iter(lines_list))
+        break
+
+    return _parse_watch_file_legacy(iter(lines_list))
+
+
+def _parse_watch_file_legacy(f: Iterable[str]) -> Optional[WatchFile]:
+    """Parse a legacy (version 1-4) watch file.
 
     Args:
       f: watch file to parse

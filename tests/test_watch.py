@@ -31,6 +31,7 @@ from debmutate.watch import (
     WatchFile,
     html_search,
     parse_watch_file,
+    parse_watch_file_deb822,
     plain_search,
     search,
 )
@@ -547,3 +548,473 @@ class SearchTests(TestCase):
                 )
             ),
         )
+
+
+class ParseWatchFileDeb822Tests(TestCase):
+    def test_parse_empty(self):
+        self.assertIs(None, parse_watch_file_deb822(StringIO("")))
+
+    def test_parse_no_version(self):
+        self.assertRaises(
+            MissingVersion,
+            parse_watch_file_deb822,
+            StringIO("Source: https://example.com/\n"),
+        )
+
+    def test_parse_simple(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(
+            [Watch("https://samba.org/~jelmer/", "blah-(\\d+).tar.gz")],
+            wf.entries,
+        )
+
+    def test_parse_single_paragraph(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(1, len(wf.entries))
+        self.assertEqual("https://samba.org/~jelmer/", wf.entries[0].url)
+        self.assertEqual("blah-(\\d+).tar.gz", wf.entries[0].matching_pattern)
+
+    def test_parse_with_options(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+Pgp-Mode: mangle
+Pgp-Sig-Url-Mangle: s/$/.asc/
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(1, len(wf.entries))
+        self.assertEqual("pgpmode=mangle", wf.entries[0].options[0])
+        self.assertEqual("pgpsigurlmangle=s/$/.asc/", wf.entries[0].options[1])
+
+    def test_parse_global_defaults(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+Pgp-Mode: auto
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(["pgpmode=auto"], wf.options)
+        # Entry should inherit global default
+        self.assertEqual("auto", wf.entries[0].get_option("pgpmode"))
+
+    def test_parse_global_defaults_override(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+Pgp-Mode: auto
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+Pgp-Mode: mangle
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        # Entry-level override takes precedence
+        self.assertEqual("mangle", wf.entries[0].get_option("pgpmode"))
+
+    def test_parse_multiple_entries(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://example.com/main/
+Matching-Pattern: main-(\\d+).tar.gz
+
+Source: https://example.com/component/
+Matching-Pattern: comp-(\\d+).tar.gz
+Component: extra
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(2, len(wf.entries))
+        self.assertEqual("https://example.com/main/", wf.entries[0].url)
+        self.assertEqual("https://example.com/component/", wf.entries[1].url)
+        self.assertEqual("extra", wf.entries[1].get_option("component"))
+
+    def test_parse_with_comments(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+# This is a comment
+Version: 5
+
+# Another comment
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(1, len(wf.entries))
+
+    def test_parse_update_script(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+Update-Script: debian/repack.sh
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual("debian/repack.sh", wf.entries[0].script)
+
+    def test_parse_case_insensitive(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+version: 5
+
+source: https://samba.org/~jelmer/
+matching-pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual("https://samba.org/~jelmer/", wf.entries[0].url)
+
+    def test_autodetect_deb822(self):
+        """parse_watch_file auto-detects deb822 format."""
+        wf = parse_watch_file(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+        self.assertEqual(1, len(wf.entries))
+        self.assertEqual("https://samba.org/~jelmer/", wf.entries[0].url)
+
+    def test_roundtrip(self):
+        original = """\
+Version: 5
+
+Source: https://samba.org/~jelmer/
+Matching-Pattern: blah-(\\d+).tar.gz
+Pgp-Mode: mangle
+"""
+        wf = parse_watch_file_deb822(StringIO(original))
+        assert wf is not None
+        output = StringIO()
+        wf.dump(output)
+        wf2 = parse_watch_file_deb822(StringIO(output.getvalue()))
+        assert wf2 is not None
+        self.assertEqual(wf.version, wf2.version)
+        self.assertEqual(len(wf.entries), len(wf2.entries))
+        self.assertEqual(wf.entries[0].url, wf2.entries[0].url)
+        self.assertEqual(
+            wf.entries[0].matching_pattern, wf2.entries[0].matching_pattern
+        )
+        self.assertEqual(
+            wf.entries[0].get_option("pgpmode"),
+            wf2.entries[0].get_option("pgpmode"),
+        )
+
+    def test_dump_deb822(self):
+        wf = WatchFile(
+            entries=[
+                Watch(
+                    "https://example.com/",
+                    matching_pattern="foo-(\\d+).tar.gz",
+                    opts=["pgpmode=mangle"],
+                ),
+            ],
+            version=5,
+        )
+        output = StringIO()
+        wf.dump(output)
+        self.assertEqual(
+            output.getvalue(),
+            """\
+Version: 5
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+Pgp-Mode: mangle
+""",
+        )
+
+    def test_dump_deb822_with_global_options(self):
+        wf = WatchFile(
+            entries=[
+                Watch(
+                    "https://example.com/",
+                    matching_pattern="foo-(\\d+).tar.gz",
+                ),
+            ],
+            options=["pgpmode=auto"],
+            version=5,
+        )
+        output = StringIO()
+        wf.dump(output)
+        self.assertEqual(
+            output.getvalue(),
+            """\
+Version: 5
+Pgp-Mode: auto
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+""",
+        )
+
+    def test_parse_version_too_low(self):
+        from debmutate.watch import WatchSyntaxError
+
+        self.assertRaises(
+            WatchSyntaxError,
+            parse_watch_file_deb822,
+            StringIO("Version: 4\n\nSource: https://example.com/\n"),
+        )
+
+    def test_parse_boolean_option(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+Repack: yes
+"""
+            )
+        )
+        assert wf is not None
+        self.assertTrue(wf.entries[0].has_option("repack"))
+
+    def test_parse_untrackable(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+Untrackable: upstream gone
+
+Source: https://example.com/
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(5, wf.version)
+
+    def test_autodetect_legacy(self):
+        """parse_watch_file still handles legacy format correctly."""
+        wf = parse_watch_file(
+            StringIO(
+                """\
+version=4
+https://samba.org/~jelmer/ blah-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(4, wf.version)
+        self.assertEqual(1, len(wf.entries))
+
+    def test_parse_git_mode(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://github.com/user/project.git
+Matching-Pattern: refs/tags/v@ANY_VERSION@
+Mode: git
+Git-Mode: full
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual("git", wf.entries[0].get_option("mode"))
+        self.assertEqual("full", wf.entries[0].get_option("gitmode"))
+
+    def test_roundtrip_multiple_entries(self):
+        original = """\
+Version: 5
+
+Source: https://example.com/main/
+Matching-Pattern: main-(\\d+).tar.gz
+
+Source: https://example.com/extra/
+Matching-Pattern: extra-(\\d+).tar.gz
+Component: extra
+"""
+        wf = parse_watch_file_deb822(StringIO(original))
+        assert wf is not None
+        output = StringIO()
+        wf.dump(output)
+        wf2 = parse_watch_file_deb822(StringIO(output.getvalue()))
+        assert wf2 is not None
+        self.assertEqual(2, len(wf2.entries))
+        self.assertEqual("https://example.com/main/", wf2.entries[0].url)
+        self.assertEqual("https://example.com/extra/", wf2.entries[1].url)
+        self.assertEqual("extra", wf2.entries[1].get_option("component"))
+
+    def test_roundtrip_global_options_inherited(self):
+        original = """\
+Version: 5
+Pgp-Mode: auto
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+"""
+        wf = parse_watch_file_deb822(StringIO(original))
+        assert wf is not None
+        output = StringIO()
+        wf.dump(output)
+        wf2 = parse_watch_file_deb822(StringIO(output.getvalue()))
+        assert wf2 is not None
+        self.assertEqual(["pgpmode=auto"], wf2.options)
+        self.assertEqual("auto", wf2.entries[0].get_option("pgpmode"))
+
+    def test_dump_multiple_entries(self):
+        wf = WatchFile(
+            entries=[
+                Watch(
+                    "https://example.com/main/",
+                    matching_pattern="main-(\\d+).tar.gz",
+                ),
+                Watch(
+                    "https://example.com/extra/",
+                    matching_pattern="extra-(\\d+).tar.gz",
+                    opts=["component=extra"],
+                ),
+            ],
+            version=5,
+        )
+        output = StringIO()
+        wf.dump(output)
+        self.assertEqual(
+            output.getvalue(),
+            """\
+Version: 5
+
+Source: https://example.com/main/
+Matching-Pattern: main-(\\d+).tar.gz
+
+Source: https://example.com/extra/
+Matching-Pattern: extra-(\\d+).tar.gz
+Component: extra
+""",
+        )
+
+    def test_parse_no_matching_pattern(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Source: https://example.com/
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(1, len(wf.entries))
+        self.assertIsNone(wf.entries[0].matching_pattern)
+
+    def test_parse_skips_bad_paragraph(self):
+        wf = parse_watch_file_deb822(
+            StringIO(
+                """\
+Version: 5
+
+Foo: bar
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+"""
+            )
+        )
+        assert wf is not None
+        self.assertEqual(1, len(wf.entries))
+        self.assertEqual("https://example.com/", wf.entries[0].url)
+
+
+class WatchEditorDeb822Tests(TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.test_dir)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.test_dir)
+
+    def test_edit_deb822(self):
+        with open("watch", "w") as f:
+            f.write(
+                """\
+Version: 5
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+"""
+            )
+        with WatchEditor("watch") as updater:
+            self.assertEqual(5, updater.watch_file.version)
+            self.assertEqual(1, len(updater.watch_file.entries))
+            updater.watch_file.entries[0].set_option("pgpmode", "mangle")
+        with open("watch") as f:
+            content = f.read()
+        self.assertIn("Pgp-Mode: mangle", content)
+
+    def test_no_changes_preserves_file(self):
+        original = """\
+Version: 5
+
+Source: https://example.com/
+Matching-Pattern: foo-(\\d+).tar.gz
+"""
+        with open("watch", "w") as f:
+            f.write(original)
+        with WatchEditor("watch") as updater:
+            self.assertEqual(5, updater.watch_file.version)
+        with open("watch") as f:
+            self.assertEqual(original, f.read())
